@@ -114,7 +114,7 @@ You can import the automation by pasting its contents into your `automations.yam
 | Bulb spacing | `spacing` in `createOuterBulbs()` | 42px |
 | Chase animation speed | `setInterval(animateChase, ...)` | 500ms |
 
-### Recently Added Card
+### (Bonus) Recently Added Card
 
 | Setting | Where | Default |
 |---------|-------|---------|
@@ -135,7 +135,7 @@ You can import the automation by pasting its contents into your `automations.yam
 - When nothing is playing, shows an idle "Waiting for playback" state
 - Animated chase lights around the border give it a classic cinema marquee feel
 
-### Recently Added Card
+### (Bonus) Recently Added Card
 - Connects directly to your Plex server's API
 - Fetches the latest movies and TV shows from all libraries
 - Deduplicates TV shows (only shows the most recent entry per series)
@@ -162,4 +162,5 @@ You can import the automation by pasting its contents into your `automations.yam
 
 ## Credits
 
+Built by Sam Russell - AI used in development
 Built with Home Assistant, Plex, and Fully Kiosk Browser.
