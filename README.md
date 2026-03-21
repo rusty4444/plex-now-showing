@@ -4,6 +4,14 @@ A cinema-style "Now Showing" marquee display and a Plex Recently Added dashboard
 
 ![Overview](https://img.shields.io/badge/Platform-Home_Assistant-blue)
 
+## Screenshots
+
+<p align="center">
+  <img src="screenshots/now-showing.jpg" alt="Now Showing Marquee" width="360">
+  &nbsp;&nbsp;&nbsp;
+  <img src="screenshots/recently-added.jpg" alt="Recently Added Card" width="480">
+</p>
+
 ---
 
 ## What's Included
