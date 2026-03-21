@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Now Showing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Bebas+Neue&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --gold-light: #e8c84a;
+      --gold-mid: #c9a73b;
+      --gold-dark: #8b6f2a;
+      --gold-glow: #ffd75e;
+      --bulb-on: #ffe69c;
+      --bulb-off: #665522;
+      --frame-border: #a0842e;
+      --bg-dark: #0a0a0a;
+      --bg-marquee: #111111;
+      --text-light: #f5f0e0;
+      --text-dim: #998c6e;
+      --red-curtain: #5c1010;
+      --marquee-height: 14vh;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg-dark);
+      font-family: 'Inter', sans-serif;
+      color: var(--text-light);
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ===== FULL-SCREEN FRAME WRAPPER ===== */
+    .frame-wrapper {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      padding: 4px;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== OUTER BULBS (around entire screen) ===== */
+    .bulbs-outer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .bulb {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 40% 35%, #fff8dc, var(--bulb-on) 40%, #d4a820 100%);
+      box-shadow:
+        0 0 16px 6px rgba(255, 215, 94, 0.7),
+        0 0 32px 12px rgba(255, 215, 94, 0.3),
+        0 0 4px 2px rgba(255, 230, 156, 0.9);
+      transition: all 0.35s ease;
+    }
+
+    .bulb.off {
+      background: radial-gradient(circle at 40% 35%, #887744, var(--bulb-off) 60%);
+      box-shadow: 0 0 4px 2px rgba(102, 85, 34, 0.4);
+    }
+
+    /* ===== MARQUEE BANNER ===== */
+    .marquee {
+      position: relative;
+      width: 100%;
+      height: var(--marquee-height);
+      flex-shrink: 0;
+      border: 4px solid;
+      border-image: linear-gradient(135deg, var(--gold-light), var(--gold-dark), var(--gold-light), var(--gold-dark)) 1;
+      overflow: hidden;
+      z-index: 2;
+    }
+
+    /* Red curtain background */
+    .marquee-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(
+          90deg,
+          rgba(0,0,0,0.15) 0px,
+          transparent 3px,
+          transparent 18px,
+          rgba(0,0,0,0.15) 21px
+        ),
+        linear-gradient(
+          180deg,
+          #7a1a1a 0%,
+          #5c1010 30%,
+          #3d0a0a 70%,
+          #2a0808 100%
+        );
+    }
+
+    /* Curtain drape effect */
+    .marquee-bg::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 0%, rgba(180,40,40,0.3) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 0%, rgba(180,40,40,0.4) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 0%, rgba(180,40,40,0.3) 0%, transparent 50%);
+    }
+
+    /* Gold inner trim on marquee */
+    .marquee::after {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      border: 2px solid rgba(200, 160, 50, 0.35);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+
+
+    /* NOW SHOWING text */
+    .marquee-text {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 4;
+    }
+
+    .marquee-text h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(3.5rem, 10vw, 8rem);
+      letter-spacing: 0.35em;
+      color: var(--text-light);
+      text-shadow:
+        0 0 20px rgba(255, 215, 94, 0.4),
+        0 0 40px rgba(255, 215, 94, 0.2),
+        0 2px 4px rgba(0, 0, 0, 0.6);
+    }
+
+    /* ===== POSTER SECTION (below marquee) ===== */
+    .poster-section {
+      position: relative;
+      flex: 1;
+      width: 100%;
+      min-height: 0;
+      border: 4px solid;
+      border-top: none;
+      border-image: linear-gradient(135deg, var(--gold-light), var(--gold-dark), var(--gold-light), var(--gold-dark)) 1;
+      overflow: hidden;
+      background: var(--bg-marquee);
+    }
+
+    /* Inner gold trim on poster section */
+    .poster-section::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 3px;
+      right: 3px;
+      bottom: 3px;
+      border: 2px solid rgba(200, 160, 50, 0.25);
+      border-top: none;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    /* ===== POSTER AREA ===== */
+    .poster-area {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+      background-color: var(--bg-marquee);
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+
+    .poster-area.loaded {
+      opacity: 1;
+    }
+
+    /* Gradient overlay at bottom of poster */
+    .poster-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 35%;
+      background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 40%, transparent 100%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Title on poster */
+    .poster-title {
+      position: absolute;
+      bottom: 16px;
+      left: 20px;
+      right: 20px;
+      z-index: 2;
+    }
+
+    .poster-title h2 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: clamp(1.6rem, 4vw, 2.8rem);
+      line-height: 1.15;
+      color: var(--text-light);
+      text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+      margin-bottom: 4px;
+    }
+
+    .poster-title .subtitle {
+      font-family: 'Inter', sans-serif;
+      font-size: clamp(0.85rem, 2vw, 1.15rem);
+      font-weight: 500;
+      color: var(--text-dim);
+      text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+      letter-spacing: 0.04em;
+    }
+
+    /* ===== MEDIA INFO (bottom-right) ===== */
+    .media-info {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      text-align: right;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+      z-index: 6;
+    }
+
+    .media-info.visible { opacity: 1; }
+
+    .media-info .media-type {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(0.85rem, 2vw, 1.1rem);
+      letter-spacing: 0.15em;
+      color: var(--gold-light);
+      text-transform: uppercase;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+    }
+
+    .media-info .player-name {
+      font-family: 'Inter', sans-serif;
+      font-size: clamp(0.6rem, 1.2vw, 0.8rem);
+      color: var(--text-dim);
+      margin-top: 2px;
+      font-weight: 400;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+    }
+
+    /* ===== IDLE STATE ===== */
+    .idle-wrap {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+    }
+
+    .idle-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+
+    .idle-content.visible { opacity: 1; }
+
+    .idle-icon {
+      width: 80px;
+      height: 80px;
+      opacity: 0.25;
+      margin-bottom: 2vh;
+      color: var(--text-dim);
+    }
+
+    .idle-text {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(1.2rem, 3vw, 1.8rem);
+      letter-spacing: 0.2em;
+      color: var(--gold-dark);
+      opacity: 0.6;
+    }
+
+    /* ===== AMBIENT GLOW ===== */
+    .ambient-glow {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0;
+      transition: opacity 1.5s ease;
+    }
+
+    .ambient-glow.active {
+      opacity: 1;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="ambient-glow" id="ambientGlow"></div>
+
+  <!-- OUTER BULBS (around entire screen edge) -->
+  <div class="bulbs-outer" id="bulbsOuter"></div>
+
+  <!-- FRAME WRAPPER (full-screen, vertical layout) -->
+  <div class="frame-wrapper" id="frameWrapper">
+
+    <!-- MARQUEE BANNER (full width, top) -->
+    <div class="marquee" id="marquee">
+      <div class="marquee-bg"></div>
+
+      <div class="marquee-text">
+        <h1>NOW SHOWING</h1>
+      </div>
+    </div>
+
+    <!-- POSTER SECTION (fills remaining space) -->
+    <div class="poster-section" id="posterSection">
+      <!-- Poster background -->
+      <div class="poster-area" id="posterArea"></div>
+
+      <!-- Overlays on top of poster -->
+      <div class="poster-overlay" id="posterOverlay" style="display:none;"></div>
+      <div class="poster-title" id="posterTitle" style="display:none;">
+        <h2 id="titleText"></h2>
+        <div class="subtitle" id="subtitleText"></div>
+      </div>
+
+      <!-- MEDIA INFO (bottom-right) -->
+      <div class="media-info" id="mediaInfo">
+        <div class="media-type" id="mediaType"></div>
+        <div class="player-name" id="playerName"></div>
+      </div>
+
+      <div class="idle-wrap">
+        <div class="idle-content visible" id="idleContent">
+          <svg class="idle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
+            <line x1="7" y1="2" x2="7" y2="22"/>
+            <line x1="17" y1="2" x2="17" y2="22"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+            <line x1="2" y1="7" x2="7" y2="7"/>
+            <line x1="2" y1="17" x2="7" y2="17"/>
+            <line x1="17" y1="17" x2="22" y2="17"/>
+            <line x1="17" y1="7" x2="22" y2="7"/>
+          </svg>
+          <div class="idle-text">Waiting for playback</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== CONFIGURATION =====
+    const params = new URLSearchParams(window.location.search);
+    const HA_URL = params.get('ha_url') || window.location.origin;
+    const HA_TOKEN = params.get('token') || 'YOUR_LONG_LIVED_ACCESS_TOKEN';
+    const POLL_INTERVAL = 5000;
+    const PLEX_USERNAME = 'YOUR_PLEX_USERNAME';
+
+    // ===== DOM REFS =====
+    const posterArea = document.getElementById('posterArea');
+    const posterOverlay = document.getElementById('posterOverlay');
+    const posterTitle = document.getElementById('posterTitle');
+    const titleText = document.getElementById('titleText');
+    const subtitleText = document.getElementById('subtitleText');
+    const idleContent = document.getElementById('idleContent');
+    const mediaInfo = document.getElementById('mediaInfo');
+    const mediaType = document.getElementById('mediaType');
+    const playerName = document.getElementById('playerName');
+    const ambientGlow = document.getElementById('ambientGlow');
+    const bulbsOuterContainer = document.getElementById('bulbsOuter');
+    const marquee = document.getElementById('marquee');
+
+    // ===== STATE =====
+    let currentMediaKey = '';
+    let isShowingMedia = false;
+
+    // ===== OUTER BULB LIGHTS (around screen edge) =====
+    function createOuterBulbs() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const spacing = 42;
+      const bulbs = [];
+      const pad = 4;
+      const bulbR = 14;
+
+      // Top edge
+      const topY = pad - bulbR + 2;
+      const topCount = Math.floor((w - 2 * pad) / spacing);
+      const topStartX = pad + ((w - 2 * pad) - (topCount - 1) * spacing) / 2;
+      for (let i = 0; i < topCount; i++) {
+        bulbs.push({ x: topStartX + i * spacing - bulbR, y: topY });
+      }
+
+      // Bottom edge
+      const botY = h - pad - bulbR - 2;
+      for (let i = 0; i < topCount; i++) {
+        bulbs.push({ x: topStartX + i * spacing - bulbR, y: botY });
+      }
+
+      // Left edge
+      const leftX = pad - bulbR + 2;
+      const sideCount = Math.floor((h - 2 * pad) / spacing);
+      const sideStartY = pad + ((h - 2 * pad) - (sideCount - 1) * spacing) / 2;
+      for (let i = 0; i < sideCount; i++) {
+        bulbs.push({ x: leftX, y: sideStartY + i * spacing - bulbR });
+      }
+
+      // Right edge
+      const rightX = w - pad - bulbR - 2;
+      for (let i = 0; i < sideCount; i++) {
+        bulbs.push({ x: rightX, y: sideStartY + i * spacing - bulbR });
+      }
+
+      // Bottom of marquee banner
+      const marqueeRect = marquee.getBoundingClientRect();
+      const marqueeBottomY = marqueeRect.bottom - bulbR;
+      for (let i = 0; i < topCount; i++) {
+        bulbs.push({ x: topStartX + i * spacing - bulbR, y: marqueeBottomY });
+      }
+
+      bulbsOuterContainer.innerHTML = '';
+      bulbs.forEach((b, idx) => {
+        const el = document.createElement('div');
+        el.className = 'bulb';
+        el.style.left = b.x + 'px';
+        el.style.top = b.y + 'px';
+        el.dataset.index = idx;
+        bulbsOuterContainer.appendChild(el);
+      });
+    }
+
+
+
+    // Chase light animation — both outer and marquee bulbs
+    let chaseOffset = 0;
+    function animateChase() {
+      const outerBulbs = bulbsOuterContainer.querySelectorAll('.bulb');
+      outerBulbs.forEach((el, i) => {
+        const phase = (i + chaseOffset) % 3;
+        el.classList.toggle('off', phase !== 0);
+      });
+
+      chaseOffset = (chaseOffset + 1) % 3;
+    }
+
+    // ===== FETCH PLEX DATA FROM HA =====
+    async function fetchPlexData() {
+      try {
+        const resp = await fetch(`${HA_URL}/api/states`, {
+          headers: {
+            'Authorization': `Bearer ${HA_TOKEN}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!resp.ok) return null;
+        const states = await resp.json();
+
+        // Find active Plex media_player entities for this user only
+        const plexPlayers = states.filter(s =>
+          s.entity_id.startsWith('media_player.plex_') &&
+          (s.state === 'playing' || s.state === 'paused')
+        );
+
+        if (plexPlayers.length === 0) return null;
+
+        // Filter to only this user's players
+        const myPlayers = plexPlayers.filter(p => {
+          const attrs = p.attributes || {};
+          if (attrs.username) {
+            return attrs.username === PLEX_USERNAME;
+          }
+          const id = p.entity_id.replace('media_player.plex_', '');
+          const isGenericClient = id.startsWith('plex_for_') || id.startsWith('plex_web_');
+          return isGenericClient;
+        });
+
+        if (myPlayers.length === 0) return null;
+
+        const player = myPlayers[0];
+        const attrs = player.attributes || {};
+
+        return {
+          title: attrs.media_title || 'Unknown Title',
+          seriesTitle: attrs.media_series_title || '',
+          contentType: attrs.media_content_type || 'video',
+          artwork: attrs.entity_picture || '',
+          playerName: attrs.friendly_name || player.entity_id,
+          state: player.state,
+          season: attrs.media_season || '',
+          episode: attrs.media_episode || ''
+        };
+      } catch (err) {
+        console.warn('Fetch error:', err);
+        return null;
+      }
+    }
+
+    // ===== UPDATE DISPLAY =====
+    function showMedia(data) {
+      const artworkUrl = data.artwork.startsWith('http')
+        ? data.artwork
+        : `${HA_URL}${data.artwork}`;
+
+      const mediaKey = `${data.title}_${data.seriesTitle}_${artworkUrl}`;
+
+      if (mediaKey === currentMediaKey && isShowingMedia) return;
+      currentMediaKey = mediaKey;
+      isShowingMedia = true;
+
+      // Update poster background image
+      const img = new Image();
+      img.onload = () => {
+        posterArea.style.backgroundImage = `url(${artworkUrl})`;
+        posterArea.classList.add('loaded');
+      };
+      posterArea.classList.remove('loaded');
+      img.src = artworkUrl;
+
+      // Show overlay and title
+      posterOverlay.style.display = 'block';
+      posterTitle.style.display = 'block';
+
+      // Build title text
+      if (data.seriesTitle) {
+        titleText.textContent = data.seriesTitle;
+        let sub = data.title;
+        if (data.season && data.episode) {
+          sub = `S${String(data.season).padStart(2,'0')}E${String(data.episode).padStart(2,'0')} · ${data.title}`;
+        }
+        subtitleText.textContent = sub;
+      } else {
+        titleText.textContent = data.title;
+        subtitleText.textContent = '';
+      }
+
+      // Media type label
+      let typeLabel = 'Movie';
+      if (data.contentType === 'tvshow' || data.contentType === 'episode' || data.seriesTitle) {
+        typeLabel = 'TV Series';
+      } else if (data.contentType === 'music') {
+        typeLabel = 'Music';
+      }
+
+      if (data.state === 'paused') {
+        typeLabel += ' · Paused';
+      }
+
+      mediaType.textContent = typeLabel;
+      playerName.textContent = data.playerName;
+      mediaInfo.classList.add('visible');
+
+      // Hide idle
+      idleContent.classList.remove('visible');
+
+      // Ambient glow
+      ambientGlow.style.background = `radial-gradient(ellipse at 50% 40%, rgba(200, 160, 50, 0.08) 0%, transparent 70%)`;
+      ambientGlow.classList.add('active');
+    }
+
+    function showIdle() {
+      if (!isShowingMedia && currentMediaKey === '') return;
+
+      isShowingMedia = false;
+      currentMediaKey = '';
+
+      posterArea.classList.remove('loaded');
+      posterArea.style.backgroundImage = '';
+      posterOverlay.style.display = 'none';
+      posterTitle.style.display = 'none';
+      mediaInfo.classList.remove('visible');
+      idleContent.classList.add('visible');
+      ambientGlow.classList.remove('active');
+    }
+
+    // ===== POLLING LOOP =====
+    async function poll() {
+      const data = await fetchPlexData();
+      if (data) {
+        showMedia(data);
+      } else {
+        showIdle();
+      }
+    }
+
+    // ===== INIT =====
+    function init() {
+      createOuterBulbs();
+      setInterval(animateChase, 500);
+      poll();
+      setInterval(poll, POLL_INTERVAL);
+    }
+
+    // Recreate bulbs on resize
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        createOuterBulbs();
+      }, 200);
+    });
+
+    // Start
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  </script>
+</body>
+</html>

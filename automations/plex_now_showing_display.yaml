@@ -1,0 +1,56 @@
+# Plex - Now Showing Display
+#
+# Switches a Fully Kiosk Browser tablet to the Now Showing page
+# when Plex starts playing, and back to your dashboard when
+# playback stops.
+#
+# Prerequisites:
+#   - sensor.tnas (or your Plex session count sensor)
+#   - Fully Kiosk Browser integration with your tablet device
+#
+# Update the following before use:
+#   1. entity_id in triggers and conditions → your Plex session sensor
+#   2. device_id in actions → your Fully Kiosk Browser device ID
+#   3. URLs in actions → your Home Assistant IP and dashboard path
+
+alias: "Plex - Now Showing Display"
+description: >-
+  Switches Master Panel to cinema marquee when Plex starts playing,
+  and back to dashboard when playback stops.
+mode: restart
+
+triggers:
+  - platform: state
+    entity_id: sensor.tnas  # Change to your Plex session count sensor
+
+conditions: []
+
+actions:
+  - choose:
+      # When playback starts (sessions > 0)
+      - conditions:
+          - condition: numeric_state
+            entity_id: sensor.tnas  # Change to your Plex session count sensor
+            above: 0
+        sequence:
+          - delay:
+              seconds: 5
+          - action: fully_kiosk.load_url
+            target:
+              device_id: YOUR_FULLY_KIOSK_DEVICE_ID  # Change to your device ID
+            data:
+              url: "http://YOUR_HA_IP:8123/local/now_showing.html"  # Change to your HA URL
+
+      # When playback stops (sessions < 1)
+      - conditions:
+          - condition: numeric_state
+            entity_id: sensor.tnas  # Change to your Plex session count sensor
+            below: 1
+        sequence:
+          - delay:
+              seconds: 10
+          - action: fully_kiosk.load_url
+            target:
+              device_id: YOUR_FULLY_KIOSK_DEVICE_ID  # Change to your device ID
+            data:
+              url: "http://YOUR_HA_IP:8123/dashboard-test/0"  # Change to your dashboard URL
