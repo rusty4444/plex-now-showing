@@ -1,6 +1,6 @@
 # Plex Now Showing — Home Assistant Package
 
-A cinema-style "Now Showing" marquee display and a Plex Recently Added dashboard card for Home Assistant.
+A cinema-style "Now Showing" marquee display and a Plex Recently Added dashboard card for Home Assistant. These are two independent components — you can use either one on its own, or both together.
 
 ![Overview](https://img.shields.io/badge/Platform-Home_Assistant-blue)
 
@@ -14,42 +14,36 @@ A cinema-style "Now Showing" marquee display and a Plex Recently Added dashboard
 
 ---
 
-## What's Included
+# 1. Now Showing — Cinema Marquee Display
+
+A full-screen cinema marquee page that displays what's currently playing on Plex. Features animated chase bulb lights, a red curtain banner, and poster art with title overlays. Designed for wall-mounted tablets.
+
+### What You Need
+
+- **Home Assistant** with the [Plex integration](https://www.home-assistant.io/integrations/plex/) configured
+- A **Plex Media Server** on your local network
+- **Fully Kiosk Browser** (optional) — for automatic switching between your dashboard and the Now Showing page
+
+### Files
 
 | File | Description |
 |------|-------------|
-| `www/now_showing.html` | Full-screen cinema marquee page — shows a movie-theater-style poster display when Plex is actively playing. Features animated chase bulb lights, a red curtain marquee banner, and poster art with title overlays. |
-| `www/plex-recently-added-card.js` | Custom Lovelace card showing the 5 most recently added movies and 5 most recently added TV shows from Plex, with interleaved cycling, poster art, blurred background, synopsis, and ratings. |
-| `automations/plex_now_showing_display.yaml` | Automation that switches a Fully Kiosk Browser tablet to the Now Showing page when Plex starts playing, and back to your dashboard when playback stops. |
+| `www/now_showing.html` | The full-screen marquee page |
+| `automations/plex_now_showing_display.yaml` | Automation to auto-switch a tablet when playback starts/stops |
 
----
+### Setup
 
-## Prerequisites
+**Step 1 — Copy the file**
 
-- **Home Assistant** with the [Plex integration](https://www.home-assistant.io/integrations/plex/) configured
-- **Plex Media Server** accessible on your local network
-- **Fully Kiosk Browser** (optional) — only needed if you want the automation to switch a wall-mounted tablet between your dashboard and the Now Showing page
-- **Plex sensor** — the automation uses a `sensor.tnas` entity that reports the number of active Plex sessions (this is typically provided by the Plex integration)
-
----
-
-## Installation
-
-### 1. Copy the Web Files
-
-Place the two files from the `www/` folder into your Home Assistant `www` directory:
+Place `www/now_showing.html` into your Home Assistant `www` directory:
 
 ```
 <config>/www/now_showing.html
-<config>/www/plex-recently-added-card.js
 ```
 
-You can do this via:
-- **File Editor add-on** in Home Assistant
-- **Samba** or **SSH** access to your HA config directory
-- The **VS Code** add-on
+You can do this via the **File Editor** add-on, **Samba**, **SSH**, or the **VS Code** add-on.
 
-### 2. Configure `now_showing.html`
+**Step 2 — Configure your credentials**
 
 Open `now_showing.html` and update these values near the top of the `<script>` section:
 
@@ -59,21 +53,81 @@ const HA_TOKEN = 'YOUR_LONG_LIVED_ACCESS_TOKEN';    // HA long-lived access toke
 const PLEX_USERNAME = 'your_plex_username';          // Your Plex username (filters to only your playback)
 ```
 
-**To create a long-lived access token:**
+To create a long-lived access token:
 1. Go to your HA profile (click your name in the sidebar)
 2. Scroll to "Long-Lived Access Tokens"
 3. Click "Create Token", give it a name, and copy the token
 
-### 3. Register the Lovelace Resource
+**Step 3 — Open it**
 
-To use the Recently Added card on your dashboard:
+Navigate to `http://YOUR_HA_IP:8123/local/now_showing.html` in a browser to test it. If Plex is playing something, you should see the poster appear.
 
-1. Go to **Settings → Dashboards → Resources** (top right: three dots → Resources)
+**Step 4 (Optional) — Set up the automation**
+
+If you want a Fully Kiosk Browser tablet to automatically switch to the Now Showing page when playback starts:
+
+1. Copy the contents of `automations/plex_now_showing_display.yaml` into your `automations.yaml` file, or recreate it through the HA UI
+2. Update these values in the automation:
+   - `entity_id: sensor.tnas` — change to your Plex session count sensor
+   - `device_id` — change to your Fully Kiosk Browser device ID
+   - `url` in both actions — update to your HA IP and dashboard path
+
+### How It Works
+
+- Polls Home Assistant's API every 5 seconds for active Plex `media_player` entities
+- Filters to only your user's playback sessions
+- Displays the current media's poster art as a full-bleed background
+- Shows title, episode info (for TV), and playback state
+- When nothing is playing, shows an idle "Waiting for playback" state
+- The automation triggers when `sensor.tnas` (Plex session count) changes — it waits 5 seconds then loads the page, or waits 10 seconds after playback stops to return to your dashboard
+
+### Customization
+
+| Setting | Where | Default |
+|---------|-------|---------|
+| Poll interval | `POLL_INTERVAL` in script | 5000ms (5 seconds) |
+| Plex username filter | `PLEX_USERNAME` in script | Your Plex username |
+| Marquee text size | `.marquee-text h1` font-size in CSS | `clamp(3.5rem, 10vw, 8rem)` |
+| Bulb size | `.bulb` width/height in CSS | 28px |
+| Bulb spacing | `spacing` in `createOuterBulbs()` | 42px |
+| Chase animation speed | `setInterval(animateChase, ...)` | 500ms |
+
+---
+
+# 2. Recently Added — Plex Dashboard Card
+
+A custom Lovelace card that shows the 5 most recently added movies and 5 most recently added TV shows from Plex, with interleaved cycling, poster art, blurred background art, synopsis, and ratings.
+
+### What You Need
+
+- **Home Assistant**
+- A **Plex Media Server** on your local network
+- Your **Plex token**
+
+### Files
+
+| File | Description |
+|------|-------------|
+| `www/plex-recently-added-card.js` | The custom Lovelace card |
+
+### Setup
+
+**Step 1 — Copy the file**
+
+Place `www/plex-recently-added-card.js` into your Home Assistant `www` directory:
+
+```
+<config>/www/plex-recently-added-card.js
+```
+
+**Step 2 — Register the Lovelace resource**
+
+1. Go to **Settings → Dashboards** → click the three dots (top right) → **Resources**
 2. Click **Add Resource**
 3. URL: `/local/plex-recently-added-card.js`
 4. Type: **JavaScript Module**
 
-### 4. Add the Recently Added Card to a Dashboard
+**Step 3 — Add the card to a dashboard**
 
 In your dashboard, add a **Manual card** with this YAML:
 
@@ -87,88 +141,48 @@ cycle_interval: 8
 title: Recently Added
 ```
 
+For best results, set the card to span the full width of a section and give it plenty of vertical space (e.g., 8+ grid rows).
+
 **To find your Plex token:**
 1. Sign in to Plex Web App
 2. Browse to any media item
 3. Click "Get Info" → "View XML"
 4. The token is in the URL as `X-Plex-Token=XXXXX`
 
-For best results, set the card to span the full width of a section and give it plenty of vertical space (e.g., 8+ grid rows).
+### How It Works
 
-### 5. Set Up the Automation (Optional)
-
-If you want a tablet to automatically switch to the Now Showing page during playback:
-
-1. Import the automation from `automations/plex_now_showing_display.yaml`
-2. Update these values in the automation:
-   - `entity_id: sensor.tnas` — change to your Plex session count sensor
-   - `device_id: 7fa13eecefc0809ccc3474398e07580c` — change to your Fully Kiosk Browser device ID
-   - `url` in both actions — update to your HA IP and dashboard path
-
-You can import the automation by pasting its contents into your `automations.yaml` file or by creating it manually through the HA UI.
-
----
-
-## Customization
-
-### Now Showing Page
-
-| Setting | Where | Default |
-|---------|-------|---------|
-| Poll interval | `POLL_INTERVAL` in script | 5000ms (5 seconds) |
-| Plex username filter | `PLEX_USERNAME` in script | Your Plex username |
-| Marquee text size | `.marquee-text h1` font-size in CSS | `clamp(3.5rem, 10vw, 8rem)` |
-| Bulb size | `.bulb` width/height in CSS | 28px |
-| Bulb spacing | `spacing` in `createOuterBulbs()` | 42px |
-| Chase animation speed | `setInterval(animateChase, ...)` | 500ms |
-
-### (Bonus) Recently Added Card
-
-| Setting | Where | Default |
-|---------|-------|---------|
-| `movies_count` | Card config YAML | 5 |
-| `shows_count` | Card config YAML | 5 |
-| `cycle_interval` | Card config YAML | 8 seconds |
-| `title` | Card config YAML | "Recently Added" |
-
----
-
-## How It Works
-
-### Now Showing Page
-- Polls Home Assistant's API every 5 seconds for active Plex `media_player` entities
-- Filters to only your user's playback sessions
-- Displays the current media's poster art as a full-bleed background
-- Shows title, episode info (for TV), and playback state
-- When nothing is playing, shows an idle "Waiting for playback" state
-- Animated chase lights around the border give it a classic cinema marquee feel
-
-### (Bonus) Recently Added Card
 - Connects directly to your Plex server's API
 - Fetches the latest movies and TV shows from all libraries
 - Deduplicates TV shows (only shows the most recent entry per series)
-- Interleaves movies and TV shows for variety
+- Interleaves movies and TV shows for variety (movie, show, movie, show...)
 - Auto-cycles through items with smooth background transitions
 - Color-coded dots indicate movie (gold) vs TV (blue)
 
-### Automation
-- Triggers whenever `sensor.tnas` (Plex session count) changes
-- If sessions > 0: waits 5 seconds, then loads the Now Showing page on the tablet
-- If sessions < 1: waits 10 seconds, then loads your main dashboard
-- Uses `restart` mode so rapid state changes don't queue up
+### Customization
+
+| Setting | In card YAML | Default |
+|---------|-------------|---------|
+| `movies_count` | Number of movies to show | 5 |
+| `shows_count` | Number of TV shows to show | 5 |
+| `cycle_interval` | Seconds between items | 8 |
+| `title` | Header text (set to empty string to hide) | "Recently Added" |
 
 ---
 
 ## Troubleshooting
 
+**Now Showing**
 - **Blank poster**: Check that your HA token is valid and the Plex `entity_picture` URLs are accessible
-- **Card not appearing**: Make sure the Lovelace resource is registered and the browser cache is cleared (append `?v=2` to the resource URL to bust cache)
-- **Only seeing other users' playback**: Update `PLEX_USERNAME` in `now_showing.html` to your Plex username
-- **Automation not triggering**: Verify `sensor.tnas` exists and changes value when playback starts/stops
+- **Only seeing other users' playback**: Update `PLEX_USERNAME` in `now_showing.html` to match your Plex username
+- **Automation not triggering**: Verify your Plex session count sensor exists and changes value when playback starts/stops
+
+**Recently Added Card**
+- **Card not appearing**: Make sure the Lovelace resource is registered and clear your browser cache (or append `?v=2` to the resource URL)
+- **No items showing**: Double-check your `plex_url` and `plex_token` — the card connects directly to Plex, not through HA
 
 ---
 
 ## Credits
 
-Built by Sam Russell - AI used in development
+Built by Sam Russell — AI used in development.
 Built with Home Assistant, Plex, and Fully Kiosk Browser.
