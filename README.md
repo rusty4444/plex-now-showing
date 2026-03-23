@@ -120,6 +120,8 @@ If you want a Fully Kiosk Browser tablet to automatically switch to the Now Show
 
 Looking for a dashboard card showing recently added Plex media? Check out [plex-recently-added-card](https://github.com/rusty4444/plex-recently-added-card).
 
+Using Kodi instead of Plex? Check out [kodi-now-showing](https://github.com/rusty4444/kodi-now-showing) and [kodi-recently-added-card](https://github.com/rusty4444/kodi-recently-added-card).
+
 ---
 
 ## Credits
