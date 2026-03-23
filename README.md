@@ -67,10 +67,14 @@ Navigate to `http://YOUR_HA_IP:8123/local/now_showing.html` in a browser to test
 If you want a Fully Kiosk Browser tablet to automatically switch to the Now Showing page when playback starts:
 
 1. Copy the contents of `automations/plex_now_showing_display.yaml` into your `automations.yaml` file, or recreate it through the HA UI
-2. Update these values in the automation:
-   - `entity_id: sensor.tnas` — change to your Plex session count sensor
-   - `device_id` — change to your Fully Kiosk Browser device ID
-   - `url` in both actions — update to your HA IP and dashboard path
+2. Update the following values in the automation:
+
+| What to change | Where in the file | How to find yours |
+|---|---|---|
+| **Plex session sensor** | `entity_id: sensor.tnas` (appears 3 times — trigger + 2 conditions) | Go to **Developer Tools → States**, search for your Plex server name. Look for a `sensor.*` entity that shows the number of active sessions (e.g., `sensor.plex_myserver`, `sensor.tnas`). Its state will be a number like `0` or `1`. |
+| **Fully Kiosk device ID** | `device_id: YOUR_FULLY_KIOSK_DEVICE_ID` (appears 2 times) | Go to **Settings → Devices**, find your Fully Kiosk tablet, and copy the device ID from the URL (the long string after `/device/`). |
+| **Now Showing URL** | `url:` in the first action | Change to `http://YOUR_HA_IP:8123/local/now_showing.html` |
+| **Dashboard URL** | `url:` in the second action | Change to the URL of the dashboard you want to return to after playback stops (e.g., `http://YOUR_HA_IP:8123/lovelace/0`). |
 
 ### How It Works
 
