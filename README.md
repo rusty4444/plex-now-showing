@@ -114,24 +114,27 @@ A custom Lovelace card that shows the 5 most recently added movies and 5 most re
 |------|-------------|
 | `www/plex-recently-added-card.js` | The custom Lovelace card |
 
-### Setup
+### Install via HACS (Recommended)
 
-**Step 1 — Copy the file**
+1. Open **HACS** in Home Assistant
+2. Click the three dots (top right) → **Custom repositories**
+3. Enter `https://github.com/rusty4444/plex-now-showing` and select **Dashboard** as the category
+4. Click **Add**
+5. Search for "Plex Now Showing" in HACS and click **Install**
+6. Restart Home Assistant
 
-Place `www/plex-recently-added-card.js` into your Home Assistant `www` directory:
+The Lovelace resource will be registered automatically.
 
-```
-<config>/www/plex-recently-added-card.js
-```
+### Install Manually (Alternative)
 
-**Step 2 — Register the Lovelace resource**
+1. Download `plex-recently-added-card.js` from the [latest release](https://github.com/rusty4444/plex-now-showing/releases/latest)
+2. Place it in your `<config>/www/` directory
+3. Go to **Settings → Dashboards** → three dots (top right) → **Resources**
+4. Click **Add Resource**
+5. URL: `/local/plex-recently-added-card.js`
+6. Type: **JavaScript Module**
 
-1. Go to **Settings → Dashboards** → click the three dots (top right) → **Resources**
-2. Click **Add Resource**
-3. URL: `/local/plex-recently-added-card.js`
-4. Type: **JavaScript Module**
-
-**Step 3 — Add the card to a dashboard**
+### Add the card to a dashboard
 
 In your dashboard, add a **Manual card** with this YAML:
 
