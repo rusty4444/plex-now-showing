@@ -57,7 +57,10 @@ Open `now_showing.html` and update these values near the top of the `<script>` s
 const HA_URL = 'http://YOUR_HA_IP:8123';           // Your Home Assistant URL
 const HA_TOKEN = 'YOUR_LONG_LIVED_ACCESS_TOKEN';    // HA long-lived access token
 const PLEX_USERNAME = 'your_plex_username';          // Your Plex username (filters to only your playback)
+const PLEX_PLAYER = '';                              // Optional: lock to a specific player (e.g., 'media_player.plex_plex_for_lg_tv')
 ```
+
+`PLEX_PLAYER` is optional. When set to a specific `media_player` entity ID, the page will only show media from that player. When left empty, it shows media from any active player for your Plex user. You can find your player entity IDs in **Developer Tools → States** by searching for `media_player.plex_`.
 
 To create a long-lived access token:
 1. Go to your HA profile (click your name in the sidebar)
@@ -101,6 +104,7 @@ If you want a Fully Kiosk Browser tablet to automatically switch to the Now Show
 |---------|-------|---------|
 | Poll interval | `POLL_INTERVAL` in script | 5000ms (5 seconds) |
 | Plex username filter | `PLEX_USERNAME` in script | Your Plex username |
+| Specific player only | `PLEX_PLAYER` in script | Empty (any player for your user) |
 | Marquee text size | `.marquee-text h1` font-size in CSS | `clamp(3.5rem, 10vw, 8rem)` |
 | Bulb size | `.bulb` width/height in CSS | 28px |
 | Bulb spacing | `spacing` in `createOuterBulbs()` | 42px |

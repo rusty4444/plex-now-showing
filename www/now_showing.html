@@ -399,6 +399,7 @@
     const HA_TOKEN = params.get('token') || 'YOUR_LONG_LIVED_ACCESS_TOKEN';
     const POLL_INTERVAL = 5000;
     const PLEX_USERNAME = 'YOUR_PLEX_USERNAME';
+    const PLEX_PLAYER = '';  // Optional: set to a specific entity_id (e.g., 'media_player.plex_plex_for_lg_tv') to only show media from that player. Leave empty to show any player for your user.
 
     // ===== DOM REFS =====
     const posterArea = document.getElementById('posterArea');
@@ -500,7 +501,24 @@
         if (!resp.ok) return null;
         const states = await resp.json();
 
-        // Find active Plex media_player entities for this user only
+        // If a specific player is configured, fetch just that entity
+        if (PLEX_PLAYER) {
+          const playerState = states.find(s => s.entity_id === PLEX_PLAYER);
+          if (!playerState || (playerState.state !== 'playing' && playerState.state !== 'paused')) return null;
+          const attrs = playerState.attributes || {};
+          return {
+            title: attrs.media_title || 'Unknown Title',
+            seriesTitle: attrs.media_series_title || '',
+            contentType: attrs.media_content_type || 'video',
+            artwork: attrs.entity_picture || '',
+            playerName: attrs.friendly_name || playerState.entity_id,
+            state: playerState.state,
+            season: attrs.media_season || '',
+            episode: attrs.media_episode || ''
+          };
+        }
+
+        // Otherwise, find active Plex media_player entities for this user
         const plexPlayers = states.filter(s =>
           s.entity_id.startsWith('media_player.plex_') &&
           (s.state === 'playing' || s.state === 'paused')
