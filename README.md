@@ -126,6 +126,8 @@ Looking for a dashboard card showing recently added Plex media? Check out [plex-
 
 Using Kodi instead of Plex? Check out [kodi-now-showing](https://github.com/rusty4444/kodi-now-showing) and [kodi-recently-added-card](https://github.com/rusty4444/kodi-recently-added-card).
 
+Using Jellyfin? Check out [jellyfin-now-showing](https://github.com/rusty4444/jellyfin-now-showing) and [jellyfin-recently-added-card](https://github.com/rusty4444/jellyfin-recently-added-card).
+
 ---
 
 ## Credits
