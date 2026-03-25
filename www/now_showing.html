@@ -202,6 +202,10 @@
       transition: opacity 0.8s ease;
     }
 
+    .landscape-mode .poster-area {
+      background-size: contain;
+    }
+
     .poster-area.loaded {
       opacity: 1;
     }
@@ -336,6 +340,90 @@
       opacity: 1;
     }
 
+    /* ===== INFO OVERLAY (tap to show) ===== */
+    .info-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 20;
+      display: flex;
+      align-items: flex-end;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+      cursor: pointer;
+    }
+
+    .info-overlay.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .info-panel {
+      width: 100%;
+      padding: 28px 24px 32px;
+      transform: translateY(30px);
+      transition: transform 0.4s ease;
+    }
+
+    .info-overlay.visible .info-panel {
+      transform: translateY(0);
+    }
+
+    .info-panel .info-title {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: clamp(1.8rem, 5vw, 3rem);
+      color: var(--text-light);
+      line-height: 1.15;
+      margin-bottom: 6px;
+    }
+
+    .info-panel .info-subtitle {
+      font-family: 'Inter', sans-serif;
+      font-size: clamp(0.95rem, 2.5vw, 1.3rem);
+      color: var(--text-dim);
+      margin-bottom: 16px;
+      font-weight: 500;
+    }
+
+    .info-panel .info-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .info-panel .info-tag {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(0.8rem, 2vw, 1rem);
+      letter-spacing: 0.1em;
+      color: var(--gold-light);
+      background: rgba(200, 160, 50, 0.12);
+      padding: 4px 12px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .info-panel .info-player {
+      font-family: 'Inter', sans-serif;
+      font-size: clamp(0.7rem, 1.5vw, 0.9rem);
+      color: var(--text-dim);
+      opacity: 0.7;
+    }
+
+    .info-panel .info-hint {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      opacity: 0.4;
+      margin-top: 16px;
+      text-align: center;
+    }
+
   </style>
 </head>
 <body>
@@ -374,6 +462,17 @@
         <div class="player-name" id="playerName"></div>
       </div>
 
+      <!-- INFO OVERLAY (tap to show) -->
+      <div class="info-overlay" id="infoOverlay">
+        <div class="info-panel">
+          <div class="info-title" id="infoTitle"></div>
+          <div class="info-subtitle" id="infoSubtitle"></div>
+          <div class="info-meta" id="infoMeta"></div>
+          <div class="info-player" id="infoPlayer"></div>
+          <div class="info-hint">Tap anywhere to dismiss</div>
+        </div>
+      </div>
+
       <div class="idle-wrap">
         <div class="idle-content visible" id="idleContent">
           <svg class="idle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -400,6 +499,7 @@
     const POLL_INTERVAL = 5000;
     const PLEX_USERNAME = 'YOUR_PLEX_USERNAME';
     const PLEX_PLAYER = '';  // Optional: set to a specific entity_id (e.g., 'media_player.plex_plex_for_lg_tv') to only show media from that player. Leave empty to show any player for your user.
+    const LANDSCAPE_MODE = false;  // Set to true to fit the entire poster on screen (adds letterboxing). Default: false (poster fills the screen, may crop edges).
 
     // ===== DOM REFS =====
     const posterArea = document.getElementById('posterArea');
@@ -418,6 +518,81 @@
     // ===== STATE =====
     let currentMediaKey = '';
     let isShowingMedia = false;
+    let currentMediaData = null;
+    let infoTimeout = null;
+    const infoOverlay = document.getElementById('infoOverlay');
+    const infoTitle = document.getElementById('infoTitle');
+    const infoSubtitle = document.getElementById('infoSubtitle');
+    const infoMeta = document.getElementById('infoMeta');
+    const infoPlayer = document.getElementById('infoPlayer');
+    const posterSection = document.getElementById('posterSection');
+
+    // Apply landscape mode
+    if (LANDSCAPE_MODE) {
+      document.getElementById('frameWrapper').classList.add('landscape-mode');
+    }
+
+    // Tap to show/hide info
+    posterSection.addEventListener('click', (e) => {
+      if (!isShowingMedia || !currentMediaData) return;
+      if (infoOverlay.classList.contains('visible')) {
+        hideInfo();
+      } else {
+        showInfo();
+      }
+    });
+
+    function showInfo() {
+      if (!currentMediaData) return;
+      const d = currentMediaData;
+
+      // Title
+      infoTitle.textContent = d.seriesTitle || d.title;
+
+      // Subtitle
+      if (d.seriesTitle) {
+        let sub = d.title;
+        if (d.season && d.episode) {
+          sub = `S${String(d.season).padStart(2,'0')}E${String(d.episode).padStart(2,'0')} · ${d.title}`;
+        }
+        infoSubtitle.textContent = sub;
+      } else {
+        infoSubtitle.textContent = '';
+      }
+
+      // Meta tags
+      let tags = [];
+      let typeLabel = 'Movie';
+      if (d.contentType === 'tvshow' || d.contentType === 'episode' || d.seriesTitle) {
+        typeLabel = 'TV Series';
+      } else if (d.contentType === 'music') {
+        typeLabel = 'Music';
+      }
+      tags.push(typeLabel);
+      if (d.contentRating) tags.push(d.contentRating);
+      if (d.duration) {
+        const mins = Math.round(d.duration / 60);
+        const hrs = Math.floor(mins / 60);
+        const rem = mins % 60;
+        tags.push(hrs > 0 ? `${hrs}h ${rem}m` : `${mins}m`);
+      }
+      if (d.state === 'paused') tags.push('Paused');
+      infoMeta.innerHTML = tags.map(t => `<span class="info-tag">${t}</span>`).join('');
+
+      // Player
+      infoPlayer.textContent = `Playing on ${d.playerName}`;
+
+      infoOverlay.classList.add('visible');
+
+      // Auto-hide after 8 seconds
+      clearTimeout(infoTimeout);
+      infoTimeout = setTimeout(hideInfo, 8000);
+    }
+
+    function hideInfo() {
+      infoOverlay.classList.remove('visible');
+      clearTimeout(infoTimeout);
+    }
 
     // ===== OUTER BULB LIGHTS (around screen edge) =====
     function createOuterBulbs() {
@@ -514,7 +689,9 @@
             playerName: attrs.friendly_name || playerState.entity_id,
             state: playerState.state,
             season: attrs.media_season || '',
-            episode: attrs.media_episode || ''
+            episode: attrs.media_episode || '',
+            contentRating: attrs.media_content_rating || '',
+            duration: attrs.media_duration || 0
           };
         }
 
@@ -550,7 +727,9 @@
           playerName: attrs.friendly_name || player.entity_id,
           state: player.state,
           season: attrs.media_season || '',
-          episode: attrs.media_episode || ''
+          episode: attrs.media_episode || '',
+          contentRating: attrs.media_content_rating || '',
+          duration: attrs.media_duration || 0
         };
       } catch (err) {
         console.warn('Fetch error:', err);
@@ -569,6 +748,8 @@
       if (mediaKey === currentMediaKey && isShowingMedia) return;
       currentMediaKey = mediaKey;
       isShowingMedia = true;
+      currentMediaData = data;
+      hideInfo();
 
       // Update poster background image
       const img = new Image();
@@ -625,6 +806,8 @@
 
       isShowingMedia = false;
       currentMediaKey = '';
+      currentMediaData = null;
+      hideInfo();
 
       posterArea.classList.remove('loaded');
       posterArea.style.backgroundImage = '';
