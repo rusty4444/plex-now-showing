@@ -408,6 +408,37 @@
       text-transform: uppercase;
     }
 
+    .info-panel .info-summary {
+      font-family: 'Inter', sans-serif;
+      font-size: clamp(0.85rem, 2vw, 1.05rem);
+      color: var(--text-light);
+      opacity: 0.85;
+      line-height: 1.55;
+      margin-bottom: 16px;
+      display: -webkit-box;
+      -webkit-line-clamp: 5;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .info-panel .info-techbox {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .info-panel .info-tech {
+      font-family: 'Inter', sans-serif;
+      font-size: clamp(0.65rem, 1.5vw, 0.8rem);
+      font-weight: 500;
+      color: var(--text-dim);
+      background: rgba(255, 255, 255, 0.06);
+      padding: 3px 10px;
+      border-radius: 3px;
+      letter-spacing: 0.03em;
+    }
+
     .info-panel .info-player {
       font-family: 'Inter', sans-serif;
       font-size: clamp(0.7rem, 1.5vw, 0.9rem);
@@ -468,6 +499,8 @@
           <div class="info-title" id="infoTitle"></div>
           <div class="info-subtitle" id="infoSubtitle"></div>
           <div class="info-meta" id="infoMeta"></div>
+          <div class="info-summary" id="infoSummary"></div>
+          <div class="info-techbox" id="infoTech"></div>
           <div class="info-player" id="infoPlayer"></div>
           <div class="info-hint">Tap anywhere to dismiss</div>
         </div>
@@ -500,6 +533,8 @@
     const PLEX_USERNAME = 'YOUR_PLEX_USERNAME';
     const PLEX_PLAYER = '';  // Optional: set to a specific entity_id (e.g., 'media_player.plex_plex_for_lg_tv') to only show media from that player. Leave empty to show any player for your user.
     const LANDSCAPE_MODE = false;  // Set to true to fit the entire poster on screen (adds letterboxing). Default: false (poster fills the screen, may crop edges).
+    const PLEX_URL = '';  // Optional: Plex server URL for fetching media file info (resolution, codec, bitrate). Leave empty to skip.
+    const PLEX_TOKEN = '';  // Optional: Plex token (needed if PLEX_URL is set).
 
     // ===== DOM REFS =====
     const posterArea = document.getElementById('posterArea');
@@ -520,10 +555,13 @@
     let isShowingMedia = false;
     let currentMediaData = null;
     let infoTimeout = null;
+    let cachedMediaInfo = {};  // Cache Plex media info by ratingKey
     const infoOverlay = document.getElementById('infoOverlay');
     const infoTitle = document.getElementById('infoTitle');
     const infoSubtitle = document.getElementById('infoSubtitle');
     const infoMeta = document.getElementById('infoMeta');
+    const infoSummary = document.getElementById('infoSummary');
+    const infoTech = document.getElementById('infoTech');
     const infoPlayer = document.getElementById('infoPlayer');
     const posterSection = document.getElementById('posterSection');
 
@@ -542,7 +580,46 @@
       }
     });
 
-    function showInfo() {
+    // Fetch media file info from Plex API
+    async function fetchPlexMediaInfo(ratingKey) {
+      if (!PLEX_URL || !PLEX_TOKEN || !ratingKey) return null;
+      if (cachedMediaInfo[ratingKey]) return cachedMediaInfo[ratingKey];
+      try {
+        const resp = await fetch(`${PLEX_URL}/library/metadata/${ratingKey}?X-Plex-Token=${PLEX_TOKEN}`, {
+          headers: { 'Accept': 'application/json' }
+        });
+        if (!resp.ok) return null;
+        const data = await resp.json();
+        const item = data?.MediaContainer?.Metadata?.[0];
+        if (!item || !item.Media || !item.Media[0]) return null;
+        const media = item.Media[0];
+        const part = media.Part?.[0];
+        const videoStream = part?.Stream?.find(s => s.streamType === 1);
+        const audioStream = part?.Stream?.find(s => s.streamType === 2);
+        const info = {
+          videoResolution: media.videoResolution ? media.videoResolution.toUpperCase() : '',
+          videoCodec: (media.videoCodec || '').toUpperCase(),
+          videoProfile: media.videoProfile || '',
+          videoBitDepth: videoStream?.bitDepth || '',
+          hdr: videoStream?.DOVIPresent ? 'Dolby Vision' : (videoStream?.colorTrc === 'smpte2084' || videoStream?.colorTrc === 'arib-std-b67') ? 'HDR' : '',
+          audioCodec: (media.audioCodec || '').toUpperCase(),
+          audioChannels: media.audioChannels || '',
+          audioTitle: audioStream?.displayTitle || '',
+          bitrate: media.bitrate || 0,
+          container: (media.container || '').toUpperCase(),
+          fileSize: part?.size || 0,
+          width: media.width || 0,
+          height: media.height || 0
+        };
+        cachedMediaInfo[ratingKey] = info;
+        return info;
+      } catch (err) {
+        console.warn('Plex media info fetch error:', err);
+        return null;
+      }
+    }
+
+    async function showInfo() {
       if (!currentMediaData) return;
       const d = currentMediaData;
 
@@ -578,6 +655,45 @@
       }
       if (d.state === 'paused') tags.push('Paused');
       infoMeta.innerHTML = tags.map(t => `<span class="info-tag">${t}</span>`).join('');
+
+      // Synopsis
+      if (d.summary) {
+        infoSummary.textContent = d.summary;
+        infoSummary.style.display = 'block';
+      } else {
+        infoSummary.style.display = 'none';
+      }
+
+      // Media file info from Plex API
+      infoTech.innerHTML = '';
+      if (d.ratingKey && PLEX_URL) {
+        const mi = await fetchPlexMediaInfo(d.ratingKey);
+        if (mi) {
+          let techTags = [];
+          if (mi.width && mi.height) techTags.push(`${mi.width}×${mi.height}`);
+          if (mi.videoCodec) {
+            let vc = mi.videoCodec;
+            if (mi.videoProfile) vc += ` ${mi.videoProfile}`;
+            if (mi.videoBitDepth) vc += ` ${mi.videoBitDepth}bit`;
+            techTags.push(vc);
+          }
+          if (mi.hdr) techTags.push(mi.hdr);
+          if (mi.audioTitle) {
+            techTags.push(mi.audioTitle);
+          } else if (mi.audioCodec) {
+            let ac = mi.audioCodec;
+            if (mi.audioChannels) ac += ` ${mi.audioChannels === 6 ? '5.1' : mi.audioChannels === 8 ? '7.1' : mi.audioChannels + 'ch'}`;
+            techTags.push(ac);
+          }
+          if (mi.bitrate) techTags.push(`${Math.round(mi.bitrate / 1000 * 10) / 10} Mbps`);
+          if (mi.container) techTags.push(mi.container);
+          if (mi.fileSize) {
+            const gb = mi.fileSize / (1024 * 1024 * 1024);
+            techTags.push(gb >= 1 ? `${gb.toFixed(1)} GB` : `${Math.round(mi.fileSize / (1024 * 1024))} MB`);
+          }
+          infoTech.innerHTML = techTags.map(t => `<span class="info-tech">${t}</span>`).join('');
+        }
+      }
 
       // Player
       infoPlayer.textContent = `Playing on ${d.playerName}`;
@@ -691,7 +807,9 @@
             season: attrs.media_season || '',
             episode: attrs.media_episode || '',
             contentRating: attrs.media_content_rating || '',
-            duration: attrs.media_duration || 0
+            duration: attrs.media_duration || 0,
+            summary: attrs.media_summary || '',
+            ratingKey: attrs.media_content_id || ''
           };
         }
 
@@ -729,7 +847,9 @@
           season: attrs.media_season || '',
           episode: attrs.media_episode || '',
           contentRating: attrs.media_content_rating || '',
-          duration: attrs.media_duration || 0
+          duration: attrs.media_duration || 0,
+          summary: attrs.media_summary || '',
+          ratingKey: attrs.media_content_id || ''
         };
       } catch (err) {
         console.warn('Fetch error:', err);
