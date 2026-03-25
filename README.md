@@ -16,7 +16,9 @@ Features animated chase bulb lights, a red curtain banner, poster art with title
 - Red curtain banner with "NOW SHOWING" text
 - Full-bleed poster art from the currently playing media
 - Title, episode info (for TV), and playback state overlays
-- Filters to a specific Plex user so other users' playback doesn't show up
+- **Tap for info** — tap the poster to see synopsis, content rating, duration, and media file details (resolution, codec, audio, bitrate, file size)
+- **Landscape mode** — optional flag to fit the entire poster on widescreen displays
+- Filters to a specific Plex user or specific player so other users' playback doesn't show up
 - Idle state when nothing is playing
 - Optional automation to switch a Fully Kiosk Browser tablet between your dashboard and the Now Showing page
 
@@ -58,9 +60,13 @@ const HA_URL = 'http://YOUR_HA_IP:8123';           // Your Home Assistant URL
 const HA_TOKEN = 'YOUR_LONG_LIVED_ACCESS_TOKEN';    // HA long-lived access token
 const PLEX_USERNAME = 'your_plex_username';          // Your Plex username (filters to only your playback)
 const PLEX_PLAYER = '';                              // Optional: lock to a specific player (e.g., 'media_player.plex_plex_for_lg_tv')
+const PLEX_URL = '';                                 // Optional: Plex server URL for media file info
+const PLEX_TOKEN = '';                               // Optional: Plex token for media file info
 ```
 
 `PLEX_PLAYER` is optional. When set to a specific `media_player` entity ID, the page will only show media from that player. When left empty, it shows media from any active player for your Plex user. You can find your player entity IDs in **Developer Tools → States** by searching for `media_player.plex_`.
+
+`PLEX_URL` and `PLEX_TOKEN` are optional. When configured, the info overlay will show detailed media file information (resolution, codec, bitrate, audio format, file size). Without them, the info overlay still works but only shows what Home Assistant provides (title, synopsis, duration, content rating).
 
 To create a long-lived access token:
 1. Go to your HA profile (click your name in the sidebar)
@@ -98,6 +104,26 @@ If you want a Fully Kiosk Browser tablet to automatically switch to the Now Show
 
 ---
 
+## Tap for Info
+
+Tap anywhere on the poster while media is playing to show an info panel. It slides up from the bottom and shows:
+
+- Title and episode info
+- Media type (Movie / TV Series), content rating, and duration
+- **Synopsis** (pulled from the Plex integration's `media_summary` attribute)
+- **Media file details** (requires `PLEX_URL` and `PLEX_TOKEN` to be configured):
+  - Resolution (e.g., 1920×1080)
+  - Video codec, profile, and bit depth (e.g., HEVC Main 10bit)
+  - HDR / Dolby Vision (if applicable)
+  - Audio format (e.g., English EAC3 5.1)
+  - Bitrate (e.g., 4.2 Mbps)
+  - Container and file size (e.g., MKV, 2.3 GB)
+- Player name
+
+The panel auto-dismisses after 8 seconds, or tap again to close it.
+
+---
+
 ## Customization
 
 | Setting | Where | Default |
@@ -105,10 +131,17 @@ If you want a Fully Kiosk Browser tablet to automatically switch to the Now Show
 | Poll interval | `POLL_INTERVAL` in script | 5000ms (5 seconds) |
 | Plex username filter | `PLEX_USERNAME` in script | Your Plex username |
 | Specific player only | `PLEX_PLAYER` in script | Empty (any player for your user) |
+| Landscape mode | `LANDSCAPE_MODE` in script | `false` (poster fills screen, may crop) |
+| Plex server URL | `PLEX_URL` in script | Empty (media file info disabled) |
+| Plex token | `PLEX_TOKEN` in script | Empty |
 | Marquee text size | `.marquee-text h1` font-size in CSS | `clamp(3.5rem, 10vw, 8rem)` |
 | Bulb size | `.bulb` width/height in CSS | 28px |
 | Bulb spacing | `spacing` in `createOuterBulbs()` | 42px |
 | Chase animation speed | `setInterval(animateChase, ...)` | 500ms |
+
+### Landscape Mode
+
+If you're using a landscape/widescreen display instead of a portrait tablet, set `LANDSCAPE_MODE = true`. This fits the entire poster on screen with letterboxing (black bars) instead of cropping to fill.
 
 ---
 
