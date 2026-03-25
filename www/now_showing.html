@@ -206,6 +206,31 @@
       background-size: contain;
     }
 
+    /* Blurred background fill for landscape mode (replaces black bars) */
+    .poster-bg-blur {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+      filter: blur(30px) brightness(0.3);
+      transform: scale(1.1);
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+
+    .landscape-mode .poster-bg-blur {
+      display: block;
+    }
+
+    .poster-bg-blur.loaded {
+      opacity: 1;
+    }
+
     .poster-area.loaded {
       opacity: 1;
     }
@@ -477,7 +502,9 @@
 
     <!-- POSTER SECTION (fills remaining space) -->
     <div class="poster-section" id="posterSection">
-      <!-- Poster background -->
+      <!-- Blurred background for landscape mode -->
+      <div class="poster-bg-blur" id="posterBgBlur"></div>
+      <!-- Poster foreground -->
       <div class="poster-area" id="posterArea"></div>
 
       <!-- Overlays on top of poster -->
@@ -538,6 +565,7 @@
 
     // ===== DOM REFS =====
     const posterArea = document.getElementById('posterArea');
+    const posterBgBlur = document.getElementById('posterBgBlur');
     const posterOverlay = document.getElementById('posterOverlay');
     const posterTitle = document.getElementById('posterTitle');
     const titleText = document.getElementById('titleText');
@@ -876,8 +904,12 @@
       img.onload = () => {
         posterArea.style.backgroundImage = `url(${artworkUrl})`;
         posterArea.classList.add('loaded');
+        // Also update blurred background for landscape mode
+        posterBgBlur.style.backgroundImage = `url(${artworkUrl})`;
+        posterBgBlur.classList.add('loaded');
       };
       posterArea.classList.remove('loaded');
+      posterBgBlur.classList.remove('loaded');
       img.src = artworkUrl;
 
       // Show overlay and title
@@ -931,6 +963,8 @@
 
       posterArea.classList.remove('loaded');
       posterArea.style.backgroundImage = '';
+      posterBgBlur.classList.remove('loaded');
+      posterBgBlur.style.backgroundImage = '';
       posterOverlay.style.display = 'none';
       posterTitle.style.display = 'none';
       mediaInfo.classList.remove('visible');
