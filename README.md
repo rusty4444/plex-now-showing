@@ -167,6 +167,8 @@ Using Kodi instead of Plex? Check out [kodi-now-showing](https://github.com/rust
 
 Using Jellyfin? Check out [jellyfin-now-showing](https://github.com/rusty4444/jellyfin-now-showing) and [jellyfin-recently-added-card](https://github.com/rusty4444/jellyfin-recently-added-card).
 
+Using Emby? Check out [emby-now-showing](https://github.com/rusty4444/emby-now-showing) and [emby-recently-added-card](https://github.com/rusty4444/emby-recently-added-card).
+
 ---
 
 ## Credits
