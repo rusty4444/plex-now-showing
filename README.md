@@ -7,7 +7,13 @@ Features animated chase bulb lights, a red curtain banner, poster art with title
 ![Platform](https://img.shields.io/badge/Platform-Home_Assistant-blue)
 
 <p align="center">
-  <img src="screenshots/now-showing.jpg" alt="Now Showing Marquee" width="400">
+  <img src="screenshots/now-showing.jpg" alt="Now Showing Marquee" width="300">
+  &nbsp;&nbsp;
+  <img src="screenshots/info-overlay.jpg" alt="Tap for Info Overlay" width="300">
+</p>
+
+<p align="center">
+  <img src="screenshots/landscape-mode.jpg" alt="Landscape Mode with Blurred Background" width="620">
 </p>
 
 ## Features
