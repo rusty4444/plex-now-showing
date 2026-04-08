@@ -1,5 +1,13 @@
 # Plex Now Showing
 
+<p align="center">
+  <a href="https://buymeacoffee.com/rusty4" target="_blank">
+    <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="50">
+  </a>
+</p>
+
+
+
 A full-screen cinema marquee display for Home Assistant that shows what's currently playing on Plex. Designed for wall-mounted tablets using Fully Kiosk Browser.
 
 Features animated chase bulb lights, a red curtain banner, poster art with title overlays, and automatic switching between your dashboard and the Now Showing page.
