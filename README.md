@@ -169,13 +169,15 @@ If you're using a landscape/widescreen display instead of a portrait tablet, set
 
 ## Related
 
-Looking for a dashboard card showing recently added Plex media? Check out [plex-recently-added-card](https://github.com/rusty4444/plex-recently-added-card).
+Looking for a dashboard card showing recently added media? Check out [recently-added-media-card](https://github.com/rusty4444/recently-added-media-card) — a unified Lovelace card that supports Plex, Kodi, Jellyfin and Emby.
 
-Using Kodi instead of Plex? Check out [kodi-now-showing](https://github.com/rusty4444/kodi-now-showing) and [kodi-recently-added-card](https://github.com/rusty4444/kodi-recently-added-card).
+Want to show upcoming movies and TV episodes alongside your recently added media? Check out [coming-soon-card](https://github.com/rusty4444/coming-soon-card) — a companion card powered by Radarr, Sonarr and Trakt.
 
-Using Jellyfin? Check out [jellyfin-now-showing](https://github.com/rusty4444/jellyfin-now-showing) and [jellyfin-recently-added-card](https://github.com/rusty4444/jellyfin-recently-added-card).
+Using Kodi instead of Plex? Check out [kodi-now-showing](https://github.com/rusty4444/kodi-now-showing).
 
-Using Emby? Check out [emby-now-showing](https://github.com/rusty4444/emby-now-showing) and [emby-recently-added-card](https://github.com/rusty4444/emby-recently-added-card).
+Using Jellyfin? Check out [jellyfin-now-showing](https://github.com/rusty4444/jellyfin-now-showing).
+
+Using Emby? Check out [emby-now-showing](https://github.com/rusty4444/emby-now-showing).
 
 ---
 
