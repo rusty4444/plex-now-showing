@@ -173,6 +173,40 @@
       background: var(--bg-marquee);
     }
 
+    /* ===== BURN-IN MITIGATION (#28) =====
+       Two independent sub-features, both gated by body.visual-burn-in:
+         1. Pixel nudge — translate the whole body by ±N px on a slow loop so
+            no pixel sees the same content for more than ~60 s.
+         2. Night mode overlay — semi-transparent black layer that dims the
+            screen during overnight hours, driven by either an HA entity or
+            the OS-level prefers-color-scheme: dark media query. */
+
+    /* Pixel nudge: the JS sets --pns-nudge-x / -y on :root every interval,
+       and the long ease here turns each step into an invisible drift rather
+       than a visible jump. We use translate3d to keep it on the GPU. */
+    body.visual-burn-in {
+      transform: translate3d(var(--pns-nudge-x, 0px), var(--pns-nudge-y, 0px), 0);
+      transition: transform 400ms ease;
+      will-change: transform;
+    }
+
+    /* Night-mode dim overlay. position: fixed inset:0, lives above the
+       theatre chrome but under the info-overlay so a tap to inspect the
+       movie still works clearly. The opacity is driven by --pns-night-opacity
+       which the JS sets from the resolved config (default 0.4). */
+    .night-mode-overlay {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 18; /* above bulbs (10) and backdrop (15), below info-overlay (20) */
+      transition: opacity 1.5s ease;
+    }
+    body.night-mode .night-mode-overlay {
+      opacity: var(--pns-night-opacity, 0.4);
+    }
+
     /* ===== PLAYBACK PROGRESS BAR (#17) ===== */
     /* Hidden by default. Shown only when body.visual-progress-bar is set by
        the runtime-config loader. Matches the classic-gold theme: a gold
@@ -904,6 +938,11 @@
        so tap-to-peek still lands on the info panel. -->
   <div class="backdrop-image" id="backdropImage"></div>
 
+  <!-- #28 BURN-IN: night-mode dim overlay. Only visible when body.night-mode
+       is set; the JS toggles that based on either an HA entity poll or the
+       prefers-color-scheme media query. -->
+  <div class="night-mode-overlay" id="nightModeOverlay"></div>
+
   <!-- SETUP GEAR (reopen setup from the live display) -->
   <div class="setup-gear" id="setupGear" title="Open setup" style="display:none;">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -1169,6 +1208,9 @@
     // fleet without touching every tablet.
     const INFO_PANEL_MODES = ['on_tap', 'on_pause', 'always'];
     const BACKDROP_STYLES = ['fullscreen', 'ambient'];
+    // VISUAL holds the resolved values for every visual toggle. Defaults
+    // mirror the server-side defaults so a hard-refresh before /api/config
+    // resolves still renders sanely.
     const VISUAL = {
       progressBar: false,
       ratingsBadges: false,
@@ -1178,7 +1220,25 @@
       useBackdrops: false,
       backdropStyle: 'fullscreen', // 'fullscreen' | 'ambient'
       backdropDelayMs: 10000,
+      // #28 burn-in mitigation
+      burnInMitigation: false,
+      nudgeIntervalMs: 60000,
+      nudgeAmplitudePx: 4,
+      nightModeEntity: '',
+      nightModeOpacity: 0.4,
     };
+
+    // #28 helper — clamp a float read from URL hash / localStorage. Mirrors
+    // readIntClamped() defined further below but for floats (night mode
+    // opacity).
+    function readFloatClamped(key, defaultValue, min, max) {
+      const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
+      const raw = hash.get(key) || localStorage.getItem('pns.' + key);
+      if (raw == null || raw === '') return defaultValue;
+      const n = parseFloat(String(raw));
+      if (!Number.isFinite(n)) return defaultValue;
+      return Math.max(min, Math.min(max, n));
+    }
 
     function readInfoPanelMode(defaultValue) {
       // Hash override takes precedence over localStorage so tablet operators can
@@ -1221,6 +1281,16 @@
       VISUAL.useBackdrops = readBool('visualUseBackdrops', false);
       VISUAL.backdropStyle = readBackdropStyle('fullscreen');
       VISUAL.backdropDelayMs = readIntClamped('visualBackdropDelayMs', 10000, 1000, 600000);
+      // #28 burn-in mitigation — same precedence as the others.
+      VISUAL.burnInMitigation = readBool('visualBurnInMitigation', false);
+      VISUAL.nudgeIntervalMs  = readIntClamped('visualNudgeIntervalMs', 60000, 5000, 600000);
+      VISUAL.nudgeAmplitudePx = readIntClamped('visualNudgeAmplitudePx', 4, 1, 16);
+      {
+        const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
+        VISUAL.nightModeEntity = hash.get('visualNightModeEntity')
+          || localStorage.getItem('pns.visualNightModeEntity') || '';
+      }
+      VISUAL.nightModeOpacity = readFloatClamped('visualNightModeOpacity', 0.4, 0, 0.95);
 
       await serverModeReady;
       if (!SERVER_MODE) return;
@@ -1242,10 +1312,113 @@
         if (v && Number.isFinite(v.backdropDelayMs)) {
           VISUAL.backdropDelayMs = Math.max(1000, Math.min(600000, v.backdropDelayMs));
         }
+        if (v && typeof v.burnInMitigation === 'boolean') VISUAL.burnInMitigation = v.burnInMitigation;
+        if (v && Number.isFinite(v.nudgeIntervalMs))     VISUAL.nudgeIntervalMs   = v.nudgeIntervalMs;
+        if (v && Number.isFinite(v.nudgeAmplitudePx))    VISUAL.nudgeAmplitudePx  = v.nudgeAmplitudePx;
+        if (v && typeof v.nightModeEntity === 'string')  VISUAL.nightModeEntity   = v.nightModeEntity;
+        if (v && Number.isFinite(v.nightModeOpacity))    VISUAL.nightModeOpacity  = v.nightModeOpacity;
       } catch (err) {
         console.warn('[plex-now-showing] /api/config fetch failed — using local defaults.', err);
       }
     }
+
+    // ===== BURN-IN MITIGATION (#28) =====
+    //
+    // Two timers, both driven by the master `body.visual-burn-in` toggle:
+    //
+    //   1. Pixel nudge — every nudgeIntervalMs (60 s default) move the body
+    //      transform through a 5-step cycle: (0,0), (+a,0), (0,+a), (-a,0),
+    //      (0,-a). The CSS transition smooths each step into a 400 ms ease.
+    //   2. Night mode — every 60 s either poll /api/night-mode (when an HA
+    //      entity is configured) or read the prefers-color-scheme media
+    //      query. Toggle body.night-mode accordingly.
+    //
+    // Both timers are .stop()-able so a tablet that turns the master off
+    // (via setup form, hash, or server reload) doesn't leak intervals.
+    const burnInCtx = (() => {
+      const NUDGE_OFFSETS = [
+        [0, 0], [1, 0], [0, 1], [-1, 0], [0, -1],
+      ];
+      let nudgeTimer = null;
+      let nightTimer = null;
+      let nightMql = null;
+      let nightMqlHandler = null;
+      let nudgeStep = 0;
+
+      function applyNudge() {
+        const [sx, sy] = NUDGE_OFFSETS[nudgeStep % NUDGE_OFFSETS.length];
+        const a = VISUAL.nudgeAmplitudePx;
+        document.documentElement.style.setProperty('--pns-nudge-x', `${sx * a}px`);
+        document.documentElement.style.setProperty('--pns-nudge-y', `${sy * a}px`);
+        nudgeStep += 1;
+      }
+
+      async function evaluateNightMode() {
+        // Priority: server-resolved HA entity → prefers-color-scheme.
+        // The server reports `configured: false` when no entity is set, in
+        // which case we let the media query decide.
+        let on = false;
+        if (VISUAL.nightModeEntity && SERVER_MODE) {
+          try {
+            const r = await fetch('/api/night-mode', { cache: 'no-store' });
+            if (r.ok) {
+              const j = await r.json();
+              if (j && j.configured) {
+                on = !!j.on;
+              } else if (nightMql) {
+                on = nightMql.matches;
+              }
+            }
+          } catch (_) {
+            // Fall through to the media query so a brief HA blip doesn't
+            // strand the screen in the wrong mode.
+            if (nightMql) on = nightMql.matches;
+          }
+        } else if (nightMql) {
+          on = nightMql.matches;
+        }
+        document.body.classList.toggle('night-mode', on);
+      }
+
+      function start() {
+        stop(); // idempotent
+        // Reset the nudge to (0,0) at start so flipping the toggle doesn't
+        // leave the page mid-step.
+        nudgeStep = 0;
+        applyNudge();
+        nudgeTimer = setInterval(applyNudge, VISUAL.nudgeIntervalMs);
+
+        // Wire the prefers-color-scheme listener so an OS night-mode flip
+        // re-evaluates immediately, not just on the 60 s tick.
+        nightMql = window.matchMedia('(prefers-color-scheme: dark)');
+        nightMqlHandler = () => evaluateNightMode();
+        if (nightMql.addEventListener) nightMql.addEventListener('change', nightMqlHandler);
+        else if (nightMql.addListener)  nightMql.addListener(nightMqlHandler);
+
+        evaluateNightMode();
+        // 60 s is plenty — the entity rarely changes. We deliberately don't
+        // tie this to /api/state's faster cadence to avoid burning HA calls.
+        nightTimer = setInterval(evaluateNightMode, 60000);
+      }
+
+      function stop() {
+        if (nudgeTimer)  { clearInterval(nudgeTimer);  nudgeTimer  = null; }
+        if (nightTimer)  { clearInterval(nightTimer);  nightTimer  = null; }
+        if (nightMql && nightMqlHandler) {
+          if (nightMql.removeEventListener) nightMql.removeEventListener('change', nightMqlHandler);
+          else if (nightMql.removeListener) nightMql.removeListener(nightMqlHandler);
+        }
+        nightMql = null;
+        nightMqlHandler = null;
+        // Reset the transform vars so the page doesn't sit stuck mid-nudge
+        // when the user disables the feature.
+        document.documentElement.style.setProperty('--pns-nudge-x', '0px');
+        document.documentElement.style.setProperty('--pns-nudge-y', '0px');
+        document.body.classList.remove('night-mode');
+      }
+
+      return { start, stop };
+    })();
 
     function applyVisualToggles() {
       document.body.classList.toggle('visual-progress-bar', VISUAL.progressBar);
@@ -1266,6 +1439,19 @@
       document.body.classList.toggle('backdrop-ambient-mode', ambientOn);
       if (!VISUAL.useBackdrops || VISUAL.backdropStyle !== 'fullscreen') {
         document.body.classList.remove('backdrop-fullscreen-visible');
+      }
+
+      // #28 burn-in: master switch. The pixel-nudge transform is gated on
+      // body.visual-burn-in; the night-mode controller is started further
+      // down only when burn-in is on.
+      document.body.classList.toggle('visual-burn-in', VISUAL.burnInMitigation);
+      // Set the night-mode opacity custom property regardless — if night
+      // mode never activates the property is harmless.
+      document.documentElement.style.setProperty('--pns-night-opacity', String(VISUAL.nightModeOpacity));
+      if (VISUAL.burnInMitigation) {
+        burnInCtx.start();
+      } else {
+        burnInCtx.stop();
       }
     }
 

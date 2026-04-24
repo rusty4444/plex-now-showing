@@ -109,6 +109,34 @@ configuration:
       How long the player must stay paused before the fullscreen backdrop
       fades in. Defaults to 10000 (10 s) per spec; skip-intros / quick
       seeks shouldn't trigger the swap.
+  visual_burn_in_mitigation:
+    name: Burn-in mitigation
+    description: >-
+      Master switch for OLED burn-in protection. Off by default. When on,
+      the screen drifts by a few pixels every minute and an optional
+      overnight dim layer activates based on either an HA entity or the
+      OS prefers-color-scheme: dark setting.
+  visual_nudge_interval_ms:
+    name: Pixel nudge interval (ms)
+    description: >-
+      How often the page transform shifts by ± amplitude pixels. Default
+      60000 (one minute). Range 5000–600000.
+  visual_nudge_amplitude_px:
+    name: Pixel nudge amplitude (px)
+    description: >-
+      Maximum shift in either direction. 4 px is invisible mid-watch but
+      enough to rotate static pixels. Range 1–16.
+  visual_night_mode_entity:
+    name: Night-mode HA entity
+    description: >-
+      Optional Home Assistant entity (e.g. input_boolean.bedroom_kiosk_dim)
+      whose "on" state activates the night-mode dim overlay. Leave blank to
+      fall back to the OS prefers-color-scheme: dark media query.
+  visual_night_mode_opacity:
+    name: Night-mode dim opacity
+    description: >-
+      How dark the overnight overlay is. 0.4 reads as clearly dimmed but
+      the title is still legible from across the room. Range 0–0.95.
   log_level:
     name: Log level
     description: Verbosity of the add-on log.

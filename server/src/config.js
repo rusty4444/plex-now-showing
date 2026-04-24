@@ -78,6 +78,25 @@ export function loadConfig(env = process.env) {
       // Delay (ms) before the fullscreen backdrop fades in on pause. Spec
       // calls for >10 s so quick seeks / skip-intros don't trigger the swap.
       backdropDelayMs: parseIntClamped(env.VISUAL_BACKDROP_DELAY_MS, 10000, 1000, 600000),
+      // Burn-in mitigation (#28). Master switch + sub-features. Designed for
+      // 24/7 OLED kiosks where the same poster, marquee, and bulb pattern
+      // would otherwise sit on the same pixels for hours. Default off so
+      // LCD/short-session installs see no behaviour change.
+      burnInMitigation: parseBool(env.VISUAL_BURN_IN_MITIGATION, false),
+      // Pixel nudge: cycle the body through ±N px every N ms. Small enough
+      // to be invisible mid-watch, large enough to rotate static pixels off
+      // any given OLED sub-pixel cell.
+      nudgeIntervalMs: parseIntClamped(env.VISUAL_NUDGE_INTERVAL_MS, 60000, 5000, 600000),
+      nudgeAmplitudePx: parseIntClamped(env.VISUAL_NUDGE_AMPLITUDE_PX, 4, 1, 16),
+      // Night mode: dims the screen overnight. Two triggers, evaluated in
+      // priority order:
+      //   1. HA input_boolean (or any on/off entity) named below
+      //   2. browser prefers-color-scheme: dark fallback
+      // Empty entity = HA path is skipped, falls through to media query.
+      nightModeEntity: env.VISUAL_NIGHT_MODE_ENTITY || '',
+      // Overlay opacity when night mode is active. 0.4 reads as "clearly
+      // dimmed but the title is still legible from across the room".
+      nightModeOpacity: parseFloatClamped(env.VISUAL_NIGHT_MODE_OPACITY, 0.4, 0, 0.95),
     },
     // Where the static HTML lives (overridden in tests)
     staticDir: env.STATIC_DIR || new URL('../../www', import.meta.url).pathname,
@@ -105,6 +124,13 @@ function parseEnum(v, allowed, defaultValue) {
   if (v == null || v === '') return defaultValue;
   const s = String(v).trim().toLowerCase();
   return allowed.includes(s) ? s : defaultValue;
+}
+
+function parseFloatClamped(v, defaultValue, min, max) {
+  if (v == null || v === '') return defaultValue;
+  const n = parseFloat(String(v));
+  if (!Number.isFinite(n)) return defaultValue;
+  return Math.min(Math.max(n, min), max);
 }
 
 function validate(c) {
