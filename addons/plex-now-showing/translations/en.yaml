@@ -137,6 +137,20 @@ configuration:
     description: >-
       How dark the overnight overlay is. 0.4 reads as clearly dimmed but
       the title is still legible from across the room. Range 0–0.95.
+  visual_theme:
+    name: Visual theme preset
+    description: >-
+      Top-level look-and-feel. "classic-gold" (default) keeps the warm
+      cinema-bulb vibe. "art-deco-silver" uses cooler chrome highlights.
+      "neon-80s" leans into hot pink + cyan. "minimalist-dark" drops the
+      ornament for a clean dark UI.
+  visual_accent_color:
+    name: Accent colour override
+    description: >-
+      Optional #RRGGBB hex (e.g. #ff5500) that overrides the active theme's
+      accent ramp — bulbs, marquee text glow, progress bar, and ratings
+      badges all derive from it. Leave blank to use the theme's default
+      ramp. Short form (#abc) and named colours are rejected.
   log_level:
     name: Log level
     description: Verbosity of the add-on log.

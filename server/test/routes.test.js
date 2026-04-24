@@ -120,8 +120,29 @@ test('GET /api/config defaults every visual toggle off', async () => {
         nudgeAmplitudePx: 4,
         nightModeEntity: '',
         nightModeOpacity: 0.4,
+        theme: 'classic-gold',
+        accentColor: '',
       },
     });
+  } finally { server.close(); }
+});
+
+test('GET /api/config surfaces theme + accentColor when configured', async () => {
+  const haClient = { getStates: async () => haStates };
+  const { server, url } = await startApp(
+    baseConfig({
+      visual: {
+        progressBar: false, ratingsBadges: false, infoPanelMode: 'on_tap',
+        theme: 'neon-80s',
+        accentColor: '#ff00aa',
+      },
+    }),
+    haClient,
+  );
+  try {
+    const body = await fetch(`${url}/api/config`).then(r => r.json());
+    assert.equal(body.visual.theme, 'neon-80s');
+    assert.equal(body.visual.accentColor, '#ff00aa');
   } finally { server.close(); }
 });
 

@@ -70,6 +70,11 @@ export_opt VISUAL_NUDGE_INTERVAL_MS   visual_nudge_interval_ms
 export_opt VISUAL_NUDGE_AMPLITUDE_PX  visual_nudge_amplitude_px
 export_opt VISUAL_NIGHT_MODE_ENTITY   visual_night_mode_entity
 export_opt VISUAL_NIGHT_MODE_OPACITY  visual_night_mode_opacity
+# Theme presets (#23) + accent colour picker (#66). Theme is one of
+# classic-gold|art-deco-silver|neon-80s|minimalist-dark; accent colour is
+# a strict #RRGGBB override (empty = use theme's default ramp).
+export_opt VISUAL_THEME               visual_theme
+export_opt VISUAL_ACCENT_COLOR        visual_accent_color
 
 # ---- Diagnostics (no secrets) ----
 bashio::log.info "Plex URL configured:      $([[ -n "${PLEX_URL}"   ]] && echo yes || echo no)"
@@ -89,6 +94,8 @@ bashio::log.info "Visual genre chips:       ${VISUAL_GENRE_CHIPS:-false}"
 bashio::log.info "Info panel mode:          ${VISUAL_INFO_PANEL_MODE:-on_tap}"
 bashio::log.info "Backdrop art:             ${VISUAL_USE_BACKDROPS:-false} (${VISUAL_BACKDROP_STYLE:-fullscreen}, delay ${VISUAL_BACKDROP_DELAY_MS:-10000}ms)"
 bashio::log.info "Burn-in mitigation:       ${VISUAL_BURN_IN_MITIGATION:-false} (nudge ${VISUAL_NUDGE_AMPLITUDE_PX:-4}px every ${VISUAL_NUDGE_INTERVAL_MS:-60000}ms, night entity=${VISUAL_NIGHT_MODE_ENTITY:-<none>}, opacity=${VISUAL_NIGHT_MODE_OPACITY:-0.4})"
+bashio::log.info "Visual theme:             ${VISUAL_THEME:-classic-gold}"
+bashio::log.info "Accent colour override:   ${VISUAL_ACCENT_COLOR:-<theme default>}"
 bashio::log.info "Switcher enabled:         ${SWITCHER_ENABLED:-false}"
 if bashio::var.true "${SWITCHER_ENABLED:-false}"; then
   kiosk_count=$(bashio::config 'fully_kiosks | length')

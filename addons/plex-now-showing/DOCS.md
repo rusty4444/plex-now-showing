@@ -47,6 +47,8 @@ and HA tokens never leave the add-on.
 | `visual_nudge_amplitude_px` | `4` | Maximum shift in pixels. Clamped to `1` – `16`. |
 | `visual_night_mode_entity` | _empty_ | Optional HA `input_boolean` / `switch` / `binary_sensor`. When `on`, dims the kiosk. Leave empty to fall back to the OS `prefers-color-scheme: dark` media query. |
 | `visual_night_mode_opacity` | `0.4` | Dim overlay opacity when night mode is active. Clamped to `0` – `0.95`. |
+| `visual_theme` | `classic-gold` | Theme preset — one of `classic-gold` / `art-deco-silver` / `neon-80s` / `minimalist-dark`. Reskins the bulbs, marquee glow, progress bar, and ratings badges. |
+| `visual_accent_color` | _empty_ | Optional `#RRGGBB` hex (e.g. `#ff5500`) that overrides the active theme's accent ramp. Empty = use theme default. Strict format — short form, names, and `rgb()` are rejected. |
 | `log_level` | `info` | s6 / add-on log verbosity. |
 
 ### Visual toggles (V2)
@@ -64,6 +66,7 @@ through to the browser automatically — no rebuild, no per-tablet config.
 | `visual_use_backdrops` / `visual_backdrop_style` / `visual_backdrop_delay_ms` | Backdrop art on pause (#21). **Master switch** is `visual_use_backdrops`. **Style** picks between `fullscreen` (after the item has been paused for `visual_backdrop_delay_ms`, the poster view crossfades to the Plex fanart — landscape orientations only, portrait is silently skipped because fanart crops look bad there) and `ambient` (a blurred + darkened copy of the fanart replaces the yellow bulb-lit background whenever media is active; works on both orientations because the blur makes aspect ratio moot). Images are proxied through the server at `/api/plex-art?path=…` so the Plex token never leaves the server. Requires `plex_url` + `plex_token`. |
 | `visual_burn_in_mitigation` | Master switch for long-running-kiosk protection. When on, the whole UI drifts by a few pixels every minute (configurable via `visual_nudge_interval_ms` + `visual_nudge_amplitude_px`) using a smooth 400 ms GPU transform, and a dim overlay can be triggered by an HA entity or the OS dark-mode media query. Off by default. |
 | `visual_night_mode_entity` | Optional HA entity id (`input_boolean`, `switch`, or `binary_sensor`). When its state is `on`, the kiosk fades in a dim overlay (opacity from `visual_night_mode_opacity`, default 40%). Leave empty and the kiosk uses `window.matchMedia('(prefers-color-scheme: dark)')` instead — handy for tablets that flip themselves at night. Requires `visual_burn_in_mitigation: true`. |
+| `visual_theme` / `visual_accent_color` | Top-level look-and-feel (#23 + #66). `visual_theme` picks one of four presets via `<body data-theme>`: `classic-gold` (default, original warm bulb look), `art-deco-silver` (cooler chrome highlights and brushed-metal glow), `neon-80s` (hot pink + cyan with magenta bulbs), or `minimalist-dark` (clean dark UI, ornament backed off). `visual_accent_color` is an optional strict `#RRGGBB` override (e.g. `#ff5500`) that re-derives the four-stop accent ramp via CSS `color-mix(in srgb, ...)` — leave blank to use the theme's default ramp. Both are presentation-only; nothing on the server changes. |
 
 HACS-only users (no add-on / server) can flip any visual toggle per tablet
 by setting `pns.visualProgressBar=true` / `pns.visualRatingsBadges=true` /
@@ -71,12 +74,15 @@ by setting `pns.visualProgressBar=true` / `pns.visualRatingsBadges=true` /
 `pns.visualUseBackdrops=true` / `pns.visualBackdropStyle=ambient` /
 `pns.visualBurnInMitigation=true` (with optional
 `pns.visualNudgeIntervalMs`, `pns.visualNudgeAmplitudePx`,
-`pns.visualNightModeEntity`, `pns.visualNightModeOpacity`) in
+`pns.visualNightModeEntity`, `pns.visualNightModeOpacity`) /
+`pns.visualTheme=art-deco-silver` /
+`pns.visualAccentColor=#ff5500` in
 `localStorage`, or adding the matching
 `#visualProgressBar=true` / `#visualRatingsBadges=true` /
 `#visualGenreChips=true` / `#visualInfoPanelMode=always` /
 `#visualUseBackdrops=true` / `#visualBackdropStyle=ambient` /
-`#visualBurnInMitigation=true`
+`#visualBurnInMitigation=true` /
+`#visualTheme=neon-80s` / `#visualAccentColor=%23ff5500`
 to the kiosk URL hash.
 
 ### Fully Kiosk auto-switcher (#48)
