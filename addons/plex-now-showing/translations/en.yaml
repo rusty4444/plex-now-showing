@@ -48,6 +48,22 @@ configuration:
     description: >-
       Allowlist for the Origin header on /api/*. One URL per line, e.g.
       http://tablet.lan:8099. Leave empty for Ingress-only use.
+  switcher_enabled:
+    name: Fully Kiosk auto-switcher
+    description: >-
+      Turn on to make the add-on itself drive your Fully Kiosk tablets. Only
+      enable this if you’re NOT using the HA Blueprint — pick one to avoid
+      duplicate triggers.
+  switcher_interval_ms:
+    name: Switcher tick interval (ms)
+    description: How often the switcher polls HA for play/stop transitions.
+  fully_kiosks:
+    name: Fully Kiosk tablets
+    description: >-
+      One entry per tablet. “Host” is the Fully REST URL (e.g.
+      http://tablet.lan:2323). “Password” is the Remote Admin password set
+      in Fully. “Playing URL” is loaded when Plex starts. “Stopped URL” is
+      loaded when Plex stops — leave empty to return to Fully’s start URL.
   log_level:
     name: Log level
     description: Verbosity of the add-on log.

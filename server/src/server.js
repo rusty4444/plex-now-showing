@@ -15,6 +15,7 @@ import { dirname, join } from 'node:path';
 import { loadConfig } from './config.js';
 import { createCache } from './cache.js';
 import { createHaClient } from './ha.js';
+import { createSwitcher, parseKiosks } from './switcher.js';
 import { rootRoute } from './routes/root.js';
 import { healthzRoute } from './routes/healthz.js';
 import { stateRoute } from './routes/state.js';
@@ -81,6 +82,29 @@ if (isDirectRun) {
   }
   const haClient = createHaClient({ haUrl: config.haUrl, haToken: config.haToken });
   const app = createApp({ config, haClient });
+
+  // Optional Fully Kiosk auto-switcher (#48).
+  if (config.switcherEnabled) {
+    let kiosks = [];
+    try {
+      kiosks = parseKiosks(config.fullyKiosksRaw);
+    } catch (err) {
+      console.error(`[switcher] config error: ${err.message}`);
+      process.exit(1);
+    }
+    const switcher = createSwitcher({
+      haClient,
+      config,
+      kiosks,
+      intervalMs: config.switcherIntervalMs,
+    });
+    switcher.start();
+    // Clean shutdown so Supervisor's SIGTERM doesn't leave a dangling timer.
+    for (const sig of ['SIGTERM', 'SIGINT']) {
+      process.on(sig, () => { switcher.stop(); process.exit(0); });
+    }
+  }
+
   app.listen(config.port, () => {
     console.log(`plex-now-showing-server v${pkg.version} listening on :${config.port} (mode=${config.mode})`);
   });

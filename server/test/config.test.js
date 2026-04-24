@@ -46,3 +46,20 @@ test('TTL defaults match spec (3 s state, 10 min media-info)', () => {
   assert.equal(config.stateTtl, 3000);
   assert.equal(config.mediaInfoTtl, 600000);
 });
+
+test('switcher is off by default, on requires FULLY_KIOSKS', () => {
+  const off = loadConfig({ SUPERVISOR_TOKEN: 'x' });
+  assert.equal(off.config.switcherEnabled, false);
+  assert.equal(off.errors.filter(e => e.includes('FULLY_KIOSKS')).length, 0);
+
+  const enabledNoKiosks = loadConfig({ SUPERVISOR_TOKEN: 'x', SWITCHER_ENABLED: 'true' });
+  assert.equal(enabledNoKiosks.config.switcherEnabled, true);
+  assert.ok(enabledNoKiosks.errors.some(e => e.includes('FULLY_KIOSKS')));
+
+  const enabled = loadConfig({
+    SUPERVISOR_TOKEN: 'x',
+    SWITCHER_ENABLED: 'true',
+    FULLY_KIOSKS: 'http://t:2323|pw|http://srv/a',
+  });
+  assert.deepEqual(enabled.errors, []);
+});
