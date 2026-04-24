@@ -1,0 +1,41 @@
+{
+  "MediaContainer": {
+    "size": 1,
+    "Metadata": [
+      {
+        "ratingKey": "12345",
+        "title": "Pilot",
+        "Media": [
+          {
+            "videoResolution": "4k",
+            "videoCodec": "hevc",
+            "videoProfile": "main 10",
+            "audioCodec": "eac3",
+            "audioChannels": 6,
+            "bitrate": 24000,
+            "container": "mkv",
+            "width": 3840,
+            "height": 2160,
+            "Part": [
+              {
+                "size": 12500000000,
+                "Stream": [
+                  {
+                    "streamType": 1,
+                    "bitDepth": 10,
+                    "colorTrc": "smpte2084",
+                    "DOVIPresent": false
+                  },
+                  {
+                    "streamType": 2,
+                    "displayTitle": "English (EAC3 5.1)"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

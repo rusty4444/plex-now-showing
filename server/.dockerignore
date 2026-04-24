@@ -1,0 +1,8 @@
+node_modules
+test
+fixtures
+*.md
+Dockerfile
+.dockerignore
+.git
+.gitignore
