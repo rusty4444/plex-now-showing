@@ -1,0 +1,65 @@
+# =============================================================================
+# Plex Now Showing — Docker Compose example (install path B, HA Container).
+#
+# For folks running Home Assistant Container (plain Docker) rather than HA OS
+# or Supervised. Same image as the HA add-on, just without Supervisor; you
+# provide HA_URL + HA_TOKEN yourself.
+#
+# Quick start:
+#   cp .env.example .env
+#   $EDITOR .env                 # fill HA_URL / HA_TOKEN (and optionally PLEX_*)
+#   docker compose -f docker-compose.example.yml up -d
+#   open http://<this-host>:8099/now_showing.html
+#
+# The image comes from the same GHCR publish as the HA add-on (#45) so you're
+# never more than one `docker compose pull` behind.
+# =============================================================================
+
+services:
+  plex-now-showing:
+    image: ghcr.io/rusty4444/plex-now-showing-${ARCH:-amd64}:${TAG:-latest}
+    container_name: plex-now-showing
+    restart: unless-stopped
+
+    # If you want to colocate with HA Container on the same docker network
+    # and reach it as `http://homeassistant:8123`, uncomment and adjust:
+    # networks:
+    #   - homeassistant
+
+    ports:
+      - "${HOST_PORT:-8099}:8099"
+
+    environment:
+      # ---- Home Assistant (required) ----
+      HA_URL: "${HA_URL}"
+      HA_TOKEN: "${HA_TOKEN}"
+
+      # ---- Plex (optional; needed for codec/HDR info panel) ----
+      PLEX_URL: "${PLEX_URL:-}"
+      PLEX_TOKEN: "${PLEX_TOKEN:-}"
+      PLEX_USERNAME: "${PLEX_USERNAME:-}"
+      PLEX_PLAYER: "${PLEX_PLAYER:-}"
+
+      # ---- Display / behaviour ----
+      LANDSCAPE: "${LANDSCAPE:-false}"
+      THEME: "${THEME:-classic-gold}"
+      POLL: "${POLL:-5000}"
+      STATE_TTL_MS: "${STATE_TTL_MS:-3000}"
+      MEDIA_INFO_TTL_MS: "${MEDIA_INFO_TTL_MS:-600000}"
+
+      # ---- Optional hardening (recommended if exposed off-LAN) ----
+      PROXY_SECRET: "${PROXY_SECRET:-}"
+      ALLOWED_ORIGINS: "${ALLOWED_ORIGINS:-}"
+
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8099/healthz >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+
+# Uncomment alongside the `networks:` block on the service to join the HA
+# Container network.
+# networks:
+#   homeassistant:
+#     external: true
