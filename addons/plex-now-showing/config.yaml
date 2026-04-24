@@ -60,6 +60,7 @@ options:
   # keep the original look until the user opts in.
   visual_progress_bar: false
   visual_ratings_badges: false
+  visual_genre_chips: false
   visual_info_panel_mode: on_tap
   log_level: info
 schema:
@@ -84,6 +85,7 @@ schema:
       stopped_url: "url?"
   visual_progress_bar: "bool"
   visual_ratings_badges: "bool"
+  visual_genre_chips: "bool"
   visual_info_panel_mode: "list(on_tap|on_pause|always)"
   log_level: "list(trace|debug|info|notice|warning|error|fatal)?"
 image: ghcr.io/rusty4444/plex-now-showing-{arch}

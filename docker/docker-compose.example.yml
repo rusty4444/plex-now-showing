@@ -50,6 +50,7 @@ services:
       # ---- Visual toggles (v2 visual sprint) ----
       VISUAL_PROGRESS_BAR: "${VISUAL_PROGRESS_BAR:-false}"
       VISUAL_RATINGS_BADGES: "${VISUAL_RATINGS_BADGES:-false}"
+      VISUAL_GENRE_CHIPS: "${VISUAL_GENRE_CHIPS:-false}"
       VISUAL_INFO_PANEL_MODE: "${VISUAL_INFO_PANEL_MODE:-on_tap}"
 
       # ---- Optional hardening (recommended if exposed off-LAN) ----

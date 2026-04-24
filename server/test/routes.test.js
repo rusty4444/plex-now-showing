@@ -31,7 +31,7 @@ function baseConfig(overrides = {}) {
     allowedOrigins: [],
     stateTtl: 3000,
     mediaInfoTtl: 600000,
-    visual: { progressBar: false, ratingsBadges: false, infoPanelMode: 'on_tap' },
+    visual: { progressBar: false, ratingsBadges: false, genreChips: false, infoPanelMode: 'on_tap' },
     staticDir: join(__dirname, '..', 'fixtures'),
     ...overrides,
   };
@@ -106,7 +106,7 @@ test('GET /api/config defaults every visual toggle off', async () => {
     assert.equal(resp.status, 200);
     assert.equal(resp.headers.get('cache-control'), 'no-store');
     const body = await resp.json();
-    assert.deepEqual(body, { visual: { progressBar: false, ratingsBadges: false, infoPanelMode: 'on_tap' } });
+    assert.deepEqual(body, { visual: { progressBar: false, ratingsBadges: false, genreChips: false, infoPanelMode: 'on_tap' } });
   } finally { server.close(); }
 });
 
@@ -144,6 +144,20 @@ test('GET /api/config surfaces ratingsBadges when enabled', async () => {
   try {
     const body = await fetch(`${url}/api/config`).then(r => r.json());
     assert.equal(body.visual.ratingsBadges, true);
+  } finally { server.close(); }
+});
+
+test('GET /api/config surfaces genreChips when enabled', async () => {
+  const haClient = { getStates: async () => haStates };
+  const { server, url } = await startApp(
+    baseConfig({ visual: { progressBar: false, ratingsBadges: false, genreChips: true } }),
+    haClient,
+  );
+  try {
+    const body = await fetch(`${url}/api/config`).then(r => r.json());
+    assert.equal(body.visual.genreChips, true);
+    assert.equal(body.visual.progressBar, false);
+    assert.equal(body.visual.ratingsBadges, false);
   } finally { server.close(); }
 });
 

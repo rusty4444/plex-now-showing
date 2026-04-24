@@ -61,6 +61,7 @@ For HA Container users running via Docker Compose. Set:
 | `FULLY_KIOSKS` | – | One kiosk per line: `host|password|playing_url[|stopped_url]` |
 | `VISUAL_PROGRESS_BAR` | `false` | Show a slim gold progress bar along the bottom of the poster |
 | `VISUAL_RATINGS_BADGES` | `false` | Show IMDb / Rotten Tomatoes / audience score badges in the info panel (needs `PLEX_URL` + `PLEX_TOKEN`) |
+| `VISUAL_GENRE_CHIPS` | `false` | Show genre pills next to the content rating in the info panel (needs `PLEX_URL` + `PLEX_TOKEN`) |
 | `VISUAL_INFO_PANEL_MODE` | `on_tap` | When to show the info panel: `on_tap`, `on_pause`, or `always` |
 | `STATIC_DIR` | `../www` | Override where `now_showing.html` is served from |
 
