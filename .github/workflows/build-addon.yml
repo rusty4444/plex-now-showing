@@ -1,0 +1,168 @@
+---
+# Build & publish the Plex Now Showing add-on images to GHCR.
+#
+# HA add-ons use one OCI image per arch (config.yaml has
+# `image: ghcr.io/rusty4444/plex-now-showing-{arch}`). Supervisor fills in
+# {arch} at install time, so we publish:
+#
+#   ghcr.io/rusty4444/plex-now-showing-amd64
+#   ghcr.io/rusty4444/plex-now-showing-aarch64
+#   ghcr.io/rusty4444/plex-now-showing-armv7
+#   ghcr.io/rusty4444/plex-now-showing-armhf
+#   ghcr.io/rusty4444/plex-now-showing-i386
+#
+# Tagging strategy:
+#   - push to `dev`                -> :dev           (rolling pre-release)
+#   - push a Git tag `addon-vX.Y.Z` -> :X.Y.Z + :latest (proper release)
+#   - pull_request                  -> build-only, no push (CI proof)
+
+name: Build add-on
+
+on:
+  # Pushes to dev/main rebuild rolling :dev / :main images, but only when
+  # something that actually affects the image changes.
+  push:
+    branches: [dev, main]
+    paths:
+      - 'addons/**'
+      - 'server/**'
+      - 'www/**'
+      - '.github/workflows/build-addon.yml'
+    # Version tags — no paths filter so an `addon-v*` tag always cuts a build.
+    tags: ['addon-v*']
+  pull_request:
+    paths:
+      - 'addons/**'
+      - 'server/**'
+      - 'www/**'
+      - '.github/workflows/build-addon.yml'
+  workflow_dispatch:
+
+# Single source of truth for arch → HA base image mapping. Taken from
+# https://github.com/hassio-addons/addon-base — keep in sync when bumping.
+# The `from` value becomes the BUILD_FROM arg consumed by the Dockerfile.
+env:
+  HA_BASE_TAG: "16.0.1"
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: build-addon-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Cheap, fast pre-flight before we spin up QEMU for every arch.
+  lint:
+    name: Lint add-on config
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: YAML parse + options/schema balance
+        run: |
+          python3 - <<'PY'
+          import yaml, sys
+          with open('addons/plex-now-showing/config.yaml') as f:
+              cfg = yaml.safe_load(f)
+          opts = set(cfg.get('options', {}).keys())
+          sch  = set(cfg.get('schema',  {}).keys())
+          assert opts == sch, f'options/schema mismatch: only-in-options={opts-sch}, only-in-schema={sch-opts}'
+          for k in ('name', 'version', 'slug', 'arch', 'image'):
+              assert k in cfg, f'missing {k}'
+          assert cfg['arch'], 'arch list is empty'
+          print('config.yaml OK; arches:', cfg['arch'])
+          PY
+      - name: Shellcheck bashio scripts
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y shellcheck
+          shellcheck --shell=bash addons/plex-now-showing/rootfs/etc/services.d/plex-now-showing/run
+
+  build:
+    name: Build ${{ matrix.arch }}
+    needs: lint
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            platform: linux/amd64
+          - arch: aarch64
+            platform: linux/arm64
+          - arch: armv7
+            platform: linux/arm/v7
+          - arch: armhf
+            platform: linux/arm/v6
+          - arch: i386
+            platform: linux/386
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve version
+        id: ver
+        run: |
+          # addon-vX.Y.Z tag → release
+          if [[ "${GITHUB_REF}" == refs/tags/addon-v* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/addon-v}"
+            CHANNEL="release"
+          elif [[ "${GITHUB_REF}" == refs/heads/dev ]]; then
+            VERSION="dev"
+            CHANNEL="dev"
+          elif [[ "${GITHUB_REF}" == refs/heads/main ]]; then
+            VERSION="main"
+            CHANNEL="main"
+          else
+            VERSION="pr-${{ github.event.pull_request.number || 'x' }}"
+            CHANNEL="pr"
+          fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "channel=${CHANNEL}" >> "$GITHUB_OUTPUT"
+          echo "Building version=${VERSION} channel=${CHANNEL}"
+
+      - name: Set up QEMU
+        if: matrix.arch != 'amd64'
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        if: steps.ver.outputs.channel != 'pr'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/plex-now-showing-${{ matrix.arch }}
+          tags: |
+            type=raw,value=${{ steps.ver.outputs.version }}
+            type=raw,value=latest,enable=${{ steps.ver.outputs.channel == 'release' }}
+            type=raw,value=dev,enable=${{ steps.ver.outputs.channel == 'dev' }}
+          labels: |
+            org.opencontainers.image.title=Plex Now Showing (${{ matrix.arch }})
+            org.opencontainers.image.description=HA add-on image for Plex Now Showing
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.licenses=MIT
+
+      - name: Build & push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: addons/plex-now-showing/Dockerfile
+          platforms: ${{ matrix.platform }}
+          push: ${{ steps.ver.outputs.channel != 'pr' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            BUILD_FROM=ghcr.io/hassio-addons/base:${{ env.HA_BASE_TAG }}
+            BUILD_ARCH=${{ matrix.arch }}
+            BUILD_VERSION=${{ steps.ver.outputs.version }}
+          provenance: false
+          cache-from: type=gha,scope=addon-${{ matrix.arch }}
+          cache-to: type=gha,scope=addon-${{ matrix.arch }},mode=max
