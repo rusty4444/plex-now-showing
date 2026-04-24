@@ -173,6 +173,66 @@
       background: var(--bg-marquee);
     }
 
+    /* ===== PLAYBACK PROGRESS BAR (#17) ===== */
+    /* Hidden by default. Shown only when body.visual-progress-bar is set by
+       the runtime-config loader. Matches the classic-gold theme: a gold
+       gradient with a soft glow, pinned near the bottom of the poster so it
+       reads like cinema film-strip trim without clashing with the bulb frame. */
+    .progress-bar {
+      position: absolute;
+      left: 6%;
+      right: 6%;
+      bottom: 2.8vh; /* lifted above the outer bulb string so it doesn't fuse with it */
+      height: 8px;
+      background: rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(0, 0, 0, 0.85);
+      border-radius: 4px;
+      overflow: hidden;
+      z-index: 6;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      pointer-events: none;
+      display: none;
+      box-shadow:
+        0 0 0 1px rgba(200, 160, 50, 0.35),
+        0 2px 6px rgba(0, 0, 0, 0.6);
+    }
+    body.visual-progress-bar .progress-bar { display: block; }
+    .progress-bar.visible { opacity: 1; }
+
+    .progress-bar-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 0%;
+      background: linear-gradient(90deg,
+        var(--gold-dark) 0%,
+        var(--gold-mid) 40%,
+        var(--gold-light) 70%,
+        var(--gold-glow) 100%);
+      box-shadow:
+        0 0 10px rgba(255, 215, 94, 0.55),
+        0 0 22px rgba(255, 215, 94, 0.3);
+      will-change: width;
+    }
+    /* Soft leading edge so the bar feels like a spotlight sweep */
+    .progress-bar-fill::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: -5px;
+      bottom: 0;
+      width: 10px;
+      background: radial-gradient(ellipse at left center,
+        rgba(255, 230, 156, 0.95) 0%, transparent 70%);
+    }
+    /* Dimmed fill while paused */
+    .progress-bar.paused .progress-bar-fill {
+      filter: brightness(0.55) saturate(0.7);
+      box-shadow: none;
+    }
+
     /* Inner gold trim on poster section */
     .poster-section::after {
       content: '';
@@ -255,6 +315,13 @@
       left: 20px;
       right: 20px;
       z-index: 2;
+      transition: bottom 0.4s ease;
+    }
+    /* Lift the title above the playback progress bar when the toggle is on
+       so the bar doesn't clip the bottom of the movie name. The bar itself
+       sits at 2.8vh with 8px height + glow — give it ~18px of breathing room. */
+    body.visual-progress-bar .poster-title {
+      bottom: calc(2.8vh + 8px + 18px);
     }
 
     .poster-title h2 {
@@ -283,8 +350,12 @@
       right: 20px;
       text-align: right;
       opacity: 0;
-      transition: opacity 0.6s ease;
+      transition: opacity 0.6s ease, bottom 0.4s ease;
       z-index: 6;
+    }
+    /* Keep the player-name/media-type block clear of the progress bar too. */
+    body.visual-progress-bar .media-info {
+      bottom: calc(2.8vh + 8px + 18px);
     }
 
     .media-info.visible { opacity: 1; }
@@ -734,6 +805,11 @@
         <div class="player-name" id="playerName"></div>
       </div>
 
+      <!-- PLAYBACK PROGRESS BAR (#17) — opt-in via VISUAL_PROGRESS_BAR env -->
+      <div class="progress-bar" id="progressBar" aria-hidden="true">
+        <div class="progress-bar-fill" id="progressBarFill"></div>
+      </div>
+
       <!-- INFO OVERLAY (tap to show) -->
       <div class="info-overlay" id="infoOverlay">
         <div class="info-panel">
@@ -869,6 +945,44 @@
         return false;
       }
     })();
+
+    // ===== VISUAL TOGGLES (V2 visual sprint) =====
+    //
+    // Every visual feature is opt-in. Defaults preserve the original v1 look.
+    //
+    // Resolution order (same as other settings):
+    //   1. /api/config          — unified-server mode; driven by env vars /
+    //                             add-on options (e.g. VISUAL_PROGRESS_BAR).
+    //   2. readBool('visualProgressBar', …)
+    //                           — HACS-only users can flip it per-tablet via
+    //                             localStorage ('pns.visualProgressBar') or
+    //                             the URL hash (#visualProgressBar=true).
+    //
+    // Server config wins so operators can ship a consistent look across the
+    // fleet without touching every tablet.
+    const VISUAL = { progressBar: false };
+
+    async function loadVisualConfig() {
+      // Local overrides apply first so the tablet still looks right even if
+      // the server is briefly unreachable.
+      VISUAL.progressBar = readBool('visualProgressBar', false);
+
+      await serverModeReady;
+      if (!SERVER_MODE) return;
+      try {
+        const resp = await fetch('/api/config', { cache: 'no-store' });
+        if (!resp.ok) return;
+        const body = await resp.json();
+        const v = body && body.visual;
+        if (v && typeof v.progressBar === 'boolean') VISUAL.progressBar = v.progressBar;
+      } catch (err) {
+        console.warn('[plex-now-showing] /api/config fetch failed — using local defaults.', err);
+      }
+    }
+
+    function applyVisualToggles() {
+      document.body.classList.toggle('visual-progress-bar', VISUAL.progressBar);
+    }
 
     // ===== SETUP PAGE CONTROLLER (#setup) =====
     //
@@ -1329,6 +1443,8 @@
             episode: attrs.media_episode || '',
             contentRating: attrs.media_content_rating || '',
             duration: attrs.media_duration || 0,
+            position: Number.isFinite(attrs.media_position) ? attrs.media_position : 0,
+            positionUpdatedAt: attrs.media_position_updated_at || '',
             summary: attrs.media_summary || '',
             ratingKey: attrs.media_content_id || ''
           };
@@ -1369,6 +1485,8 @@
           episode: attrs.media_episode || '',
           contentRating: attrs.media_content_rating || '',
           duration: attrs.media_duration || 0,
+          position: Number.isFinite(attrs.media_position) ? attrs.media_position : 0,
+          positionUpdatedAt: attrs.media_position_updated_at || '',
           summary: attrs.media_summary || '',
           ratingKey: attrs.media_content_id || ''
         };
@@ -1376,6 +1494,53 @@
         console.warn('Fetch error:', err);
         return null;
       }
+    }
+
+    // ===== PROGRESS BAR CONTROLLER (#17) =====
+    //
+    // Plays well with the 5 s poll: we store the latest {duration, position,
+    // positionUpdatedAt, state} from HA and interpolate "now" against the
+    // server clock in a requestAnimationFrame loop. When paused or idle the
+    // bar freezes at the last known position. When nothing is playing the bar
+    // is hidden with a fade.
+    const progressBar = document.getElementById('progressBar');
+    const progressBarFill = document.getElementById('progressBarFill');
+    let progressState = null; // { duration, basePosition, baseAt, playing }
+    let progressRafId = null;
+
+    function setProgressFromState(data) {
+      if (!VISUAL.progressBar) return;
+      const duration = Number(data && data.duration) || 0;
+      if (duration <= 0) { hideProgressBar(); return; }
+      const basePosition = Number(data.position) || 0;
+      // positionUpdatedAt is HA's ISO8601 string; fall back to "now" so a
+      // missing field still produces a monotonic bar.
+      const parsed = data.positionUpdatedAt ? Date.parse(data.positionUpdatedAt) : NaN;
+      const baseAt = Number.isFinite(parsed) ? parsed : Date.now();
+      progressState = { duration, basePosition, baseAt, playing: data.state === 'playing' };
+      progressBar.classList.toggle('paused', data.state !== 'playing');
+      progressBar.classList.add('visible');
+      if (progressRafId == null) tickProgressBar();
+    }
+
+    function tickProgressBar() {
+      progressRafId = null;
+      if (!progressState) return;
+      const { duration, basePosition, baseAt, playing } = progressState;
+      const elapsedSec = playing ? Math.max(0, (Date.now() - baseAt) / 1000) : 0;
+      const pos = Math.min(duration, basePosition + elapsedSec);
+      const pct = duration > 0 ? (pos / duration) * 100 : 0;
+      progressBarFill.style.width = pct.toFixed(3) + '%';
+      // Only keep the RAF loop alive while playing; when paused the width is
+      // already correct and we don't need to burn cycles.
+      if (playing) progressRafId = requestAnimationFrame(tickProgressBar);
+    }
+
+    function hideProgressBar() {
+      progressState = null;
+      if (progressRafId != null) { cancelAnimationFrame(progressRafId); progressRafId = null; }
+      progressBar.classList.remove('visible');
+      progressBar.classList.remove('paused');
     }
 
     // ===== UPDATE DISPLAY =====
@@ -1444,6 +1609,9 @@
       // Ambient glow
       ambientGlow.style.background = `radial-gradient(ellipse at 50% 40%, rgba(200, 160, 50, 0.08) 0%, transparent 70%)`;
       ambientGlow.classList.add('active');
+
+      // Progress bar — updated every poll; no-ops when toggle is off.
+      setProgressFromState(data);
     }
 
     function showIdle() {
@@ -1463,6 +1631,7 @@
       mediaInfo.classList.remove('visible');
       idleContent.classList.add('visible');
       ambientGlow.classList.remove('active');
+      hideProgressBar();
     }
 
     // ===== POLLING LOOP =====
@@ -1476,9 +1645,13 @@
     }
 
     // ===== INIT =====
-    function init() {
+    async function init() {
       createOuterBulbs();
       setInterval(animateChase, 500);
+      // Runtime visual config must resolve before the first render so we don't
+      // flash the default UI and then repaint.
+      await loadVisualConfig();
+      applyVisualToggles();
       poll();
       setInterval(poll, POLL_INTERVAL);
     }

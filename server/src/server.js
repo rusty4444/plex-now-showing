@@ -19,6 +19,7 @@ import { createSwitcher, parseKiosks } from './switcher.js';
 import { rootRoute } from './routes/root.js';
 import { healthzRoute } from './routes/healthz.js';
 import { stateRoute } from './routes/state.js';
+import { configRoute } from './routes/config.js';
 import { mediaInfoRoute } from './routes/mediaInfo.js';
 import { artworkRoute } from './routes/artwork.js';
 
@@ -58,6 +59,7 @@ export function createApp({ config, haClient }) {
 
   app.use(rootRoute({ config, version: pkg.version }));
   app.use(healthzRoute({ config, version: pkg.version }));
+  app.use(configRoute({ config }));
   app.use(stateRoute({ haClient, cache: stateCache, config }));
   app.use(mediaInfoRoute({ cache: mediaInfoCache, config }));
   app.use(artworkRoute({ config }));

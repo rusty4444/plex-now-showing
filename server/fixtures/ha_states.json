@@ -16,6 +16,8 @@
       "media_episode": 1,
       "media_content_rating": "TV-MA",
       "media_duration": 3120,
+      "media_position": 842,
+      "media_position_updated_at": "2026-04-24T12:00:00.000000+00:00",
       "media_summary": "Mark leads a team of office workers whose memories have been surgically divided.",
       "media_content_id": "12345",
       "entity_picture": "/api/media_player_proxy/media_player.plex_plex_for_lg_tv",
@@ -40,6 +42,8 @@
       "media_content_type": "movie",
       "media_content_rating": "PG-13",
       "media_duration": 9900,
+      "media_position": 1234,
+      "media_position_updated_at": "2026-04-24T11:30:00.000000+00:00",
       "media_content_id": "plex://movie/5e161e4c8f3f5a00401b5af1",
       "entity_picture": "/api/media_player_proxy/media_player.plex_plex_for_android_tv",
       "username": "rusty"

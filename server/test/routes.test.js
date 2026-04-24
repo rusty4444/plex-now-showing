@@ -31,6 +31,7 @@ function baseConfig(overrides = {}) {
     allowedOrigins: [],
     stateTtl: 3000,
     mediaInfoTtl: 600000,
+    visual: { progressBar: false },
     staticDir: join(__dirname, '..', 'fixtures'),
     ...overrides,
   };
@@ -94,6 +95,30 @@ test('PROXY_SECRET middleware blocks requests without the header', async () => {
     assert.equal(blocked.status, 401);
     const ok = await fetch(`${url}/api/state`, { headers: { 'x-proxy-secret': 'sekret' } });
     assert.equal(ok.status, 200);
+  } finally { server.close(); }
+});
+
+test('GET /api/config defaults every visual toggle off', async () => {
+  const haClient = { getStates: async () => haStates };
+  const { server, url } = await startApp(baseConfig(), haClient);
+  try {
+    const resp = await fetch(`${url}/api/config`);
+    assert.equal(resp.status, 200);
+    assert.equal(resp.headers.get('cache-control'), 'no-store');
+    const body = await resp.json();
+    assert.deepEqual(body, { visual: { progressBar: false } });
+  } finally { server.close(); }
+});
+
+test('GET /api/config reflects server-side visual toggle state', async () => {
+  const haClient = { getStates: async () => haStates };
+  const { server, url } = await startApp(
+    baseConfig({ visual: { progressBar: true } }),
+    haClient,
+  );
+  try {
+    const body = await fetch(`${url}/api/config`).then(r => r.json());
+    assert.equal(body.visual.progressBar, true);
   } finally { server.close(); }
 });
 

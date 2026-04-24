@@ -47,6 +47,9 @@ services:
       STATE_TTL_MS: "${STATE_TTL_MS:-3000}"
       MEDIA_INFO_TTL_MS: "${MEDIA_INFO_TTL_MS:-600000}"
 
+      # ---- Visual toggles (v2 visual sprint) ----
+      VISUAL_PROGRESS_BAR: "${VISUAL_PROGRESS_BAR:-false}"
+
       # ---- Optional hardening (recommended if exposed off-LAN) ----
       PROXY_SECRET: "${PROXY_SECRET:-}"
       ALLOWED_ORIGINS: "${ALLOWED_ORIGINS:-}"

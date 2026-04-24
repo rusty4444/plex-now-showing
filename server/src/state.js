@@ -46,6 +46,13 @@ function shape(playerState) {
   const artwork = rawArt && !/^https?:\/\//i.test(rawArt)
     ? `/api/artwork?path=${encodeURIComponent(rawArt)}`
     : rawArt;
+  // Progress bar (#17) needs both current position and the timestamp HA last
+  // updated it, so the browser can interpolate smoothly between polls when
+  // playing. positionUpdatedAt is an ISO8601 string in HA state JSON.
+  const position = Number.isFinite(attrs.media_position)
+    ? attrs.media_position
+    : 0;
+  const positionUpdatedAt = attrs.media_position_updated_at || '';
   return {
     title: attrs.media_title || 'Unknown Title',
     seriesTitle: attrs.media_series_title || '',
@@ -57,6 +64,8 @@ function shape(playerState) {
     episode: attrs.media_episode || '',
     contentRating: attrs.media_content_rating || '',
     duration: attrs.media_duration || 0,
+    position,
+    positionUpdatedAt,
     summary: attrs.media_summary || '',
     ratingKey: attrs.media_content_id || '',
   };

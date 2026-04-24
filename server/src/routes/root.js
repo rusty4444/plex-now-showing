@@ -13,6 +13,7 @@ export function rootRoute({ config, version }) {
       mode: config.mode,
       endpoints: {
         state: '/api/state',
+        config: '/api/config',
         mediaInfo: '/api/media-info/:ratingKey',
         healthz: '/healthz',
         html: '/now_showing.html',

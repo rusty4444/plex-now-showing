@@ -56,6 +56,9 @@ if bashio::config.has_value 'fully_kiosks'; then
   export FULLY_KIOSKS
 fi
 
+# ---- Visual toggles (V2 visual sprint) ----
+export_opt VISUAL_PROGRESS_BAR visual_progress_bar
+
 # ---- Diagnostics (no secrets) ----
 bashio::log.info "Plex URL configured:      $([[ -n "${PLEX_URL}"   ]] && echo yes || echo no)"
 bashio::log.info "Plex token configured:    $([[ -n "${PLEX_TOKEN}" ]] && echo yes || echo no)"
@@ -68,6 +71,7 @@ bashio::log.info "State cache TTL (ms):     ${STATE_TTL_MS}"
 bashio::log.info "Media-info cache TTL (ms):${MEDIA_INFO_TTL_MS}"
 bashio::log.info "Proxy secret:             $([[ -n "${PROXY_SECRET}" ]] && echo set || echo unset)"
 bashio::log.info "Allowed origins:          ${ALLOWED_ORIGINS:-<any (ingress-only)>}"
+bashio::log.info "Visual progress bar:      ${VISUAL_PROGRESS_BAR:-false}"
 bashio::log.info "Switcher enabled:         ${SWITCHER_ENABLED:-false}"
 if bashio::var.true "${SWITCHER_ENABLED:-false}"; then
   kiosk_count=$(bashio::config 'fully_kiosks | length')

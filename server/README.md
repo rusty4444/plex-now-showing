@@ -17,6 +17,7 @@ Standalone (HACS-only) installs continue to work against the unmodified
 | GET    | `/now_showing.html`               | The kiosk UI (served from `STATIC_DIR`, default `../www`) |
 | GET    | `/api`                            | Version + mode + endpoint listing                        |
 | GET    | `/api/state`                      | Normalised now-playing payload (3 s TTL cache)          |
+| GET    | `/api/config`                     | Browser-safe runtime flags (visual toggles)              |
 | GET    | `/api/media-info/:ratingKey`      | Plex metadata for the info panel (10 min TTL cache)      |
 | GET    | `/healthz`                        | Liveness probe (doesn't call upstream)                   |
 
@@ -58,6 +59,7 @@ For HA Container users running via Docker Compose. Set:
 | `SWITCHER_ENABLED` | `false` | Turn on the built-in Fully Kiosk auto-switcher (#48) |
 | `SWITCHER_INTERVAL_MS` | `5000` | How often the switcher polls HA for play/stop edges |
 | `FULLY_KIOSKS` | – | One kiosk per line: `host|password|playing_url[|stopped_url]` |
+| `VISUAL_PROGRESS_BAR` | `false` | Show a slim gold progress bar along the bottom of the poster |
 | `STATIC_DIR` | `../www` | Override where `now_showing.html` is served from |
 
 ## Local development

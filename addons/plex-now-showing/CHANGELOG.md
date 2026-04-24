@@ -18,3 +18,10 @@ The project follows [Semantic Versioning](https://semver.org/).
   `switcher_enabled: true`; configure one entry per tablet under
   `fully_kiosks`. Alternative to the HA Blueprint (#47 / PR #51) — pick one,
   not both.
+- Playback progress bar (closes #17). Opt-in via `visual_progress_bar: true`
+  — a slim gold bar along the bottom of the poster that tracks HA's
+  `media_position`, interpolated between polls for smooth motion. Freezes
+  while paused, hides when idle. Off by default; every other v2 visual
+  feature will follow the same toggle pattern.
+- Server now exposes `GET /api/config` so the browser can read runtime
+  visual toggles without a rebuild.

@@ -47,6 +47,16 @@ test('TTL defaults match spec (3 s state, 10 min media-info)', () => {
   assert.equal(config.mediaInfoTtl, 600000);
 });
 
+test('visual toggles all default to false', () => {
+  const { config } = loadConfig({ SUPERVISOR_TOKEN: 'x' });
+  assert.equal(config.visual.progressBar, false);
+});
+
+test('VISUAL_PROGRESS_BAR=true flips the progress-bar toggle on', () => {
+  const { config } = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_PROGRESS_BAR: 'true' });
+  assert.equal(config.visual.progressBar, true);
+});
+
 test('switcher is off by default, on requires FULLY_KIOSKS', () => {
   const off = loadConfig({ SUPERVISOR_TOKEN: 'x' });
   assert.equal(off.config.switcherEnabled, false);
