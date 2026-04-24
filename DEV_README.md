@@ -8,11 +8,23 @@ All V2 work happens on the `dev` branch. Each roadmap item is tracked by a GitHu
 
 ## Guiding principles
 
-- **No tokens in source.** A user should never have to paste a Home Assistant long‑lived token or a Plex token into a file that sits in `/config/www`.
-- **One‑file install should still work.** A casual user dropping `now_showing.html` into `www/` must still get a working display — configured via a sibling `now_showing.config.js` or URL parameters.
-- **Power users get Docker + HACS.** Advanced users get a HACS plugin, a Docker image that proxies HA/Plex, and a Home Assistant Blueprint for the automation.
+- **Two install paths, one codebase.** Most HA users are on HA OS / Supervised and don't think in Docker. They get a one-click Add-on. HA Container users (like the maintainer) get the same image via `docker compose`. A "just the HTML" path stays supported for HACS users who don't want any server-side piece.
+- **No tokens in the browser when it matters.** With the Add-on, tokens live server-side (the add-on uses the Supervisor token — no user-created HA token required). For the HTML-only path, tokens live in `localStorage` via a first-run setup page, never hard-coded.
+- **Auto-switching is optional and user-choice.** Two ways to switch a Fully Kiosk tablet between marquee and dashboard: an HA Blueprint (HA-native, compose your own rules) or the Add-on's built-in Fully Kiosk auto-switcher (zero HA automation). Users pick one.
 - **Unify the family.** `plex-`, `jellyfin-`, `emby-` and `kodi-now-showing` converge behind a `backend:` switch so fixes ship once.
-- **Cinema feel first.** Every visual change must still look like a real marquee on a wall‑mounted tablet. No dashboards, no chrome.
+- **Cinema feel first.** Every visual change must still look like a real marquee on a wall-mounted tablet. No dashboards, no chrome.
+
+---
+
+## Install paths (shipped side-by-side)
+
+| Path | Who it's for | What they install |
+|------|--------------|-------------------|
+| **A. Home Assistant Add-on** (recommended) | HA OS / Supervised users — the majority | One click in the HA Add-on Store. Config via a form. Tokens live server-side. |
+| **B. Docker Compose** (same image) | HA Container users | One `docker compose up -d` with `.env` file. Same image as the add-on. |
+| **C. HACS frontend only** | Users who don't want any server-side piece | Drop `now_showing.html` in `/config/www`. Tokens handled by first-run setup page in `localStorage`. |
+
+A, B and C share the same `now_showing.html` code. The add-on / compose just adds a thin server that proxies HA+Plex and serves the HTML on a dedicated port.
 
 ---
 
@@ -20,19 +32,34 @@ All V2 work happens on the `dev` branch. Each roadmap item is tracked by a GitHu
 
 The roadmap is grouped into four milestones. Each item maps to a GitHub issue — see the Issues tab for status, owners and linked PRs.
 
-### Milestone 1 — Packaging & config (V2.0)
+### Milestone 1 — Packaging & security (V2.0)
 
-Goal: make V2 installable from HACS, configurable without editing HTML, and safe to expose on a LAN.
+Goal: make V2 installable from the HA Add-on Store, from HACS, or via Docker Compose — with tokens handled safely in each case.
 
-- [ ] **#security-1 — Move tokens out of the HTML source.** Hard‑coded `HA_TOKEN` / `PLEX_TOKEN` constants are removed. Tokens are read from (in priority order) URL hash fragment → `localStorage` → `config.json` → URL query param. Query‑param fallback logs a console warning about referrer leakage.
-- [ ] **#security-2 — First‑run setup page.** `now_showing.html#setup` renders a form that collects HA URL / HA token / Plex username / optional Plex URL+token, stores them in `localStorage`, and redirects back to the display. No more Developer‑Tools detective work.
-- [ ] **#security-3 — Optional backend proxy (`plex-now-showing-proxy` Docker image).** A tiny Caddy/Node container keeps tokens server‑side and exposes only the two endpoints the page needs (`/state` and `/media-info/:ratingKey`). Config via env vars. Ships with a `docker-compose.yml` example.
-- [ ] **#security-4 — CSRF / origin hardening.** When running behind the proxy, require a shared secret header set at container start. Reject state requests from unexpected origins.
-- [ ] **#pkg-1 — Split the monolith.** `src/index.html` + `src/styles.css` + `src/app.js` + `src/plex.js` + `src/ha.js` + `src/bulbs.js`, bundled with Vite to a single `dist/now_showing.html` (inlined CSS+JS) for easy drop‑in, plus an un‑inlined `dist/` for HACS.
-- [ ] **#pkg-2 — HACS distribution.** Add `hacs.json`, `info.md`, LICENSE (MIT), GitHub Release workflow that attaches `now_showing.html` and a zipped `dist/` to each tag. Register as a HACS custom repository.
-- [ ] **#pkg-3 — Home Assistant Blueprint.** Convert `automations/plex_now_showing_display.yaml` to a Blueprint with dropdown selectors for `sensor` / `device` / `dashboard_url`. Add a `my.home-assistant.io` import badge to the README.
-- [ ] **#pkg-4 — Runtime config file.** `www/now_showing.config.js` (a single `window.NOW_SHOWING_CONFIG = {...}` object) is loaded before the app script. If missing, the app falls back to URL params / setup page.
-- [ ] **#pkg-5 — URL‑param driven multi‑tablet.** Every config key becomes a URL param so one HTML can drive several tablets with different `player=` / `landscape=` / `theme=` settings.
+**Add-on (path A & B)**
+- [ ] **#addon-1 — Unified server: serve HTML + proxy HA/Plex.** One lightweight Node (or Go) service. Uses `$SUPERVISOR_TOKEN` when running as an add-on (no user-created HA token needed); falls back to `HA_URL` + `HA_TOKEN` env vars for plain Docker.
+- [ ] **#addon-2 — HA Add-on wrapper.** `addon/config.yaml` + `Dockerfile` + `build.yaml` + `rootfs/` + icon/logo, multi-arch (amd64 / aarch64 / armv7), schema-backed options form.
+- [ ] **#addon-3 — Publish to GHCR + HA Add-on custom repository.** `.github/workflows/addon-build.yml` on tag push, `repository.yaml`, one-click "Add to my Home Assistant" badge.
+- [ ] **#addon-4 — Docker Compose example.** `docker-compose.example.yml` using the same GHCR image, `.env` pattern. For HA Container users.
+
+**Auto-switching (pick one)**
+- [ ] **#addon-5 — Blueprint + one-click import.** HA-native option. Convert the existing automation to a Blueprint with selectors for sensor / device / dashboard URL. `my.home-assistant.io` import badge.
+- [ ] **#addon-6 — Built-in Fully Kiosk auto-switcher (opt-in).** Zero-HA-automation option. Add-on watches Plex state and calls Fully Kiosk's REST API directly. Toggled from the add-on config form.
+
+**Multi-tablet**
+- [ ] **#addon-7 — Multi-tablet provisioning helper.** Script + docs for pushing the startup URL to N tablets via Fully Kiosk Remote Admin.
+
+**Frontend (path C)**
+- [x] **#1 — Move tokens out of the HTML source.** Hard-coded `HA_TOKEN` / `PLEX_TOKEN` constants removed. Tokens are read in priority order: URL hash fragment → `localStorage` → `window.NOW_SHOWING_CONFIG` → URL query (with warning). Shipped in PR #41.
+- [x] **#2 — First-run setup page.** `#setup` renders a form that collects HA URL / HA token / Plex info, stores them in `localStorage`, strips the hash, and launches the display. Gear icon on the live display reopens setup. Shipped in PR #42.
+- [ ] **#pkg-1 — Split the monolith.** `src/index.html` + `src/styles.css` + `src/app.js` + `src/plex.js` + `src/ha.js` + `src/bulbs.js`, bundled with Vite to a single `dist/now_showing.html` (inlined CSS+JS) for easy drop-in, plus an un-inlined `dist/` for HACS.
+- [ ] **#pkg-2 — HACS distribution.** Add `hacs.json`, `info.md`, LICENSE (MIT), GitHub Release workflow that attaches `now_showing.html` and a zipped `dist/` to each tag.
+- [ ] **#pkg-4 — Runtime config file.** Optional `www/now_showing.config.js` with non-sensitive defaults. Tokens deliberately not supported here — they go via setup page.
+- [ ] **#pkg-5 — URL-param driven multi-tablet.** Every non-sensitive config key can be overridden by a URL param.
+
+> **~~#security-3 / #security-4~~** (standalone proxy + CSRF hardening) — **closed.** Superseded by the unified add-on (#addon-1 ... #addon-4), which solves the same problem with a single install. Shared-secret + origin allow-list are rolled into #addon-1.
+>
+> **~~#pkg-3~~** (standalone Blueprint) — **superseded** by #addon-5, which ships the Blueprint alongside the add-on plus a one-click import button.
 
 ### Milestone 2 — Architecture & reliability (V2.1)
 
@@ -110,4 +137,8 @@ V2 build pipeline lands with **#pkg-1**. Until then, edit `www/now_showing.html`
 
 ## Current status
 
-Milestone 1 is in flight. Security issues (`#security-1` … `#security-4`) are the first PRs against `dev`.
+Milestone 1 is in flight.
+
+- Shipped: `#1` (token resolver) and `#2` (setup page) — PRs #41 and #42 on `dev`.
+- Next: `#addon-1` (unified server) + `#addon-2` (add-on wrapper). These land together on a new `feature/addon-*` branch.
+- After that: `#addon-5` (Blueprint) and `#addon-6` (built-in auto-switcher) ship in parallel so users have both options when V2.0 tags.
