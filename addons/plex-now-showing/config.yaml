@@ -51,6 +51,11 @@ options:
   media_info_ttl_ms: 600000
   proxy_secret: ""
   allowed_origins: []
+  # Fully Kiosk auto-switcher (#48) — disabled by default. Enable this OR the
+  # HA Blueprint (#47), not both.
+  switcher_enabled: false
+  switcher_interval_ms: 5000
+  fully_kiosks: []
   log_level: info
 schema:
   plex_url: "str?"
@@ -65,5 +70,12 @@ schema:
   proxy_secret: "password?"
   allowed_origins:
     - "url?"
+  switcher_enabled: "bool"
+  switcher_interval_ms: "int(1000,60000)"
+  fully_kiosks:
+    - host: "url"
+      password: "password"
+      playing_url: "url"
+      stopped_url: "url?"
   log_level: "list(trace|debug|info|notice|warning|error|fatal)?"
 image: ghcr.io/rusty4444/plex-now-showing-{arch}

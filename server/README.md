@@ -55,6 +55,9 @@ For HA Container users running via Docker Compose. Set:
 | `MEDIA_INFO_TTL_MS` | `600000` | Server-side media-info cache |
 | `PROXY_SECRET` | – | If set, requests to `/api/*` must carry `X-Proxy-Secret` |
 | `ALLOWED_ORIGINS` | – | Comma-separated allowlist for `Origin` on `/api/*` |
+| `SWITCHER_ENABLED` | `false` | Turn on the built-in Fully Kiosk auto-switcher (#48) |
+| `SWITCHER_INTERVAL_MS` | `5000` | How often the switcher polls HA for play/stop edges |
+| `FULLY_KIOSKS` | – | One kiosk per line: `host|password|playing_url[|stopped_url]` |
 | `STATIC_DIR` | `../www` | Override where `now_showing.html` is served from |
 
 ## Local development

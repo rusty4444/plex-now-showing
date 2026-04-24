@@ -40,6 +40,11 @@ export function loadConfig(env = process.env) {
     // TTLs (ms) — tuned below 1× poll interval so a second tablet doesn't re-hit HA
     stateTtl: parseInt(env.STATE_TTL_MS || '3000', 10),
     mediaInfoTtl: parseInt(env.MEDIA_INFO_TTL_MS || '600000', 10), // 10 min
+    // Fully Kiosk auto-switcher (#48). Disabled by default; users who prefer
+    // the HA Blueprint (#47) can leave it off and vice versa.
+    switcherEnabled: parseBool(env.SWITCHER_ENABLED, false),
+    switcherIntervalMs: parseInt(env.SWITCHER_INTERVAL_MS || '5000', 10),
+    fullyKiosksRaw: env.FULLY_KIOSKS || '',
     // Where the static HTML lives (overridden in tests)
     staticDir: env.STATIC_DIR || new URL('../../www', import.meta.url).pathname,
   };
@@ -60,5 +65,11 @@ function validate(c) {
   if (c.plexUrl && !c.plexToken) errors.push('plexToken is required when plexUrl is set');
   if (!Number.isFinite(c.port) || c.port < 1 || c.port > 65535) errors.push('port must be between 1 and 65535');
   if (!Number.isFinite(c.poll) || c.poll < 1000) errors.push('poll must be \u2265 1000 ms');
+  if (c.switcherEnabled && !c.fullyKiosksRaw) {
+    errors.push('FULLY_KIOSKS is required when SWITCHER_ENABLED is true');
+  }
+  if (!Number.isFinite(c.switcherIntervalMs) || c.switcherIntervalMs < 1000) {
+    errors.push('switcherIntervalMs must be \u2265 1000 ms');
+  }
   return errors;
 }

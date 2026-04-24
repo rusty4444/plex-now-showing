@@ -32,7 +32,28 @@ and HA tokens never leave the add-on.
 | `media_info_ttl_ms` | `600000` | Server-side cache for `/api/media-info/:ratingKey`. |
 | `proxy_secret` | _empty_ | If set, requests to `/api/*` must carry `X-Proxy-Secret`. |
 | `allowed_origins` | `[]` | Comma-joined allowlist for the `Origin` header on `/api/*`. Leave empty for Ingress-only. |
+| `switcher_enabled` | `false` | Turn on the built-in Fully Kiosk auto-switcher. Use **this or the Blueprint (#47)** — not both. |
+| `switcher_interval_ms` | `5000` | How often the switcher polls HA for play/stop edges. |
+| `fully_kiosks` | `[]` | List of tablets to drive. See below. |
 | `log_level` | `info` | s6 / add-on log verbosity. |
+
+### Fully Kiosk auto-switcher (#48)
+
+If you’d rather not touch HA automations, flip `switcher_enabled: true` and
+add one `fully_kiosks` entry per tablet:
+
+| Field | Required | Example |
+|-------|----------|---------|
+| `host` | yes | `http://tablet.lan:2323` |
+| `password` | yes | Fully → Settings → Remote Admin → “Set Password” |
+| `playing_url` | yes | `http://<ha-ip>:8099/now_showing.html` |
+| `stopped_url` | no | Any URL to return to when Plex stops; leave empty to use Fully’s start URL |
+
+Under the hood the add-on watches HA for `playing` / `paused` / idle
+transitions on your pinned player (or username-filtered players) and calls
+Fully’s REST API. The HA Blueprint (#47 / PR #51) does the same job if you
+prefer to keep logic in HA — don’t run both or each transition will fire
+twice.
 
 ### Where to get `plex_token`
 

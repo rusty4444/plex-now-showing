@@ -14,3 +14,7 @@ The project follows [Semantic Versioning](https://semver.org/).
 - s6-overlay service that forwards `/data/options.json` → env and runs
   `node src/server.js`.
 - HEALTHCHECK against `/healthz` so Supervisor can detect a stuck process.
+- Built-in Fully Kiosk auto-switcher (closes #48). Opt-in via
+  `switcher_enabled: true`; configure one entry per tablet under
+  `fully_kiosks`. Alternative to the HA Blueprint (#47 / PR #51) — pick one,
+  not both.

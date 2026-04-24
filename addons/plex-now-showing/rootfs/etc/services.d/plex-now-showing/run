@@ -44,6 +44,18 @@ if bashio::config.has_value 'allowed_origins'; then
   export ALLOWED_ORIGINS
 fi
 
+# ---- Fully Kiosk auto-switcher (#48) ----
+export_opt SWITCHER_ENABLED     switcher_enabled
+export_opt SWITCHER_INTERVAL_MS switcher_interval_ms
+
+# fully_kiosks is a structured list; fold into the server's pipe-delimited
+# "host|password|playing_url[|stopped_url]" format, one kiosk per newline.
+if bashio::config.has_value 'fully_kiosks'; then
+  # jq — newline-joined so parseKiosks() happily splits on \n.
+  FULLY_KIOSKS="$(bashio::config 'fully_kiosks | map([.host, .password, .playing_url, .stopped_url // ""] | map(select(. != "")) | join("|")) | join("\n")')"
+  export FULLY_KIOSKS
+fi
+
 # ---- Diagnostics (no secrets) ----
 bashio::log.info "Plex URL configured:      $([[ -n "${PLEX_URL}"   ]] && echo yes || echo no)"
 bashio::log.info "Plex token configured:    $([[ -n "${PLEX_TOKEN}" ]] && echo yes || echo no)"
@@ -56,6 +68,12 @@ bashio::log.info "State cache TTL (ms):     ${STATE_TTL_MS}"
 bashio::log.info "Media-info cache TTL (ms):${MEDIA_INFO_TTL_MS}"
 bashio::log.info "Proxy secret:             $([[ -n "${PROXY_SECRET}" ]] && echo set || echo unset)"
 bashio::log.info "Allowed origins:          ${ALLOWED_ORIGINS:-<any (ingress-only)>}"
+bashio::log.info "Switcher enabled:         ${SWITCHER_ENABLED:-false}"
+if bashio::var.true "${SWITCHER_ENABLED:-false}"; then
+  kiosk_count=$(bashio::config 'fully_kiosks | length')
+  bashio::log.info "Switcher tick interval:   ${SWITCHER_INTERVAL_MS}ms"
+  bashio::log.info "Kiosks configured:        ${kiosk_count}"
+fi
 
 cd /app
 exec node src/server.js
