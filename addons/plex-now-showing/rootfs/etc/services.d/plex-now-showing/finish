@@ -1,0 +1,6 @@
+#!/command/execlineb -S0
+# ==============================================================================
+# If the Node server exits, bring the add-on down — Supervisor will restart
+# it. We don't want s6 to keep trying to relaunch a broken binary forever.
+# ==============================================================================
+s6-svscanctl -t /var/run/s6/services

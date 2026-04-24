@@ -1,0 +1,69 @@
+---
+# Home Assistant add-on manifest for Plex Now Showing (V2).
+#
+# Wraps the unified Node 20 server (../server/) so HA OS / Supervised users
+# install this with one click from the add-on store. No user-created long-
+# lived access token is needed: Supervisor injects SUPERVISOR_TOKEN and the
+# HA API is reachable at http://supervisor/core.
+#
+# Docs on each field: https://developers.home-assistant.io/docs/add-ons/configuration
+
+name: Plex Now Showing
+version: "0.1.0"
+slug: plex_now_showing
+description: Cinema-style now-playing kiosk for Plex, served directly from Home Assistant.
+url: https://github.com/rusty4444/plex-now-showing
+arch:
+  - amd64
+  - aarch64
+  - armv7
+  - armhf
+  - i386
+startup: services
+boot: auto
+init: false
+hassio_api: true
+homeassistant_api: true
+auth_api: false
+ingress: true
+ingress_port: 8099
+ingress_entry: /now_showing.html
+panel_icon: mdi:theater
+panel_title: Now Showing
+ports:
+  # Direct access for Fully Kiosk / other tablets that can't use ingress.
+  # Leaving it empty in options.json disables the host port; users only need
+  # this exposed if they browse from outside the HA frontend.
+  8099/tcp: 8099
+ports_description:
+  8099/tcp: Direct HTTP access for external kiosks (leave empty to disable)
+map:
+  - ssl
+options:
+  plex_url: ""
+  plex_token: ""
+  plex_username: ""
+  plex_player: ""
+  landscape: false
+  theme: classic-gold
+  poll_interval: 5000
+  state_ttl_ms: 3000
+  media_info_ttl_ms: 600000
+  proxy_secret: ""
+  allowed_origins: []
+  log_level: info
+schema:
+  plex_url: "str?"
+  plex_token: "password?"
+  plex_username: "str?"
+  plex_player: "str?"
+  landscape: "bool"
+  theme: "list(classic-gold|midnight|neon|minimal|custom)?"
+  poll_interval: "int(1000,60000)"
+  state_ttl_ms: "int(500,30000)"
+  media_info_ttl_ms: "int(10000,3600000)"
+  proxy_secret: "password?"
+  allowed_origins:
+    - "url?"
+  log_level: "list(trace|debug|info|notice|warning|error|fatal)?"
+image: ghcr.io/rusty4444/plex-now-showing-{arch}
