@@ -53,6 +53,23 @@
             "value": 9.1,
             "type": "audience"
           }
+        ],
+        "Genre": [
+          {
+            "id": 1,
+            "filter": "genre=1",
+            "tag": "Action"
+          },
+          {
+            "id": 2,
+            "filter": "genre=2",
+            "tag": "Adventure"
+          },
+          {
+            "id": 3,
+            "filter": "genre=3",
+            "tag": "Science Fiction"
+          }
         ]
       }
     ]

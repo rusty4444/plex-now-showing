@@ -51,6 +51,9 @@ export function loadConfig(env = process.env) {
     visual: {
       progressBar: parseBool(env.VISUAL_PROGRESS_BAR, false),
       ratingsBadges: parseBool(env.VISUAL_RATINGS_BADGES, false),
+      // Render genre chips (Action, Sci-Fi, …) next to the content rating.
+      // Populated from Plex metadata (item.Genre[]); empty for personal media.
+      genreChips: parseBool(env.VISUAL_GENRE_CHIPS, false),
       // How the info panel (title + ratings + meta + tech) is revealed:
       //   'on_tap'   — default; hidden until the user taps the poster (8 s peek)
       //   'on_pause' — persistently shown while paused, still tappable when playing

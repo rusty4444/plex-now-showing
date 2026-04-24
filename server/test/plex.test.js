@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
-import { parseRatingKey, fetchMediaInfo, parseRatings } from '../src/plex.js';
+import { parseRatingKey, fetchMediaInfo, parseRatings, parseGenres } from '../src/plex.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const metadata = JSON.parse(
@@ -163,4 +163,72 @@ test('fetchMediaInfo: surfaces ratings from the canned fixture', async () => {
   assert.equal(info.ratings.rottenTomatoes.value, 9.3);
   assert.equal(info.ratings.rottenTomatoes.fresh, true);
   assert.equal(info.ratings.audience.value, 9.1);
+});
+
+// ----- #20 parseGenres ---------------------------------------------------
+
+test('parseGenres: returns [] for falsy / missing input', () => {
+  assert.deepEqual(parseGenres(null), []);
+  assert.deepEqual(parseGenres(undefined), []);
+  assert.deepEqual(parseGenres({}), []);
+  assert.deepEqual(parseGenres({ Genre: null }), []);
+});
+
+test('parseGenres: returns tag strings in original order', () => {
+  const g = parseGenres({
+    Genre: [
+      { id: 1, tag: 'Action' },
+      { id: 2, tag: 'Adventure' },
+      { id: 3, tag: 'Science Fiction' },
+    ],
+  });
+  assert.deepEqual(g, ['Action', 'Adventure', 'Science Fiction']);
+});
+
+test('parseGenres: dedupes case-insensitively, keeps first casing', () => {
+  const g = parseGenres({
+    Genre: [
+      { tag: 'Sci-Fi' },
+      { tag: 'sci-fi' },      // duplicate
+      { tag: 'SCI-FI' },       // duplicate
+      { tag: 'Drama' },
+    ],
+  });
+  assert.deepEqual(g, ['Sci-Fi', 'Drama']);
+});
+
+test('parseGenres: skips entries without a non-empty string tag', () => {
+  const g = parseGenres({
+    Genre: [
+      { tag: 'Action' },
+      { tag: '' },
+      { tag: '   ' },
+      { id: 99 },
+      null,
+      { tag: 42 },
+      { tag: 'Thriller' },
+    ],
+  });
+  assert.deepEqual(g, ['Action', 'Thriller']);
+});
+
+test('parseGenres: caps output at the configurable max (default 6)', () => {
+  const many = Array.from({ length: 12 }, (_, i) => ({ tag: `Genre${i}` }));
+  assert.equal(parseGenres({ Genre: many }).length, 6);
+  assert.equal(parseGenres({ Genre: many }, { max: 3 }).length, 3);
+});
+
+test('parseGenres: trims surrounding whitespace on tags', () => {
+  const g = parseGenres({
+    Genre: [{ tag: '  Horror  ' }, { tag: 'Mystery' }],
+  });
+  assert.deepEqual(g, ['Horror', 'Mystery']);
+});
+
+test('fetchMediaInfo: surfaces genres from the canned fixture', async () => {
+  const fetchImpl = async () => ({ ok: true, async json() { return metadata; } });
+  const info = await fetchMediaInfo({
+    plexUrl: 'u', plexToken: 't', ratingKey: '12345', fetchImpl,
+  });
+  assert.deepEqual(info.genres, ['Action', 'Adventure', 'Science Fiction']);
 });

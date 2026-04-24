@@ -76,6 +76,12 @@ configuration:
       Adds IMDb, Rotten Tomatoes, and audience score badges to the info
       panel (shown when you tap the kiosk). Requires plex_url + plex_token
       so the server can read ratings from /library/metadata. Off by default.
+  visual_genre_chips:
+    name: Show genre chips
+    description: >-
+      Adds genre pills (Action, Sci-Fi, …) next to the content rating in
+      the info panel. Populated from Plex metadata; requires plex_url +
+      plex_token. Off by default.
   visual_info_panel_mode:
     name: Info panel visibility
     description: >-

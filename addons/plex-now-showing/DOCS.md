@@ -37,6 +37,7 @@ and HA tokens never leave the add-on.
 | `fully_kiosks` | `[]` | List of tablets to drive. See below. |
 | `visual_progress_bar` | `false` | Slim gold progress bar along the bottom of the poster. See **Visual toggles** below. |
 | `visual_ratings_badges` | `false` | IMDb / Rotten Tomatoes / audience badges on the info panel. Needs `plex_url` + `plex_token`. |
+| `visual_genre_chips` | `false` | Genre pills (Action, Sci-Fi, …) next to the content rating in the info panel. Needs `plex_url` + `plex_token`. |
 | `visual_info_panel_mode` | `on_tap` | When to show the info panel. `on_tap` (default), `on_pause` (pinned while paused), `always` (pinned whenever media is active). |
 | `log_level` | `info` | s6 / add-on log verbosity. |
 
@@ -50,12 +51,14 @@ through to the browser automatically — no rebuild, no per-tablet config.
 |--------|--------------|
 | `visual_progress_bar` | Adds a slim gold playback bar along the bottom of the poster. Tracks HA's `media_position`, interpolated between polls so it moves smoothly. Dimmed while paused, hidden while idle. |
 | `visual_ratings_badges` | Adds IMDb, Rotten Tomatoes (fresh/rotten), and audience score chips on the info panel that slides up when you tap the kiosk. Scores are pulled server-side from Plex's `/library/metadata/{id}` via the existing `/api/media-info/:ratingKey` endpoint — requires `plex_url` + `plex_token` to be set. |
+| `visual_genre_chips` | Adds genre pills (Action, Sci-Fi, …) next to the content rating in the info panel. Tags are pulled from Plex metadata (`item.Genre[]`) via `/api/media-info/:ratingKey` — requires `plex_url` + `plex_token`. Personal media libraries without metadata agents will simply render nothing, which is fine. Capped at 6 chips to keep the meta row tidy. |
 | `visual_info_panel_mode` | Controls **when** the whole info panel appears. `on_tap` (default) matches v1 behaviour — hidden until you tap the poster, auto-hides after 8 s. `on_pause` pins the panel open whenever the player is paused (tap-to-peek still works during playback). `always` keeps the panel open the entire time media is active; tap is suppressed. Combine with `visual_ratings_badges` if you want ratings visible on pause or always. |
 
 HACS-only users (no add-on / server) can flip any visual toggle per tablet
 by setting `pns.visualProgressBar=true` / `pns.visualRatingsBadges=true` /
-`pns.visualInfoPanelMode=on_pause` in `localStorage` or adding
-`#visualProgressBar=true` / `#visualRatingsBadges=true` /
+`pns.visualGenreChips=true` / `pns.visualInfoPanelMode=on_pause` in
+`localStorage` or adding `#visualProgressBar=true` /
+`#visualRatingsBadges=true` / `#visualGenreChips=true` /
 `#visualInfoPanelMode=always` to the kiosk URL.
 
 ### Fully Kiosk auto-switcher (#48)

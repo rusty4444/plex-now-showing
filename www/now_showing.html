@@ -522,6 +522,30 @@
       text-transform: uppercase;
     }
 
+    /* ===== GENRE CHIPS (#20) =====
+       Shown inline in the same .info-meta row as the meta tags (Movie / PG-13 /
+       runtime / Paused). Hidden by default; body.visual-genre-chips toggles them
+       on. Chips use a cooler slate-blue tint so they read as a distinct
+       taxonomic axis from the gold meta tags without clashing with the classic
+       gold theme. Rounded pill shape distinguishes them at a glance. */
+    .info-panel .info-genre {
+      display: none;
+      font-family: 'Inter', sans-serif;
+      font-size: clamp(0.7rem, 1.7vw, 0.85rem);
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      color: rgba(220, 230, 245, 0.92);
+      background: rgba(80, 110, 150, 0.25);
+      border: 1px solid rgba(140, 170, 200, 0.25);
+      padding: 3px 11px;
+      border-radius: 999px;
+      text-transform: none;
+      white-space: nowrap;
+    }
+    body.visual-genre-chips .info-panel .info-genre {
+      display: inline-block;
+    }
+
     /* ===== RATINGS BADGES (#18) =====
        Shown between subtitle and meta row inside .info-panel. Hidden by default;
        body.visual-ratings-badges toggles them on. Each provider renders as a
@@ -1054,7 +1078,7 @@
     // Server config wins so operators can ship a consistent look across the
     // fleet without touching every tablet.
     const INFO_PANEL_MODES = ['on_tap', 'on_pause', 'always'];
-    const VISUAL = { progressBar: false, ratingsBadges: false, infoPanelMode: 'on_tap' };
+    const VISUAL = { progressBar: false, ratingsBadges: false, genreChips: false, infoPanelMode: 'on_tap' };
 
     function readInfoPanelMode(defaultValue) {
       // Hash override takes precedence over localStorage so tablet operators can
@@ -1072,6 +1096,7 @@
       // the server is briefly unreachable.
       VISUAL.progressBar = readBool('visualProgressBar', false);
       VISUAL.ratingsBadges = readBool('visualRatingsBadges', false);
+      VISUAL.genreChips = readBool('visualGenreChips', false);
       VISUAL.infoPanelMode = readInfoPanelMode('on_tap');
 
       await serverModeReady;
@@ -1083,6 +1108,7 @@
         const v = body && body.visual;
         if (v && typeof v.progressBar === 'boolean') VISUAL.progressBar = v.progressBar;
         if (v && typeof v.ratingsBadges === 'boolean') VISUAL.ratingsBadges = v.ratingsBadges;
+        if (v && typeof v.genreChips === 'boolean') VISUAL.genreChips = v.genreChips;
         if (v && typeof v.infoPanelMode === 'string' && INFO_PANEL_MODES.includes(v.infoPanelMode)) {
           VISUAL.infoPanelMode = v.infoPanelMode;
         }
@@ -1094,6 +1120,7 @@
     function applyVisualToggles() {
       document.body.classList.toggle('visual-progress-bar', VISUAL.progressBar);
       document.body.classList.toggle('visual-ratings-badges', VISUAL.ratingsBadges);
+      document.body.classList.toggle('visual-genre-chips', VISUAL.genreChips);
       // Exactly one info-mode-* class is set so CSS / JS can branch without
       // juggling multiple booleans.
       document.body.classList.toggle('info-mode-on-tap', VISUAL.infoPanelMode === 'on_tap');
@@ -1471,6 +1498,31 @@
       infoRatings.classList.add('has-ratings');
     }
 
+    // ===== GENRE CHIPS (#20) =====
+    //
+    // Appends <span class="info-genre">…</span> chips into the meta row.
+    // `renderGenreChips(null)` clears any stale chips from the previous
+    // media before /api/media-info returns for the new one. When the
+    // visual-genre-chips toggle is off the CSS keeps the chips hidden even
+    // though the DOM is populated — same pattern as ratings-badges.
+    function renderGenreChips(genres) {
+      if (!infoMeta) return;
+      // Remove any existing genre chips from the row. We keep the info-tag
+      // spans intact (type / rating / runtime / paused) and only strip
+      // .info-genre so re-renders don't double up.
+      infoMeta.querySelectorAll('.info-genre').forEach(el => el.remove());
+      if (!Array.isArray(genres) || genres.length === 0) return;
+      const frag = document.createDocumentFragment();
+      for (const g of genres) {
+        if (typeof g !== 'string' || !g.trim()) continue;
+        const span = document.createElement('span');
+        span.className = 'info-genre';
+        span.textContent = g;
+        frag.appendChild(span);
+      }
+      infoMeta.appendChild(frag);
+    }
+
     async function showInfo() {
       if (!currentMediaData) return;
       const d = currentMediaData;
@@ -1507,6 +1559,12 @@
       }
       if (d.state === 'paused') tags.push('Paused');
       infoMeta.innerHTML = tags.map(t => `<span class="info-tag">${t}</span>`).join('');
+      // Genre chips (#20) append to the same row so they flow naturally on a
+      // single line when there's room and wrap when there isn't. Populated
+      // only once /api/media-info returns; until then the row just shows
+      // type / rating / runtime / paused. CSS gate (visual-genre-chips) keeps
+      // the chips hidden when the toggle is off even if the array is set.
+      renderGenreChips(null);
 
       // Synopsis
       if (d.summary) {
@@ -1525,6 +1583,7 @@
         const mi = await fetchPlexMediaInfo(d.ratingKey);
         if (mi) {
           renderRatingsBadges(mi.ratings);
+          renderGenreChips(mi.genres);
           let techTags = [];
           if (mi.width && mi.height) techTags.push(`${mi.width}×${mi.height}`);
           if (mi.videoCodec) {

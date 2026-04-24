@@ -51,6 +51,7 @@ test('visual toggles all default to false', () => {
   const { config } = loadConfig({ SUPERVISOR_TOKEN: 'x' });
   assert.equal(config.visual.progressBar, false);
   assert.equal(config.visual.ratingsBadges, false);
+  assert.equal(config.visual.genreChips, false);
 });
 
 test('VISUAL_PROGRESS_BAR=true flips the progress-bar toggle on', () => {
@@ -62,6 +63,13 @@ test('VISUAL_RATINGS_BADGES=true flips the ratings-badges toggle on', () => {
   const { config } = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_RATINGS_BADGES: 'true' });
   assert.equal(config.visual.ratingsBadges, true);
   assert.equal(config.visual.progressBar, false);
+});
+
+test('VISUAL_GENRE_CHIPS=true flips the genre-chips toggle on', () => {
+  const { config } = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_GENRE_CHIPS: 'true' });
+  assert.equal(config.visual.genreChips, true);
+  assert.equal(config.visual.progressBar, false);
+  assert.equal(config.visual.ratingsBadges, false);
 });
 
 test('VISUAL_INFO_PANEL_MODE defaults to on_tap', () => {

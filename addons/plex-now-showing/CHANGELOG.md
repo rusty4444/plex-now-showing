@@ -34,3 +34,9 @@ The project follows [Semantic Versioning](https://semver.org/).
   `on_tap` (default, current behaviour), `on_pause` (panel pinned open
   whenever the player is paused; tap-to-peek still works while playing),
   and `always` (panel pinned open the entire time media is active).
+- Genre chips (closes #20). Opt-in via `visual_genre_chips: true` — genre
+  pills (Action, Sci-Fi, …) appended to the content-rating row on the
+  info panel. Tags read from Plex metadata (`item.Genre[]`) via the
+  existing media-info pipeline; requires `plex_url` + `plex_token`. Capped
+  at 6 entries and deduped so a long sub-genre list can't blow out the
+  layout.

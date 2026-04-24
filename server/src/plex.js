@@ -114,6 +114,34 @@ export function parseRatings(item) {
   return out;
 }
 
+// parseGenres — #20 Genre chips. Plex exposes genres via `item.Genre` when the
+// metadata agent has scraped them:
+//
+//   [ { id: 1, filter: 'genre=1', tag: 'Action' },
+//     { id: 2, filter: 'genre=2', tag: 'Adventure' }, ... ]
+//
+// Some libraries omit the array entirely (music, personal media); others have
+// duplicate tags from multiple agents. We normalise to a deduped array of
+// non-empty strings in original order, preserving Plex's ranking (the first
+// entry is typically the primary genre). Capped at 6 to stop a long metal
+// album's 17 sub-genres from wrapping onto three lines in the info panel.
+export function parseGenres(item, { max = 6 } = {}) {
+  if (!item || !Array.isArray(item.Genre)) return [];
+  const seen = new Set();
+  const out = [];
+  for (const g of item.Genre) {
+    if (!g || typeof g.tag !== 'string') continue;
+    const tag = g.tag.trim();
+    if (!tag) continue;
+    const key = tag.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(tag);
+    if (out.length >= max) break;
+  }
+  return out;
+}
+
 export async function fetchMediaInfo({ plexUrl, plexToken, ratingKey, fetchImpl = globalThis.fetch }) {
   if (!plexUrl || !plexToken || !ratingKey) return null;
 
@@ -149,5 +177,6 @@ export async function fetchMediaInfo({ plexUrl, plexToken, ratingKey, fetchImpl 
     width: media.width || 0,
     height: media.height || 0,
     ratings: parseRatings(item),
+    genres: parseGenres(item),
   };
 }
