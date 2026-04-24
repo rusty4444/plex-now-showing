@@ -50,11 +50,40 @@ test('TTL defaults match spec (3 s state, 10 min media-info)', () => {
 test('visual toggles all default to false', () => {
   const { config } = loadConfig({ SUPERVISOR_TOKEN: 'x' });
   assert.equal(config.visual.progressBar, false);
+  assert.equal(config.visual.ratingsBadges, false);
 });
 
 test('VISUAL_PROGRESS_BAR=true flips the progress-bar toggle on', () => {
   const { config } = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_PROGRESS_BAR: 'true' });
   assert.equal(config.visual.progressBar, true);
+});
+
+test('VISUAL_RATINGS_BADGES=true flips the ratings-badges toggle on', () => {
+  const { config } = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_RATINGS_BADGES: 'true' });
+  assert.equal(config.visual.ratingsBadges, true);
+  assert.equal(config.visual.progressBar, false);
+});
+
+test('VISUAL_INFO_PANEL_MODE defaults to on_tap', () => {
+  const { config } = loadConfig({ SUPERVISOR_TOKEN: 'x' });
+  assert.equal(config.visual.infoPanelMode, 'on_tap');
+});
+
+test('VISUAL_INFO_PANEL_MODE accepts on_pause and always', () => {
+  const pause = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_INFO_PANEL_MODE: 'on_pause' });
+  assert.equal(pause.config.visual.infoPanelMode, 'on_pause');
+  const always = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_INFO_PANEL_MODE: 'always' });
+  assert.equal(always.config.visual.infoPanelMode, 'always');
+});
+
+test('VISUAL_INFO_PANEL_MODE falls back to on_tap on unknown values', () => {
+  const { config } = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_INFO_PANEL_MODE: 'bogus' });
+  assert.equal(config.visual.infoPanelMode, 'on_tap');
+});
+
+test('VISUAL_INFO_PANEL_MODE is case-insensitive', () => {
+  const { config } = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_INFO_PANEL_MODE: 'ON_PAUSE' });
+  assert.equal(config.visual.infoPanelMode, 'on_pause');
 });
 
 test('switcher is off by default, on requires FULLY_KIOSKS', () => {

@@ -59,6 +59,8 @@ options:
   # Visual toggles (V2 visual sprint). All default OFF so existing installs
   # keep the original look until the user opts in.
   visual_progress_bar: false
+  visual_ratings_badges: false
+  visual_info_panel_mode: on_tap
   log_level: info
 schema:
   plex_url: "str?"
@@ -81,5 +83,7 @@ schema:
       playing_url: "url"
       stopped_url: "url?"
   visual_progress_bar: "bool"
+  visual_ratings_badges: "bool"
+  visual_info_panel_mode: "list(on_tap|on_pause|always)"
   log_level: "list(trace|debug|info|notice|warning|error|fatal)?"
 image: ghcr.io/rusty4444/plex-now-showing-{arch}

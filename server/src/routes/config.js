@@ -16,6 +16,8 @@ export function configRoute({ config }) {
     res.json({
       visual: {
         progressBar: !!config.visual?.progressBar,
+        ratingsBadges: !!config.visual?.ratingsBadges,
+        infoPanelMode: config.visual?.infoPanelMode || 'on_tap',
       },
     });
   });

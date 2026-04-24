@@ -34,6 +34,25 @@
               }
             ]
           }
+        ],
+        "rating": 8.4,
+        "audienceRating": 9.1,
+        "Rating": [
+          {
+            "image": "imdb://image.rating",
+            "value": 8.4,
+            "type": "audience"
+          },
+          {
+            "image": "rottentomatoes://image.rating.ripe",
+            "value": 9.3,
+            "type": "critic"
+          },
+          {
+            "image": "rottentomatoes://image.rating.upright",
+            "value": 9.1,
+            "type": "audience"
+          }
         ]
       }
     ]
