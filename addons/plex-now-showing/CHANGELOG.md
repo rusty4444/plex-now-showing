@@ -25,3 +25,12 @@ The project follows [Semantic Versioning](https://semver.org/).
   feature will follow the same toggle pattern.
 - Server now exposes `GET /api/config` so the browser can read runtime
   visual toggles without a rebuild.
+- Ratings badges (closes #18). Opt-in via `visual_ratings_badges: true` —
+  IMDb, Rotten Tomatoes (fresh/rotten critic), and audience (RT upright/
+  spilled or TMDB fallback) chips on the info panel. Scores are pulled
+  server-side from `/library/metadata` and cached with the existing
+  media-info TTL. Requires `plex_url` + `plex_token`.
+- Info panel visibility mode (`visual_info_panel_mode`). Three choices:
+  `on_tap` (default, current behaviour), `on_pause` (panel pinned open
+  whenever the player is paused; tap-to-peek still works while playing),
+  and `always` (panel pinned open the entire time media is active).

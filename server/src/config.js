@@ -50,6 +50,13 @@ export function loadConfig(env = process.env) {
     // via GET /api/config.
     visual: {
       progressBar: parseBool(env.VISUAL_PROGRESS_BAR, false),
+      ratingsBadges: parseBool(env.VISUAL_RATINGS_BADGES, false),
+      // How the info panel (title + ratings + meta + tech) is revealed:
+      //   'on_tap'   — default; hidden until the user taps the poster (8 s peek)
+      //   'on_pause' — persistently shown while paused, still tappable when playing
+      //   'always'   — persistently shown whenever media is playing
+      infoPanelMode: parseEnum(env.VISUAL_INFO_PANEL_MODE,
+        ['on_tap', 'on_pause', 'always'], 'on_tap'),
     },
     // Where the static HTML lives (overridden in tests)
     staticDir: env.STATIC_DIR || new URL('../../www', import.meta.url).pathname,
@@ -62,6 +69,12 @@ export function loadConfig(env = process.env) {
 function parseBool(v, defaultValue) {
   if (v == null || v === '') return defaultValue;
   return /^(1|true|yes|on)$/i.test(String(v));
+}
+
+function parseEnum(v, allowed, defaultValue) {
+  if (v == null || v === '') return defaultValue;
+  const s = String(v).trim().toLowerCase();
+  return allowed.includes(s) ? s : defaultValue;
 }
 
 function validate(c) {

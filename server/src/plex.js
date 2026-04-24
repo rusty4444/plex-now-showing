@@ -37,6 +37,83 @@ export function parseRatingKey(raw) {
   return tail ? tail[1] : null;
 }
 
+// parseRatings  — #18 Ratings badges. Plex exposes ratings two ways:
+//
+//   1. Legacy scalars on the Metadata item:
+//        - `rating`          critic score (usually IMDb-sourced, 0–10)
+//        - `audienceRating`  audience score (0–10)
+//
+//   2. A `Rating` array when the Plex agent supplies multi-provider data:
+//        [ { image: 'imdb://image.rating',                value: 7.8, type: 'audience'|'critic' },
+//          { image: 'rottentomatoes://image.rating.ripe', value: 8.5, type: 'critic' },
+//          { image: 'rottentomatoes://image.rating.rotten', value: 3.2, type: 'critic' },
+//          { image: 'rottentomatoes://image.rating.upright', value: 8.9, type: 'audience' },
+//          { image: 'rottentomatoes://image.rating.spilled', value: 4.5, type: 'audience' },
+//          { image: 'themoviedb://image.rating',          value: 7.6, type: 'audience' } ]
+//
+// We prefer the Rating[] array (it's unambiguous) and fall back to the legacy
+// scalars. Each slot is null when unavailable so the frontend can skip the
+// widget cleanly.
+export function parseRatings(item) {
+  if (!item || typeof item !== 'object') return { imdb: null, rottenTomatoes: null, audience: null };
+
+  const out = { imdb: null, rottenTomatoes: null, audience: null };
+  const ratings = Array.isArray(item.Rating) ? item.Rating : [];
+
+  for (const r of ratings) {
+    if (!r || typeof r.image !== 'string') continue;
+    const img = r.image.toLowerCase();
+    const val = Number(r.value);
+    // Treat missing / non-numeric / zero values as unknown so we don't render
+    // a "0.0" badge when Plex simply hasn't fetched a score yet.
+    if (!Number.isFinite(val) || val <= 0) continue;
+    const type = (r.type || '').toLowerCase();
+
+    if (img.startsWith('imdb://')) {
+      // IMDb scores are on a 0–10 scale.
+      if (out.imdb == null) out.imdb = { value: val, scale: 10, source: 'imdb' };
+    } else if (img.startsWith('rottentomatoes://')) {
+      // RT publishes on 0–10 in Plex's feed. Map the badge variant so the
+      // frontend can pick the right icon (fresh vs rotten, upright vs spilled).
+      const fresh = img.includes('ripe') || img.includes('upright');
+      const rotten = img.includes('rotten') || img.includes('spilled');
+      const isAudience = type === 'audience' || img.includes('upright') || img.includes('spilled');
+      const slot = isAudience ? 'audience' : 'rottenTomatoes';
+      if (out[slot] == null) {
+        out[slot] = {
+          value: val,
+          scale: 10,
+          source: isAudience ? 'rt_audience' : 'rt_critic',
+          fresh: fresh || (!rotten && val >= 6),
+        };
+      }
+    } else if (img.startsWith('themoviedb://')) {
+      // TMDB is primarily audience-sourced — only use as an audience fallback.
+      if (out.audience == null) {
+        out.audience = { value: val, scale: 10, source: 'tmdb' };
+      }
+    }
+  }
+
+  // Legacy fallbacks. `item.rating` is typically the IMDb-sourced critic score
+  // when the Plex agent is the default IMDb/TMDB combo, so use it to fill the
+  // IMDb slot if the Rating[] array didn't already populate it.
+  if (out.imdb == null) {
+    const legacy = Number(item.rating);
+    if (Number.isFinite(legacy) && legacy > 0) {
+      out.imdb = { value: legacy, scale: 10, source: 'legacy_rating' };
+    }
+  }
+  if (out.audience == null) {
+    const legacyAud = Number(item.audienceRating);
+    if (Number.isFinite(legacyAud) && legacyAud > 0) {
+      out.audience = { value: legacyAud, scale: 10, source: 'legacy_audience_rating' };
+    }
+  }
+
+  return out;
+}
+
 export async function fetchMediaInfo({ plexUrl, plexToken, ratingKey, fetchImpl = globalThis.fetch }) {
   if (!plexUrl || !plexToken || !ratingKey) return null;
 
@@ -71,5 +148,6 @@ export async function fetchMediaInfo({ plexUrl, plexToken, ratingKey, fetchImpl 
     fileSize: part?.size || 0,
     width: media.width || 0,
     height: media.height || 0,
+    ratings: parseRatings(item),
   };
 }

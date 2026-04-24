@@ -31,7 +31,7 @@ function baseConfig(overrides = {}) {
     allowedOrigins: [],
     stateTtl: 3000,
     mediaInfoTtl: 600000,
-    visual: { progressBar: false },
+    visual: { progressBar: false, ratingsBadges: false, infoPanelMode: 'on_tap' },
     staticDir: join(__dirname, '..', 'fixtures'),
     ...overrides,
   };
@@ -106,19 +106,44 @@ test('GET /api/config defaults every visual toggle off', async () => {
     assert.equal(resp.status, 200);
     assert.equal(resp.headers.get('cache-control'), 'no-store');
     const body = await resp.json();
-    assert.deepEqual(body, { visual: { progressBar: false } });
+    assert.deepEqual(body, { visual: { progressBar: false, ratingsBadges: false, infoPanelMode: 'on_tap' } });
   } finally { server.close(); }
 });
 
 test('GET /api/config reflects server-side visual toggle state', async () => {
   const haClient = { getStates: async () => haStates };
   const { server, url } = await startApp(
-    baseConfig({ visual: { progressBar: true } }),
+    baseConfig({ visual: { progressBar: true, ratingsBadges: false } }),
     haClient,
   );
   try {
     const body = await fetch(`${url}/api/config`).then(r => r.json());
     assert.equal(body.visual.progressBar, true);
+    assert.equal(body.visual.ratingsBadges, false);
+  } finally { server.close(); }
+});
+
+test('GET /api/config surfaces infoPanelMode when set', async () => {
+  const haClient = { getStates: async () => haStates };
+  const { server, url } = await startApp(
+    baseConfig({ visual: { progressBar: false, ratingsBadges: false, infoPanelMode: 'on_pause' } }),
+    haClient,
+  );
+  try {
+    const body = await fetch(`${url}/api/config`).then(r => r.json());
+    assert.equal(body.visual.infoPanelMode, 'on_pause');
+  } finally { server.close(); }
+});
+
+test('GET /api/config surfaces ratingsBadges when enabled', async () => {
+  const haClient = { getStates: async () => haStates };
+  const { server, url } = await startApp(
+    baseConfig({ visual: { progressBar: false, ratingsBadges: true } }),
+    haClient,
+  );
+  try {
+    const body = await fetch(`${url}/api/config`).then(r => r.json());
+    assert.equal(body.visual.ratingsBadges, true);
   } finally { server.close(); }
 });
 

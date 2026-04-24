@@ -470,6 +470,23 @@
       transform: translateY(0);
     }
 
+    /* ===== Pinned info-panel styling =====
+       When the panel is pinned open by the active mode — rather than a user
+       tap — we drop the full-screen dim so the poster artwork stays vibrant,
+       and paint a bottom-up gradient behind just the panel so text remains
+       legible against the poster. Tap-driven reveals (on_tap, and the
+       tap-to-peek path in on_pause) keep today's 85 % black overlay. */
+    body.info-pinned .info-overlay {
+      background: transparent;
+    }
+    body.info-pinned .info-overlay .info-panel {
+      background: linear-gradient(to top,
+        rgba(0, 0, 0, 0.92) 0%,
+        rgba(0, 0, 0, 0.78) 55%,
+        rgba(0, 0, 0, 0.00) 100%);
+      padding-top: 120px;
+    }
+
     .info-panel .info-title {
       font-family: 'Playfair Display', serif;
       font-weight: 900;
@@ -503,6 +520,76 @@
       padding: 4px 12px;
       border-radius: 4px;
       text-transform: uppercase;
+    }
+
+    /* ===== RATINGS BADGES (#18) =====
+       Shown between subtitle and meta row inside .info-panel. Hidden by default;
+       body.visual-ratings-badges toggles them on. Each provider renders as a
+       small chip with an inline SVG mark + the score. Colours map to the
+       provider's brand (yellow for IMDb, tomato-red for RT critic, popcorn-gold
+       for RT audience). Dimensions are tuned to line up visually with
+       .info-tag so the two rows read as a single badge stack. */
+    .info-panel .info-ratings {
+      display: none;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    body.visual-ratings-badges .info-panel .info-ratings.has-ratings {
+      display: flex;
+    }
+    .rating-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px 4px 8px;
+      border-radius: 6px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: clamp(0.8rem, 1.9vw, 1rem);
+      line-height: 1;
+      background: rgba(0, 0, 0, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--text-light);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    }
+    .rating-badge .rating-mark {
+      display: inline-flex;
+      width: 20px;
+      height: 20px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 3px;
+      font-family: 'Bebas Neue', sans-serif;
+      letter-spacing: 0.02em;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+    .rating-badge .rating-mark svg { width: 16px; height: 16px; display: block; }
+    .rating-badge .rating-value { font-variant-numeric: tabular-nums; }
+    .rating-badge .rating-suffix {
+      font-size: 0.72em;
+      color: var(--text-dim);
+      margin-left: 2px;
+    }
+    /* Provider variants */
+    .rating-badge.imdb .rating-mark {
+      background: #f5c518;                   /* IMDb yellow */
+      color: #000;
+    }
+    .rating-badge.rt-critic .rating-mark {
+      background: #fa320a;                   /* Tomato red */
+      color: #fff;
+    }
+    .rating-badge.rt-critic.rotten .rating-mark { background: #6b7f2e; }
+    .rating-badge.rt-audience .rating-mark {
+      background: #faca15;                   /* Popcorn gold */
+      color: #3d2a0a;
+    }
+    .rating-badge.rt-audience.spilled .rating-mark { background: #5a7139; color: #fff; }
+    .rating-badge.tmdb .rating-mark {
+      background: linear-gradient(90deg, #01d277, #0d253f);
+      color: #fff;
     }
 
     .info-panel .info-summary {
@@ -551,6 +638,11 @@
       margin-top: 16px;
       text-align: center;
     }
+
+    /* "always" mode suppresses the tap-to-dismiss handler, so hide the hint
+       that advertises it. on_pause keeps tap working while playing so the
+       hint is still accurate there. */
+    body.info-mode-always .info-panel .info-hint { display: none; }
 
     /* ===== SETUP PAGE (#setup) ===== */
     .setup-overlay {
@@ -815,6 +907,7 @@
         <div class="info-panel">
           <div class="info-title" id="infoTitle"></div>
           <div class="info-subtitle" id="infoSubtitle"></div>
+          <div class="info-ratings" id="infoRatings" aria-label="Ratings"></div>
           <div class="info-meta" id="infoMeta"></div>
           <div class="info-summary" id="infoSummary"></div>
           <div class="info-techbox" id="infoTech"></div>
@@ -960,12 +1053,26 @@
     //
     // Server config wins so operators can ship a consistent look across the
     // fleet without touching every tablet.
-    const VISUAL = { progressBar: false };
+    const INFO_PANEL_MODES = ['on_tap', 'on_pause', 'always'];
+    const VISUAL = { progressBar: false, ratingsBadges: false, infoPanelMode: 'on_tap' };
+
+    function readInfoPanelMode(defaultValue) {
+      // Hash override takes precedence over localStorage so tablet operators can
+      // test modes without clearing storage — same pattern as readBool().
+      const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
+      const fromHash = hash.get('visualInfoPanelMode');
+      if (fromHash && INFO_PANEL_MODES.includes(fromHash)) return fromHash;
+      const fromStorage = localStorage.getItem('pns.visualInfoPanelMode');
+      if (fromStorage && INFO_PANEL_MODES.includes(fromStorage)) return fromStorage;
+      return defaultValue;
+    }
 
     async function loadVisualConfig() {
       // Local overrides apply first so the tablet still looks right even if
       // the server is briefly unreachable.
       VISUAL.progressBar = readBool('visualProgressBar', false);
+      VISUAL.ratingsBadges = readBool('visualRatingsBadges', false);
+      VISUAL.infoPanelMode = readInfoPanelMode('on_tap');
 
       await serverModeReady;
       if (!SERVER_MODE) return;
@@ -975,6 +1082,10 @@
         const body = await resp.json();
         const v = body && body.visual;
         if (v && typeof v.progressBar === 'boolean') VISUAL.progressBar = v.progressBar;
+        if (v && typeof v.ratingsBadges === 'boolean') VISUAL.ratingsBadges = v.ratingsBadges;
+        if (v && typeof v.infoPanelMode === 'string' && INFO_PANEL_MODES.includes(v.infoPanelMode)) {
+          VISUAL.infoPanelMode = v.infoPanelMode;
+        }
       } catch (err) {
         console.warn('[plex-now-showing] /api/config fetch failed — using local defaults.', err);
       }
@@ -982,6 +1093,12 @@
 
     function applyVisualToggles() {
       document.body.classList.toggle('visual-progress-bar', VISUAL.progressBar);
+      document.body.classList.toggle('visual-ratings-badges', VISUAL.ratingsBadges);
+      // Exactly one info-mode-* class is set so CSS / JS can branch without
+      // juggling multiple booleans.
+      document.body.classList.toggle('info-mode-on-tap', VISUAL.infoPanelMode === 'on_tap');
+      document.body.classList.toggle('info-mode-on-pause', VISUAL.infoPanelMode === 'on_pause');
+      document.body.classList.toggle('info-mode-always', VISUAL.infoPanelMode === 'always');
     }
 
     // ===== SETUP PAGE CONTROLLER (#setup) =====
@@ -1162,6 +1279,7 @@
     const infoTitle = document.getElementById('infoTitle');
     const infoSubtitle = document.getElementById('infoSubtitle');
     const infoMeta = document.getElementById('infoMeta');
+    const infoRatings = document.getElementById('infoRatings');
     const infoSummary = document.getElementById('infoSummary');
     const infoTech = document.getElementById('infoTech');
     const infoPlayer = document.getElementById('infoPlayer');
@@ -1172,17 +1290,64 @@
       document.getElementById('frameWrapper').classList.add('landscape-mode');
     }
 
-    // Tap to show/hide info
+    // Tap to show/hide info.
+    //
+    // In always mode the panel is pinned open by syncInfoPanelForMode(); a tap
+    // that tried to hide it would just be re-opened on the next poll, so we
+    // suppress it entirely. on_tap and on_pause behave the same way on tap —
+    // on_pause also keeps honouring the tap-to-peek behaviour consistent with
+    // users' muscle memory. A tap also *unpins* the panel so the full-screen
+    // dim returns for the peek (pinned modes use the lighter gradient skin).
     posterSection.addEventListener('click', (e) => {
       if (!isShowingMedia || !currentMediaData) return;
+      if (VISUAL.infoPanelMode === 'always') return;
       if (infoOverlay.classList.contains('visible')) {
         hideInfo();
       } else {
+        document.body.classList.remove('info-pinned');
         showInfo();
       }
     });
 
     // Fetch media file info from Plex API
+    // HACS-direct-path only: client-side mirror of server parseRatings().
+    // The unified-server path gets ratings pre-parsed by the backend.
+    function parseRatingsClient(item) {
+      const out = { imdb: null, rottenTomatoes: null, audience: null };
+      const ratings = Array.isArray(item?.Rating) ? item.Rating : [];
+      for (const r of ratings) {
+        if (!r || typeof r.image !== 'string') continue;
+        const val = Number(r.value);
+        if (!Number.isFinite(val) || val <= 0) continue;
+        const img = r.image.toLowerCase();
+        const type = (r.type || '').toLowerCase();
+        if (img.startsWith('imdb://')) {
+          if (!out.imdb) out.imdb = { value: val, scale: 10, source: 'imdb' };
+        } else if (img.startsWith('rottentomatoes://')) {
+          const fresh = img.includes('ripe') || img.includes('upright');
+          const rotten = img.includes('rotten') || img.includes('spilled');
+          const isAudience = type === 'audience' || img.includes('upright') || img.includes('spilled');
+          const slot = isAudience ? 'audience' : 'rottenTomatoes';
+          if (!out[slot]) out[slot] = {
+            value: val, scale: 10,
+            source: isAudience ? 'rt_audience' : 'rt_critic',
+            fresh: fresh || (!rotten && val >= 6),
+          };
+        } else if (img.startsWith('themoviedb://')) {
+          if (!out.audience) out.audience = { value: val, scale: 10, source: 'tmdb' };
+        }
+      }
+      if (!out.imdb) {
+        const l = Number(item?.rating);
+        if (Number.isFinite(l) && l > 0) out.imdb = { value: l, scale: 10, source: 'legacy_rating' };
+      }
+      if (!out.audience) {
+        const l = Number(item?.audienceRating);
+        if (Number.isFinite(l) && l > 0) out.audience = { value: l, scale: 10, source: 'legacy_audience_rating' };
+      }
+      return out;
+    }
+
     async function fetchPlexMediaInfo(ratingKey) {
       if (!ratingKey) return null;
       if (cachedMediaInfo[ratingKey]) return cachedMediaInfo[ratingKey];
@@ -1230,7 +1395,8 @@
           container: (media.container || '').toUpperCase(),
           fileSize: part?.size || 0,
           width: media.width || 0,
-          height: media.height || 0
+          height: media.height || 0,
+          ratings: parseRatingsClient(item),
         };
         cachedMediaInfo[ratingKey] = info;
         return info;
@@ -1238,6 +1404,71 @@
         console.warn('Plex media info fetch error:', err);
         return null;
       }
+    }
+
+    // ===== RATINGS BADGES (#18) =====
+    //
+    // Renders whatever providers the server returned into small themed chips.
+    // Called by showInfo() with the full ratings object or null (to clear).
+    // The body.visual-ratings-badges class gates visibility — when the toggle
+    // is off, innerHTML is still populated but CSS keeps the row hidden. This
+    // way flipping the toggle at runtime doesn't need a re-fetch.
+    const RT_FRESH_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C9 6 7 7 4 8c3 3 3 9 8 12 5-3 5-9 8-12-3-1-5-2-8-6z"/></svg>';
+    const RT_ROTTEN_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="9"/><path d="M8 9l1.5-1 1 1.5M14 10l1-1.5 1.5 1" stroke="#2a1a05" stroke-width="1.3" fill="none" stroke-linecap="round"/></svg>';
+    const AUD_UPRIGHT_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 9h14l-1 11H6zM7 9V7a5 5 0 0110 0v2"/></svg>';
+    const AUD_SPILLED_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 11h16l-3 10H7zM6 11l2-5 3 1 2-3 3 2 2 5"/></svg>';
+
+    function formatRatingValue(r) {
+      // Plex reports 0–10 across every provider we care about, so render that
+      // directly (one decimal). If something out-of-band arrives (>10), fall
+      // back to a percentage so it still reads as a meaningful score.
+      if (!r || !Number.isFinite(r.value)) return '';
+      const v = r.value;
+      if (v > 10) return `${Math.round(v)}%`;
+      return v.toFixed(1);
+    }
+
+    function renderRatingsBadges(ratings) {
+      if (!infoRatings) return;
+      infoRatings.classList.remove('has-ratings');
+      infoRatings.innerHTML = '';
+      if (!ratings) return;
+
+      const chips = [];
+
+      if (ratings.imdb) {
+        chips.push(
+          `<span class="rating-badge imdb" title="IMDb">`
+          + `<span class="rating-mark">IMDb</span>`
+          + `<span class="rating-value">${formatRatingValue(ratings.imdb)}</span>`
+          + `<span class="rating-suffix">/10</span>`
+          + `</span>`
+        );
+      }
+      if (ratings.rottenTomatoes) {
+        const fresh = ratings.rottenTomatoes.fresh;
+        chips.push(
+          `<span class="rating-badge rt-critic ${fresh ? 'fresh' : 'rotten'}" title="Rotten Tomatoes — Critics">`
+          + `<span class="rating-mark">${fresh ? RT_FRESH_SVG : RT_ROTTEN_SVG}</span>`
+          + `<span class="rating-value">${Math.round(ratings.rottenTomatoes.value * 10)}%</span>`
+          + `</span>`
+        );
+      }
+      if (ratings.audience) {
+        const isRt = ratings.audience.source === 'rt_audience' || ratings.audience.source === 'legacy_audience_rating';
+        const fresh = ratings.audience.fresh !== false;
+        chips.push(
+          `<span class="rating-badge ${isRt ? 'rt-audience' : 'tmdb'} ${fresh ? 'upright' : 'spilled'}" title="Audience score">`
+          + `<span class="rating-mark">${isRt ? (fresh ? AUD_UPRIGHT_SVG : AUD_SPILLED_SVG) : 'TMDB'}</span>`
+          + `<span class="rating-value">${formatRatingValue(ratings.audience)}</span>`
+          + `<span class="rating-suffix">/10</span>`
+          + `</span>`
+        );
+      }
+
+      if (chips.length === 0) return;
+      infoRatings.innerHTML = chips.join('');
+      infoRatings.classList.add('has-ratings');
     }
 
     async function showInfo() {
@@ -1285,11 +1516,15 @@
         infoSummary.style.display = 'none';
       }
 
-      // Media file info from Plex API
+      // Media file info from Plex API. In SERVER_MODE the server proxies the
+      // Plex request (so the browser doesn't need PLEX_URL); in HACS-only mode
+      // we fall through to the direct fetch which requires the URL + token.
       infoTech.innerHTML = '';
-      if (d.ratingKey && PLEX_URL) {
+      renderRatingsBadges(null); // reset
+      if (d.ratingKey && (SERVER_MODE || PLEX_URL)) {
         const mi = await fetchPlexMediaInfo(d.ratingKey);
         if (mi) {
+          renderRatingsBadges(mi.ratings);
           let techTags = [];
           if (mi.width && mi.height) techTags.push(`${mi.width}×${mi.height}`);
           if (mi.videoCodec) {
@@ -1321,14 +1556,57 @@
 
       infoOverlay.classList.add('visible');
 
-      // Auto-hide after 8 seconds
+      // Auto-hide after 8 seconds — but only in on_tap mode. on_pause and
+      // always keep the panel up until the state changes (pause → play, or
+      // media ends).
       clearTimeout(infoTimeout);
-      infoTimeout = setTimeout(hideInfo, 8000);
+      if (VISUAL.infoPanelMode === 'on_tap') {
+        infoTimeout = setTimeout(hideInfo, 8000);
+      }
     }
 
     function hideInfo() {
       infoOverlay.classList.remove('visible');
+      document.body.classList.remove('info-pinned');
       clearTimeout(infoTimeout);
+    }
+
+    // Called from showMedia() on every poll so the info panel reflects the
+    // current playback state for the active mode. Tap-driven visibility in
+    // on_tap and on_pause is preserved; showInfo() is only *forced* when the
+    // mode demands persistence. Returns true if the panel is now being forced
+    // open by the mode so the caller can skip conflicting hide() calls.
+    function syncInfoPanelForMode(data) {
+      if (!data) {
+        hideInfo();
+        return false;
+      }
+      if (VISUAL.infoPanelMode === 'always') {
+        // Panel is shown whenever media is active, paused or playing.
+        // Mark as mode-pinned so CSS drops the full-screen 85 % dim and
+        // uses a bottom-up gradient behind just the panel instead.
+        document.body.classList.add('info-pinned');
+        showInfo();
+        return true;
+      }
+      if (VISUAL.infoPanelMode === 'on_pause') {
+        if (data.state === 'paused') {
+          // Pinned-by-mode: no dim, just the gradient under the panel.
+          // A subsequent tap clears info-pinned so the user gets the full
+          // dim as a peek affordance.
+          document.body.classList.add('info-pinned');
+          showInfo();
+          return true;
+        }
+        // Play resumed — if the panel was pinned open by the previous pause
+        // cycle (no 8 s timer was set), retract it. If the user had opened it
+        // via tap, a timer is ticking and will hide it shortly; leaving it
+        // visible until the timer fires matches on_tap behaviour.
+        if (!infoTimeout) hideInfo();
+        return false;
+      }
+      // on_tap: fully user-driven, nothing to sync.
+      return false;
     }
 
     // ===== OUTER BULB LIGHTS (around screen edge) =====
@@ -1550,11 +1828,25 @@
         : `${HA_URL}${data.artwork}`;
 
       const mediaKey = `${data.title}_${data.seriesTitle}_${artworkUrl}`;
+      const isSameMedia = mediaKey === currentMediaKey && isShowingMedia;
 
-      if (mediaKey === currentMediaKey && isShowingMedia) return;
+      // Always keep currentMediaData fresh so syncInfoPanelForMode() sees the
+      // latest state (play vs. paused) even when the media itself hasn't
+      // changed — otherwise on_pause couldn't react to a pause event on the
+      // same movie.
+      currentMediaData = data;
+
+      if (isSameMedia) {
+        // Same media, but playback state may have flipped (play ↔ pause).
+        // Let the active info-panel mode decide whether to show/hide, refresh
+        // the progress bar's paused class, then bail out of the full re-render.
+        syncInfoPanelForMode(data);
+        setProgressFromState(data);
+        return;
+      }
+
       currentMediaKey = mediaKey;
       isShowingMedia = true;
-      currentMediaData = data;
       hideInfo();
 
       // Update poster background image
@@ -1612,6 +1904,10 @@
 
       // Progress bar — updated every poll; no-ops when toggle is off.
       setProgressFromState(data);
+
+      // Info-panel mode may need the panel to appear on first frame of new
+      // media (always), on pause state (on_pause), or not at all (on_tap).
+      syncInfoPanelForMode(data);
     }
 
     function showIdle() {
