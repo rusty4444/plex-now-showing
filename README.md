@@ -67,20 +67,48 @@ You can do this via the **File Editor** add-on, **Samba**, **SSH**, or the **VS 
 
 **Step 2 — Configure your credentials**
 
-Open `now_showing.html` and update these values near the top of the `<script>` section:
+Tokens are never hard-coded in `now_showing.html` anymore. Instead, the page reads them at runtime. Pick whichever option suits you:
+
+**Option A — runtime config file (recommended for a single tablet)**
+
+1. Copy `www/now_showing.config.example.js` to `www/now_showing.config.js`
+2. Edit the new file with your values. `now_showing.config.js` is git-ignored so tokens stay local.
 
 ```javascript
-const HA_URL = 'http://YOUR_HA_IP:8123';           // Your Home Assistant URL
-const HA_TOKEN = 'YOUR_LONG_LIVED_ACCESS_TOKEN';    // HA long-lived access token
-const PLEX_USERNAME = 'your_plex_username';          // Your Plex username (filters to only your playback)
-const PLEX_PLAYER = '';                              // Optional: lock to a specific player (e.g., 'media_player.plex_plex_for_lg_tv')
-const PLEX_URL = '';                                 // Optional: Plex server URL for media file info
-const PLEX_TOKEN = '';                               // Optional: Plex token for media file info
+window.NOW_SHOWING_CONFIG = {
+  haUrl:        'http://YOUR_HA_IP:8123',
+  haToken:      'YOUR_LONG_LIVED_ACCESS_TOKEN',
+  plexUsername: 'your_plex_username',
+  plexPlayer:   '',    // optional, e.g. 'media_player.plex_plex_for_lg_tv'
+  plexUrl:      '',    // optional, enables detailed media-file info
+  plexToken:    '',    // optional
+  landscape:    false, // true for widescreen displays
+  poll:         5000,
+};
 ```
 
-`PLEX_PLAYER` is optional. When set to a specific `media_player` entity ID, the page will only show media from that player. When left empty, it shows media from any active player for your Plex user. You can find your player entity IDs in **Developer Tools → States** by searching for `media_player.plex_`.
+**Option B — URL hash fragment (recommended for multi-tablet setups)**
 
-`PLEX_URL` and `PLEX_TOKEN` are optional. When configured, the info overlay will show detailed media file information (resolution, codec, bitrate, audio format, file size). Without them, the info overlay still works but only shows what Home Assistant provides (title, synopsis, duration, content rating).
+Open the page with the tokens after the `#`, so they stay out of referrer headers and server logs:
+
+```
+http://YOUR_HA_IP:8123/local/now_showing.html#haToken=...&plexUsername=...&plexPlayer=media_player.plex_lg_tv
+```
+
+**Option C — localStorage (set once per device)**
+
+Open DevTools on the tablet and run:
+
+```javascript
+localStorage.setItem('pns.haToken', 'YOUR_LONG_LIVED_ACCESS_TOKEN');
+localStorage.setItem('pns.plexUsername', 'your_plex_username');
+```
+
+A full in-page setup form is coming in [#2](https://github.com/rusty4444/plex-now-showing/issues/2).
+
+`plexPlayer` is optional. When set to a specific `media_player` entity ID, the page will only show media from that player. When left empty, it shows media from any active player for your Plex user. You can find your player entity IDs in **Developer Tools → States** by searching for `media_player.plex_`.
+
+`plexUrl` and `plexToken` are optional. When configured, the info overlay will show detailed media file information (resolution, codec, bitrate, audio format, file size). Without them, the info overlay still works but only shows what Home Assistant provides (title, synopsis, duration, content rating).
 
 To create a long-lived access token:
 1. Go to your HA profile (click your name in the sidebar)
@@ -142,12 +170,12 @@ The panel auto-dismisses after 8 seconds, or tap again to close it.
 
 | Setting | Where | Default |
 |---------|-------|---------|
-| Poll interval | `POLL_INTERVAL` in script | 5000ms (5 seconds) |
-| Plex username filter | `PLEX_USERNAME` in script | Your Plex username |
-| Specific player only | `PLEX_PLAYER` in script | Empty (any player for your user) |
-| Landscape mode | `LANDSCAPE_MODE` in script | `false` (poster fills screen, may crop) |
-| Plex server URL | `PLEX_URL` in script | Empty (media file info disabled) |
-| Plex token | `PLEX_TOKEN` in script | Empty |
+| Poll interval | `poll` in config | 5000ms (5 seconds) |
+| Plex username filter | `plexUsername` in config | Your Plex username |
+| Specific player only | `plexPlayer` in config | Empty (any player for your user) |
+| Landscape mode | `landscape` in config | `false` (poster fills screen, may crop) |
+| Plex server URL | `plexUrl` in config | Empty (media file info disabled) |
+| Plex token | `plexToken` in config | Empty |
 | Marquee text size | `.marquee-text h1` font-size in CSS | `clamp(3.5rem, 10vw, 8rem)` |
 | Bulb size | `.bulb` width/height in CSS | 28px |
 | Bulb spacing | `spacing` in `createOuterBulbs()` | 42px |
@@ -162,7 +190,7 @@ If you're using a landscape/widescreen display instead of a portrait tablet, set
 ## Troubleshooting
 
 - **Blank poster**: Check that your HA token is valid and the Plex `entity_picture` URLs are accessible from the device
-- **Only seeing other users' playback**: Update `PLEX_USERNAME` in `now_showing.html` to match your Plex username
+- **Only seeing other users' playback**: Set `plexUsername` in your config to match your Plex username
 - **Automation not triggering**: Verify your Plex session count sensor exists and changes value when playback starts/stops
 
 ---
