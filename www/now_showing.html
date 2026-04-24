@@ -848,6 +848,28 @@
     const LANDSCAPE_MODE = readBool('landscape', runtimeConfig.landscape === true);
     const POLL_INTERVAL  = readInt('poll', 5000);
 
+    // ===== SERVER MODE DETECTION =====
+    //
+    // When the HTML is served by the unified add-on / Docker server (#addon-1)
+    // we use /api/state and /api/media-info/:ratingKey — tokens stay server-side.
+    //
+    // When served from HA's /local/ (HACS-only install), those endpoints 404
+    // and we fall back to the original direct-to-HA path. Detection is a
+    // one-shot probe against /api on the current origin.
+    let SERVER_MODE = false;
+    const serverModeReady = (async () => {
+      try {
+        const resp = await fetch(`${window.location.origin}/api`, { cache: 'no-store' });
+        if (!resp.ok) return false;
+        const body = await resp.json();
+        SERVER_MODE = body && body.name === 'plex-now-showing-server';
+        if (SERVER_MODE) console.info('[plex-now-showing] Running against unified server — using /api/state proxy.');
+        return SERVER_MODE;
+      } catch (_) {
+        return false;
+      }
+    })();
+
     // ===== SETUP PAGE CONTROLLER (#setup) =====
     //
     // Handles the first-run setup form, the gear icon on the live display,
@@ -1048,8 +1070,27 @@
 
     // Fetch media file info from Plex API
     async function fetchPlexMediaInfo(ratingKey) {
-      if (!PLEX_URL || !PLEX_TOKEN || !ratingKey) return null;
+      if (!ratingKey) return null;
       if (cachedMediaInfo[ratingKey]) return cachedMediaInfo[ratingKey];
+
+      // Unified-server path: the server already shaped the response, so just
+      // return it straight. No token needed client-side.
+      await serverModeReady;
+      if (SERVER_MODE) {
+        try {
+          const resp = await fetch(`/api/media-info/${encodeURIComponent(ratingKey)}`);
+          if (!resp.ok) return null;
+          const info = await resp.json();
+          cachedMediaInfo[ratingKey] = info;
+          return info;
+        } catch (err) {
+          console.warn('Server media-info fetch error:', err);
+          return null;
+        }
+      }
+
+      // HACS-only path: original direct-to-Plex behaviour.
+      if (!PLEX_URL || !PLEX_TOKEN) return null;
       try {
         const resp = await fetch(`${PLEX_URL}/library/metadata/${ratingKey}?X-Plex-Token=${PLEX_TOKEN}`, {
           headers: { 'Accept': 'application/json' }
@@ -1247,6 +1288,20 @@
 
     // ===== FETCH PLEX DATA FROM HA =====
     async function fetchPlexData() {
+      // Unified-server path: /api/state is already normalised.
+      await serverModeReady;
+      if (SERVER_MODE) {
+        try {
+          const resp = await fetch('/api/state');
+          if (!resp.ok) return null;
+          return await resp.json();  // null when nothing is playing
+        } catch (err) {
+          console.warn('Server state fetch error:', err);
+          return null;
+        }
+      }
+
+      // HACS-only path: original direct-to-HA behaviour.
       try {
         const resp = await fetch(`${HA_URL}/api/states`, {
           headers: {

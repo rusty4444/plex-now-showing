@@ -13,3 +13,4 @@ Thumbs.db
 # Node (for upcoming Vite build in #pkg-1)
 node_modules/
 dist/
+server/node_modules/
