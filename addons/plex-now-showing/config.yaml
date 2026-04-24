@@ -56,6 +56,9 @@ options:
   switcher_enabled: false
   switcher_interval_ms: 5000
   fully_kiosks: []
+  # Visual toggles (V2 visual sprint). All default OFF so existing installs
+  # keep the original look until the user opts in.
+  visual_progress_bar: false
   log_level: info
 schema:
   plex_url: "str?"
@@ -77,5 +80,6 @@ schema:
       password: "password"
       playing_url: "url"
       stopped_url: "url?"
+  visual_progress_bar: "bool"
   log_level: "list(trace|debug|info|notice|warning|error|fatal)?"
 image: ghcr.io/rusty4444/plex-now-showing-{arch}

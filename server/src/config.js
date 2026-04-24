@@ -45,6 +45,12 @@ export function loadConfig(env = process.env) {
     switcherEnabled: parseBool(env.SWITCHER_ENABLED, false),
     switcherIntervalMs: parseInt(env.SWITCHER_INTERVAL_MS || '5000', 10),
     fullyKiosksRaw: env.FULLY_KIOSKS || '',
+    // Visual toggles (v2 visual sprint). All default OFF so existing installs
+    // keep the original look until the user opts in. Exposed to the browser
+    // via GET /api/config.
+    visual: {
+      progressBar: parseBool(env.VISUAL_PROGRESS_BAR, false),
+    },
     // Where the static HTML lives (overridden in tests)
     staticDir: env.STATIC_DIR || new URL('../../www', import.meta.url).pathname,
   };

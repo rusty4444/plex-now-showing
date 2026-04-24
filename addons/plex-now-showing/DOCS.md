@@ -35,7 +35,22 @@ and HA tokens never leave the add-on.
 | `switcher_enabled` | `false` | Turn on the built-in Fully Kiosk auto-switcher. Use **this or the Blueprint (#47)** — not both. |
 | `switcher_interval_ms` | `5000` | How often the switcher polls HA for play/stop edges. |
 | `fully_kiosks` | `[]` | List of tablets to drive. See below. |
+| `visual_progress_bar` | `false` | Slim gold progress bar along the bottom of the poster. See **Visual toggles** below. |
 | `log_level` | `info` | s6 / add-on log verbosity. |
+
+### Visual toggles (V2)
+
+Every new visual feature is **opt-in** so existing installs keep the
+original look until you choose otherwise. Toggles flow from add-on options
+through to the browser automatically — no rebuild, no per-tablet config.
+
+| Toggle | What it does |
+|--------|--------------|
+| `visual_progress_bar` | Adds a slim gold playback bar along the bottom of the poster. Tracks HA's `media_position`, interpolated between polls so it moves smoothly. Dimmed while paused, hidden while idle. |
+
+HACS-only users (no add-on / server) can flip any visual toggle per tablet
+by setting `pns.visualProgressBar=true` in `localStorage` or adding
+`#visualProgressBar=true` to the kiosk URL.
 
 ### Fully Kiosk auto-switcher (#48)
 

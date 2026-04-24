@@ -64,6 +64,12 @@ configuration:
       http://tablet.lan:2323). “Password” is the Remote Admin password set
       in Fully. “Playing URL” is loaded when Plex starts. “Stopped URL” is
       loaded when Plex stops — leave empty to return to Fully’s start URL.
+  visual_progress_bar:
+    name: Show playback progress bar
+    description: >-
+      Adds a slim gold progress bar along the bottom of the poster while
+      something is playing. Freezes while paused, disappears when idle.
+      Off by default; flip on to enable.
   log_level:
     name: Log level
     description: Verbosity of the add-on log.
