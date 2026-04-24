@@ -1,0 +1,61 @@
+#!/usr/bin/with-contenv bashio
+# shellcheck shell=bash
+# ==============================================================================
+# Plex Now Showing add-on — service runner.
+#
+# Reads /data/options.json via bashio and forwards each option into the
+# environment the Node server expects (see server/src/config.js for the
+# authoritative list).
+# ==============================================================================
+
+set -e
+
+bashio::log.info "Starting Plex Now Showing server..."
+
+# ---- Home Assistant API (add-on mode) ----
+# SUPERVISOR_TOKEN is injected by Supervisor when hassio_api / homeassistant_api
+# are true in config.yaml — the server will auto-detect add-on mode.
+export HA_URL="http://supervisor/core"
+export HA_TOKEN="${SUPERVISOR_TOKEN}"
+
+# Helper: export $1 from bashio config key $2. Assign then export (avoids
+# masking the return value, which "export FOO=$(cmd)" does silently).
+export_opt() {
+  local _val
+  _val="$(bashio::config "$2")"
+  export "$1=${_val}"
+}
+
+# ---- User options → env ----
+export_opt PLEX_URL          plex_url
+export_opt PLEX_TOKEN        plex_token
+export_opt PLEX_USERNAME     plex_username
+export_opt PLEX_PLAYER       plex_player
+export_opt LANDSCAPE         landscape
+export_opt THEME             theme
+export_opt POLL              poll_interval
+export_opt STATE_TTL_MS      state_ttl_ms
+export_opt MEDIA_INFO_TTL_MS media_info_ttl_ms
+export_opt PROXY_SECRET      proxy_secret
+
+# allowed_origins is a list → join with commas for the server's parser.
+if bashio::config.has_value 'allowed_origins'; then
+  ALLOWED_ORIGINS="$(bashio::config 'allowed_origins | join(",")')"
+  export ALLOWED_ORIGINS
+fi
+
+# ---- Diagnostics (no secrets) ----
+bashio::log.info "Plex URL configured:      $([[ -n "${PLEX_URL}"   ]] && echo yes || echo no)"
+bashio::log.info "Plex token configured:    $([[ -n "${PLEX_TOKEN}" ]] && echo yes || echo no)"
+bashio::log.info "Pinned player:            ${PLEX_PLAYER:-<none, using username filter>}"
+bashio::log.info "Plex username:            ${PLEX_USERNAME:-<none>}"
+bashio::log.info "Landscape mode:           ${LANDSCAPE}"
+bashio::log.info "Theme:                    ${THEME}"
+bashio::log.info "Poll interval (ms):       ${POLL}"
+bashio::log.info "State cache TTL (ms):     ${STATE_TTL_MS}"
+bashio::log.info "Media-info cache TTL (ms):${MEDIA_INFO_TTL_MS}"
+bashio::log.info "Proxy secret:             $([[ -n "${PROXY_SECRET}" ]] && echo set || echo unset)"
+bashio::log.info "Allowed origins:          ${ALLOWED_ORIGINS:-<any (ingress-only)>}"
+
+cd /app
+exec node src/server.js

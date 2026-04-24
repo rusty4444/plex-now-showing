@@ -1,0 +1,55 @@
+---
+# Translations for the Options tab in the HA add-on UI.
+# Keys match fields in config.yaml's `options:` / `schema:` blocks.
+configuration:
+  plex_url:
+    name: Plex URL
+    description: >-
+      Base URL of your Plex server, e.g. https://plex.example.com:32400. Needed
+      for the info panel (resolution, HDR, codecs, audio). Leave empty to skip.
+  plex_token:
+    name: Plex token
+    description: >-
+      Plex X-Plex-Token. Stored only in the add-on; never sent to the browser.
+  plex_username:
+    name: Plex username
+    description: >-
+      Filters which media_player.plex_* entities count as "yours" when no
+      specific player is pinned.
+  plex_player:
+    name: Pinned Plex player
+    description: >-
+      Entity id to pin, e.g. media_player.plex_plex_for_lg_tv. Takes priority
+      over username filtering.
+  landscape:
+    name: Landscape mode
+    description: Force the kiosk layout into landscape regardless of orientation.
+  theme:
+    name: Theme
+    description: Visual theme. "custom" lets your own CSS overrides take over.
+  poll_interval:
+    name: Poll interval (ms)
+    description: How often each kiosk asks the server for updated state.
+  state_ttl_ms:
+    name: State cache TTL (ms)
+    description: >-
+      Server-side cache window for /api/state. Smooths bursty polling when
+      multiple kiosks are connected.
+  media_info_ttl_ms:
+    name: Media-info cache TTL (ms)
+    description: Server-side cache window for /api/media-info/:ratingKey.
+  proxy_secret:
+    name: Proxy secret (optional)
+    description: >-
+      If set, requests to /api/* must include the header X-Proxy-Secret with
+      this value. Leave empty for Ingress-only use.
+  allowed_origins:
+    name: Allowed origins (optional)
+    description: >-
+      Allowlist for the Origin header on /api/*. One URL per line, e.g.
+      http://tablet.lan:8099. Leave empty for Ingress-only use.
+  log_level:
+    name: Log level
+    description: Verbosity of the add-on log.
+network:
+  8099/tcp: Direct HTTP access for external kiosks. Leave empty to disable.

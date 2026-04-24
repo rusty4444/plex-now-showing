@@ -1,0 +1,6 @@
+---
+# Home Assistant add-on repository manifest.
+# Users add this repo's URL in Settings → Add-ons → Add-on store → Repositories.
+name: Plex Now Showing
+url: https://github.com/rusty4444/plex-now-showing
+maintainer: rusty4444 <samrussellmobile@gmail.com>
