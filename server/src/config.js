@@ -60,6 +60,24 @@ export function loadConfig(env = process.env) {
       //   'always'   — persistently shown whenever media is playing
       infoPanelMode: parseEnum(env.VISUAL_INFO_PANEL_MODE,
         ['on_tap', 'on_pause', 'always'], 'on_tap'),
+      // Backdrop art on pause (#21). Master switch; off keeps the original
+      // poster-only look.
+      useBackdrops: parseBool(env.VISUAL_USE_BACKDROPS, false),
+      // Two presentation styles:
+      //   'fullscreen' — landscape only; after backdropDelayMs of pause,
+      //                   crossfade the poster view to the Plex fanart.
+      //                   On portrait devices the fanart crop is always bad,
+      //                   so this mode silently no-ops there.
+      //   'ambient'    — replaces the yellow bulb-lit background with a
+      //                   heavily blurred and darkened copy of the fanart at
+      //                   all times (not just on pause). Works on both
+      //                   orientations because the image is blurred to the
+      //                   point where aspect ratio doesn't matter.
+      backdropStyle: parseEnum(env.VISUAL_BACKDROP_STYLE,
+        ['fullscreen', 'ambient'], 'fullscreen'),
+      // Delay (ms) before the fullscreen backdrop fades in on pause. Spec
+      // calls for >10 s so quick seeks / skip-intros don't trigger the swap.
+      backdropDelayMs: parseIntClamped(env.VISUAL_BACKDROP_DELAY_MS, 10000, 1000, 600000),
     },
     // Where the static HTML lives (overridden in tests)
     staticDir: env.STATIC_DIR || new URL('../../www', import.meta.url).pathname,
@@ -72,6 +90,15 @@ export function loadConfig(env = process.env) {
 function parseBool(v, defaultValue) {
   if (v == null || v === '') return defaultValue;
   return /^(1|true|yes|on)$/i.test(String(v));
+}
+
+function parseIntClamped(v, defaultValue, min, max) {
+  if (v == null || v === '') return defaultValue;
+  const n = parseInt(String(v), 10);
+  if (!Number.isFinite(n)) return defaultValue;
+  if (n < min) return min;
+  if (n > max) return max;
+  return n;
 }
 
 function parseEnum(v, allowed, defaultValue) {

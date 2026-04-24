@@ -106,7 +106,17 @@ test('GET /api/config defaults every visual toggle off', async () => {
     assert.equal(resp.status, 200);
     assert.equal(resp.headers.get('cache-control'), 'no-store');
     const body = await resp.json();
-    assert.deepEqual(body, { visual: { progressBar: false, ratingsBadges: false, genreChips: false, infoPanelMode: 'on_tap' } });
+    assert.deepEqual(body, {
+      visual: {
+        progressBar: false,
+        ratingsBadges: false,
+        genreChips: false,
+        infoPanelMode: 'on_tap',
+        useBackdrops: false,
+        backdropStyle: 'fullscreen',
+        backdropDelayMs: 10000,
+      },
+    });
   } finally { server.close(); }
 });
 
@@ -158,6 +168,61 @@ test('GET /api/config surfaces genreChips when enabled', async () => {
     assert.equal(body.visual.genreChips, true);
     assert.equal(body.visual.progressBar, false);
     assert.equal(body.visual.ratingsBadges, false);
+  } finally { server.close(); }
+});
+
+// ===== #21 backdrop — /api/plex-art proxy + /api/config surfacing =====
+
+test('GET /api/config surfaces all backdrop fields when set', async () => {
+  const haClient = { getStates: async () => haStates };
+  const { server, url } = await startApp(
+    baseConfig({
+      visual: {
+        progressBar: false,
+        ratingsBadges: false,
+        infoPanelMode: 'on_tap',
+        useBackdrops: true,
+        backdropStyle: 'ambient',
+        backdropDelayMs: 15000,
+      },
+    }),
+    haClient,
+  );
+  try {
+    const body = await fetch(`${url}/api/config`).then(r => r.json());
+    assert.equal(body.visual.useBackdrops, true);
+    assert.equal(body.visual.backdropStyle, 'ambient');
+    assert.equal(body.visual.backdropDelayMs, 15000);
+  } finally { server.close(); }
+});
+
+test('GET /api/plex-art rejects paths not starting with /library/', async () => {
+  const haClient = { getStates: async () => haStates };
+  const { server, url } = await startApp(baseConfig(), haClient);
+  try {
+    // Classic SSRF vector: attacker tries to redirect the proxy off-host.
+    const cases = [
+      '/etc/passwd',
+      'http://evil.example/',
+      '/../library/metadata/1/art',
+      '',
+    ];
+    for (const path of cases) {
+      const resp = await fetch(`${url}/api/plex-art?path=${encodeURIComponent(path)}`);
+      assert.equal(resp.status, 400, `path ${path} should 400`);
+    }
+  } finally { server.close(); }
+});
+
+test('GET /api/plex-art returns 503 when plex is not configured', async () => {
+  const haClient = { getStates: async () => haStates };
+  const { server, url } = await startApp(
+    baseConfig({ plexUrl: '', plexToken: '' }),
+    haClient,
+  );
+  try {
+    const resp = await fetch(`${url}/api/plex-art?path=/library/metadata/1/art/123`);
+    assert.equal(resp.status, 503);
   } finally { server.close(); }
 });
 

@@ -94,6 +94,40 @@ test('VISUAL_INFO_PANEL_MODE is case-insensitive', () => {
   assert.equal(config.visual.infoPanelMode, 'on_pause');
 });
 
+// ===== #21 backdrop config =====
+
+test('backdrop config defaults — off, fullscreen, 10 s', () => {
+  const { config } = loadConfig({ SUPERVISOR_TOKEN: 'x' });
+  assert.equal(config.visual.useBackdrops, false);
+  assert.equal(config.visual.backdropStyle, 'fullscreen');
+  assert.equal(config.visual.backdropDelayMs, 10000);
+});
+
+test('VISUAL_USE_BACKDROPS=true flips the master switch on', () => {
+  const { config } = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_USE_BACKDROPS: 'true' });
+  assert.equal(config.visual.useBackdrops, true);
+});
+
+test('VISUAL_BACKDROP_STYLE accepts fullscreen and ambient, rejects others', () => {
+  const ambient = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_BACKDROP_STYLE: 'ambient' });
+  assert.equal(ambient.config.visual.backdropStyle, 'ambient');
+  const fullscreen = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_BACKDROP_STYLE: 'fullscreen' });
+  assert.equal(fullscreen.config.visual.backdropStyle, 'fullscreen');
+  const bogus = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_BACKDROP_STYLE: 'parallax' });
+  assert.equal(bogus.config.visual.backdropStyle, 'fullscreen');
+});
+
+test('VISUAL_BACKDROP_DELAY_MS is clamped to [1000, 600000]', () => {
+  const ok = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_BACKDROP_DELAY_MS: '15000' });
+  assert.equal(ok.config.visual.backdropDelayMs, 15000);
+  const tooSmall = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_BACKDROP_DELAY_MS: '0' });
+  assert.equal(tooSmall.config.visual.backdropDelayMs, 1000);
+  const tooBig = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_BACKDROP_DELAY_MS: '9999999' });
+  assert.equal(tooBig.config.visual.backdropDelayMs, 600000);
+  const garbage = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_BACKDROP_DELAY_MS: 'soon' });
+  assert.equal(garbage.config.visual.backdropDelayMs, 10000);
+});
+
 test('switcher is off by default, on requires FULLY_KIOSKS', () => {
   const off = loadConfig({ SUPERVISOR_TOKEN: 'x' });
   assert.equal(off.config.switcherEnabled, false);

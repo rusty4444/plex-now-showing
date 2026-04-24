@@ -90,6 +90,25 @@ configuration:
       after 8 s. "on_pause" — shows persistently whenever the player is
       paused; tap-to-peek still works while playing. "always" — pinned open
       the entire time media is active.
+  visual_use_backdrops:
+    name: Show backdrop art on pause
+    description: >-
+      Master switch for the backdrop-art feature. Requires plex_url +
+      plex_token. Pair with Backdrop style below. Off by default.
+  visual_backdrop_style:
+    name: Backdrop style
+    description: >-
+      "fullscreen" (default) — on landscape devices, after a sustained
+      pause, crossfade to the movie/show fanart. Portrait devices are
+      silently skipped since the crop looks bad there. "ambient" — replaces
+      the yellow bulb-lit background with a blurred and darkened copy of
+      the fanart whenever media is active. Works on both orientations.
+  visual_backdrop_delay_ms:
+    name: Backdrop pause delay (ms)
+    description: >-
+      How long the player must stay paused before the fullscreen backdrop
+      fades in. Defaults to 10000 (10 s) per spec; skip-intros / quick
+      seeks shouldn't trigger the swap.
   log_level:
     name: Log level
     description: Verbosity of the add-on log.

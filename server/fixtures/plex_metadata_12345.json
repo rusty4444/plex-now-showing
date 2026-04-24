@@ -37,6 +37,7 @@
         ],
         "rating": 8.4,
         "audienceRating": 9.1,
+        "art": "/library/metadata/12345/art/1700000000",
         "Rating": [
           {
             "image": "imdb://image.rating",

@@ -62,6 +62,13 @@ options:
   visual_ratings_badges: false
   visual_genre_chips: false
   visual_info_panel_mode: on_tap
+  # Backdrop art on pause (#21). Master switch is off; backdrop_style picks
+  # fullscreen (landscape-only crossfade, default) vs ambient (blurred
+  # fanart behind the poster on every orientation). Delay is the pause
+  # threshold for the fullscreen swap — >10 s by spec.
+  visual_use_backdrops: false
+  visual_backdrop_style: fullscreen
+  visual_backdrop_delay_ms: 10000
   log_level: info
 schema:
   plex_url: "str?"
@@ -87,5 +94,8 @@ schema:
   visual_ratings_badges: "bool"
   visual_genre_chips: "bool"
   visual_info_panel_mode: "list(on_tap|on_pause|always)"
+  visual_use_backdrops: "bool"
+  visual_backdrop_style: "list(fullscreen|ambient)"
+  visual_backdrop_delay_ms: "int(1000,600000)"
   log_level: "list(trace|debug|info|notice|warning|error|fatal)?"
 image: ghcr.io/rusty4444/plex-now-showing-{arch}
