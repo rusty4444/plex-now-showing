@@ -552,17 +552,97 @@
     </div>
   </div>
 
+  <!--
+    Optional runtime config. Copy www/now_showing.config.example.js to
+    www/now_showing.config.js and edit it. The file is git-ignored so your
+    tokens never end up in source control. See DEV_README.md.
+  -->
+  <script src="now_showing.config.js" onerror="void 0"></script>
+
   <script>
-    // ===== CONFIGURATION =====
-    const params = new URLSearchParams(window.location.search);
-    const HA_URL = params.get('ha_url') || window.location.origin;
-    const HA_TOKEN = params.get('token') || 'YOUR_LONG_LIVED_ACCESS_TOKEN';
-    const POLL_INTERVAL = 5000;
-    const PLEX_USERNAME = 'YOUR_PLEX_USERNAME';
-    const PLEX_PLAYER = '';  // Optional: set to a specific entity_id (e.g., 'media_player.plex_plex_for_lg_tv') to only show media from that player. Leave empty to show any player for your user.
-    const LANDSCAPE_MODE = false;  // Set to true to fit the entire poster on screen (adds letterboxing). Default: false (poster fills the screen, may crop edges).
-    const PLEX_URL = '';  // Optional: Plex server URL for fetching media file info (resolution, codec, bitrate). Leave empty to skip.
-    const PLEX_TOKEN = '';  // Optional: Plex token (needed if PLEX_URL is set).
+    // ===== CONFIGURATION RESOLVER =====
+    //
+    // Tokens must NEVER be hard-coded in this file. They're resolved at
+    // runtime in this priority order:
+    //
+    //   1. URL hash fragment   e.g. #token=abc&plex_token=xyz  (not sent to referrers)
+    //   2. localStorage        keys: pns.haToken / pns.plexToken / pns.*
+    //   3. window.NOW_SHOWING_CONFIG   (from now_showing.config.js)
+    //   4. URL query string    e.g. ?token=abc   (logs a warning — leaks via referrer)
+    //
+    // Non-sensitive values (plexUsername, plexPlayer, landscape, etc.) follow
+    // the same precedence but skip the leakage warning.
+    //
+    // If no HA token can be resolved, the page redirects to #setup (handled
+    // in a follow-up PR — see issue #2).
+
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    const queryParams = new URLSearchParams(window.location.search);
+    const runtimeConfig = (window.NOW_SHOWING_CONFIG && typeof window.NOW_SHOWING_CONFIG === 'object')
+      ? window.NOW_SHOWING_CONFIG
+      : {};
+
+    function readConfig(key, { sensitive = false, defaultValue = '', aliases = [] } = {}) {
+      const keys = [key, ...aliases];
+      // 1. hash fragment
+      for (const k of keys) {
+        const v = hashParams.get(k);
+        if (v != null && v !== '') return v;
+      }
+      // 2. localStorage (prefixed with pns.)
+      try {
+        for (const k of keys) {
+          const v = window.localStorage.getItem('pns.' + k);
+          if (v != null && v !== '') return v;
+        }
+      } catch (_) { /* storage may be disabled */ }
+      // 3. runtime config object
+      for (const k of keys) {
+        if (runtimeConfig[k] != null && runtimeConfig[k] !== '') return runtimeConfig[k];
+      }
+      // 4. query string (warn for sensitive values)
+      for (const k of keys) {
+        const v = queryParams.get(k);
+        if (v != null && v !== '') {
+          if (sensitive) {
+            console.warn('[plex-now-showing] Reading', k, 'from URL query string — this can leak via HTTP referrers. Prefer the hash fragment or localStorage.');
+          }
+          return v;
+        }
+      }
+      return defaultValue;
+    }
+
+    function readBool(key, defaultValue = false) {
+      const v = readConfig(key);
+      if (v === '' || v == null) return defaultValue;
+      if (typeof v === 'boolean') return v;
+      return /^(1|true|yes|on)$/i.test(String(v));
+    }
+
+    function readInt(key, defaultValue) {
+      const v = readConfig(key);
+      const n = parseInt(v, 10);
+      return Number.isFinite(n) ? n : defaultValue;
+    }
+
+    const HA_URL        = readConfig('haUrl',        { aliases: ['ha_url'], defaultValue: window.location.origin });
+    const HA_TOKEN      = readConfig('haToken',      { aliases: ['token', 'ha_token'], sensitive: true });
+    const PLEX_USERNAME = readConfig('plexUsername', { aliases: ['username', 'plex_username'] });
+    const PLEX_PLAYER   = readConfig('plexPlayer',   { aliases: ['player', 'plex_player'] });
+    const PLEX_URL      = readConfig('plexUrl',      { aliases: ['plex_url'] });
+    const PLEX_TOKEN    = readConfig('plexToken',    { aliases: ['plex_token'], sensitive: true });
+    const LANDSCAPE_MODE = readBool('landscape', runtimeConfig.landscape === true);
+    const POLL_INTERVAL  = readInt('poll', 5000);
+
+    // Warn (don't redirect yet) if essential config is missing. The full
+    // first-run setup page lands with issue #2.
+    if (!HA_TOKEN) {
+      console.warn('[plex-now-showing] No HA token configured. See DEV_README.md for setup.');
+    }
+    if (!PLEX_USERNAME) {
+      console.warn('[plex-now-showing] No Plex username configured — user filtering disabled.');
+    }
 
     // ===== DOM REFS =====
     const posterArea = document.getElementById('posterArea');
