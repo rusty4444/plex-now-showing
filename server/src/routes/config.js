@@ -23,6 +23,13 @@ export function configRoute({ config }) {
         backdropStyle: config.visual?.backdropStyle || 'fullscreen',
         backdropDelayMs: Number.isFinite(config.visual?.backdropDelayMs)
           ? config.visual.backdropDelayMs : 10000,
+        // #28 burn-in mitigation. Frontend reads these to decide whether to
+        // run the nudge timer and which night-mode trigger to wire up.
+        burnInMitigation: !!config.visual?.burnInMitigation,
+        nudgeIntervalMs: config.visual?.nudgeIntervalMs ?? 60000,
+        nudgeAmplitudePx: config.visual?.nudgeAmplitudePx ?? 4,
+        nightModeEntity: config.visual?.nightModeEntity || '',
+        nightModeOpacity: config.visual?.nightModeOpacity ?? 0.4,
       },
     });
   });

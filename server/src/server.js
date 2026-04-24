@@ -23,6 +23,7 @@ import { configRoute } from './routes/config.js';
 import { mediaInfoRoute } from './routes/mediaInfo.js';
 import { artworkRoute } from './routes/artwork.js';
 import { plexArtRoute } from './routes/plexArt.js';
+import { nightModeRoute } from './routes/nightMode.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8'));
@@ -65,6 +66,7 @@ export function createApp({ config, haClient }) {
   app.use(mediaInfoRoute({ cache: mediaInfoCache, config }));
   app.use(artworkRoute({ config }));
   app.use(plexArtRoute({ config }));
+  app.use(nightModeRoute({ haClient, config }));
 
   // Static HTML last so /api/* wins on overlap.
   app.use(express.static(config.staticDir, {

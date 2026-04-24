@@ -18,6 +18,7 @@ Standalone (HACS-only) installs continue to work against the unmodified
 | GET    | `/api`                            | Version + mode + endpoint listing                        |
 | GET    | `/api/state`                      | Normalised now-playing payload (3 s TTL cache)          |
 | GET    | `/api/config`                     | Browser-safe runtime flags (visual toggles)              |
+| GET    | `/api/night-mode`                 | `{configured, on}` for the optional night-mode HA entity |
 | GET    | `/api/media-info/:ratingKey`      | Plex metadata for the info panel (10 min TTL cache)      |
 | GET    | `/healthz`                        | Liveness probe (doesn't call upstream)                   |
 
@@ -66,6 +67,11 @@ For HA Container users running via Docker Compose. Set:
 | `VISUAL_USE_BACKDROPS` | `false` | Master switch for backdrop art on pause (#21). Needs `PLEX_URL` + `PLEX_TOKEN` |
 | `VISUAL_BACKDROP_STYLE` | `fullscreen` | `fullscreen` (landscape-only crossfade) or `ambient` (blurred fanart behind the poster, all orientations) |
 | `VISUAL_BACKDROP_DELAY_MS` | `10000` | Pause threshold for the fullscreen fade-in (ms, clamped 1000–600000) |
+| `VISUAL_BURN_IN_MITIGATION` | `false` | Master switch for burn-in mitigation (pixel nudge + optional night mode overlay) |
+| `VISUAL_NUDGE_INTERVAL_MS` | `60000` | Pixel-nudge interval in ms (clamped 5 000–600 000) |
+| `VISUAL_NUDGE_AMPLITUDE_PX` | `4` | Maximum pixel shift (clamped 1–16) |
+| `VISUAL_NIGHT_MODE_ENTITY` | _empty_ | Optional HA `input_boolean` / `switch` / `binary_sensor`; when `on`, dims the kiosk. Empty → fall back to `prefers-color-scheme: dark` |
+| `VISUAL_NIGHT_MODE_OPACITY` | `0.4` | Dim overlay opacity (clamped 0–0.95) |
 | `STATIC_DIR` | `../www` | Override where `now_showing.html` is served from |
 
 ## Local development

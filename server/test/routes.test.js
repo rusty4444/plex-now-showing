@@ -115,8 +115,133 @@ test('GET /api/config defaults every visual toggle off', async () => {
         useBackdrops: false,
         backdropStyle: 'fullscreen',
         backdropDelayMs: 10000,
+        burnInMitigation: false,
+        nudgeIntervalMs: 60000,
+        nudgeAmplitudePx: 4,
+        nightModeEntity: '',
+        nightModeOpacity: 0.4,
       },
     });
+  } finally { server.close(); }
+});
+
+test('GET /api/config surfaces burn-in fields when configured', async () => {
+  const haClient = { getStates: async () => haStates };
+  const { server, url } = await startApp(
+    baseConfig({
+      visual: {
+        progressBar: false,
+        ratingsBadges: false,
+        infoPanelMode: 'on_tap',
+        burnInMitigation: true,
+        nudgeIntervalMs: 30000,
+        nudgeAmplitudePx: 6,
+        nightModeEntity: 'input_boolean.bedroom_dim',
+        nightModeOpacity: 0.5,
+      },
+    }),
+    haClient,
+  );
+  try {
+    const body = await fetch(`${url}/api/config`).then(r => r.json());
+    assert.equal(body.visual.burnInMitigation, true);
+    assert.equal(body.visual.nudgeIntervalMs, 30000);
+    assert.equal(body.visual.nudgeAmplitudePx, 6);
+    assert.equal(body.visual.nightModeEntity, 'input_boolean.bedroom_dim');
+    assert.equal(body.visual.nightModeOpacity, 0.5);
+  } finally { server.close(); }
+});
+
+test('GET /api/night-mode reports configured:false when no entity is set', async () => {
+  const haClient = { getStates: async () => haStates };
+  const { server, url } = await startApp(baseConfig(), haClient);
+  try {
+    const r = await fetch(`${url}/api/night-mode`);
+    assert.equal(r.status, 200);
+    const j = await r.json();
+    assert.deepEqual(j, { configured: false, on: false });
+  } finally { server.close(); }
+});
+
+test('GET /api/night-mode returns on=true when entity is on', async () => {
+  const states = [
+    { entity_id: 'input_boolean.bedroom_dim', state: 'on' },
+    ...haStates,
+  ];
+  const haClient = { getStates: async () => states };
+  const { server, url } = await startApp(
+    baseConfig({
+      visual: {
+        progressBar: false, ratingsBadges: false, infoPanelMode: 'on_tap',
+        burnInMitigation: true, nudgeIntervalMs: 60000, nudgeAmplitudePx: 4,
+        nightModeEntity: 'input_boolean.bedroom_dim', nightModeOpacity: 0.4,
+      },
+    }),
+    haClient,
+  );
+  try {
+    const j = await fetch(`${url}/api/night-mode`).then(r => r.json());
+    assert.deepEqual(j, { configured: true, on: true });
+  } finally { server.close(); }
+});
+
+test('GET /api/night-mode returns on=false when entity is off or missing', async () => {
+  const states = [
+    { entity_id: 'input_boolean.bedroom_dim', state: 'off' },
+    ...haStates,
+  ];
+  const haClient = { getStates: async () => states };
+  const { server, url } = await startApp(
+    baseConfig({
+      visual: {
+        progressBar: false, ratingsBadges: false, infoPanelMode: 'on_tap',
+        burnInMitigation: true, nudgeIntervalMs: 60000, nudgeAmplitudePx: 4,
+        nightModeEntity: 'input_boolean.bedroom_dim', nightModeOpacity: 0.4,
+      },
+    }),
+    haClient,
+  );
+  try {
+    const off = await fetch(`${url}/api/night-mode`).then(r => r.json());
+    assert.deepEqual(off, { configured: true, on: false });
+  } finally { server.close(); }
+
+  // Now with a missing entity — server reports on:false rather than 404, so
+  // a typo in config doesn't permanently dim the kiosk.
+  const noEntityClient = { getStates: async () => haStates };
+  const { server: s2, url: url2 } = await startApp(
+    baseConfig({
+      visual: {
+        progressBar: false, ratingsBadges: false, infoPanelMode: 'on_tap',
+        burnInMitigation: true, nudgeIntervalMs: 60000, nudgeAmplitudePx: 4,
+        nightModeEntity: 'input_boolean.does_not_exist', nightModeOpacity: 0.4,
+      },
+    }),
+    noEntityClient,
+  );
+  try {
+    const j = await fetch(`${url2}/api/night-mode`).then(r => r.json());
+    assert.deepEqual(j, { configured: true, on: false });
+  } finally { s2.close(); }
+});
+
+test('GET /api/night-mode degrades to on:false when HA throws', async () => {
+  const haClient = { getStates: async () => { throw new Error('HA down'); } };
+  const { server, url } = await startApp(
+    baseConfig({
+      visual: {
+        progressBar: false, ratingsBadges: false, infoPanelMode: 'on_tap',
+        burnInMitigation: true, nudgeIntervalMs: 60000, nudgeAmplitudePx: 4,
+        nightModeEntity: 'input_boolean.bedroom_dim', nightModeOpacity: 0.4,
+      },
+    }),
+    haClient,
+  );
+  try {
+    const j = await fetch(`${url}/api/night-mode`).then(r => r.json());
+    assert.equal(j.configured, true);
+    assert.equal(j.on, false);
+    assert.ok(j.error && /HA down/.test(j.error));
   } finally { server.close(); }
 });
 

@@ -128,6 +128,57 @@ test('VISUAL_BACKDROP_DELAY_MS is clamped to [1000, 600000]', () => {
   assert.equal(garbage.config.visual.backdropDelayMs, 10000);
 });
 
+// ===== #28 burn-in mitigation config =====
+
+test('burn-in mitigation defaults to off with sane sub-defaults', () => {
+  const { config } = loadConfig({ SUPERVISOR_TOKEN: 'x' });
+  assert.equal(config.visual.burnInMitigation, false);
+  assert.equal(config.visual.nudgeIntervalMs, 60000);
+  assert.equal(config.visual.nudgeAmplitudePx, 4);
+  assert.equal(config.visual.nightModeEntity, '');
+  assert.equal(config.visual.nightModeOpacity, 0.4);
+});
+
+test('VISUAL_BURN_IN_MITIGATION=true flips master switch', () => {
+  const { config } = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_BURN_IN_MITIGATION: 'true' });
+  assert.equal(config.visual.burnInMitigation, true);
+});
+
+test('VISUAL_NUDGE_INTERVAL_MS clamps to [5000, 600000]', () => {
+  const tooLow  = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_NUDGE_INTERVAL_MS: '100' });
+  assert.equal(tooLow.config.visual.nudgeIntervalMs, 5000);
+  const tooHigh = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_NUDGE_INTERVAL_MS: '999999999' });
+  assert.equal(tooHigh.config.visual.nudgeIntervalMs, 600000);
+  const ok      = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_NUDGE_INTERVAL_MS: '30000' });
+  assert.equal(ok.config.visual.nudgeIntervalMs, 30000);
+});
+
+test('VISUAL_NUDGE_AMPLITUDE_PX clamps to [1, 16] and ignores garbage', () => {
+  const garbage = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_NUDGE_AMPLITUDE_PX: 'banana' });
+  assert.equal(garbage.config.visual.nudgeAmplitudePx, 4); // default
+  const huge    = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_NUDGE_AMPLITUDE_PX: '999' });
+  assert.equal(huge.config.visual.nudgeAmplitudePx, 16);
+  const ok      = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_NUDGE_AMPLITUDE_PX: '8' });
+  assert.equal(ok.config.visual.nudgeAmplitudePx, 8);
+});
+
+test('VISUAL_NIGHT_MODE_OPACITY clamps to [0, 0.95]', () => {
+  const tooLow  = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_NIGHT_MODE_OPACITY: '-1' });
+  assert.equal(tooLow.config.visual.nightModeOpacity, 0);
+  const tooHigh = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_NIGHT_MODE_OPACITY: '5' });
+  assert.equal(tooHigh.config.visual.nightModeOpacity, 0.95);
+  const ok      = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_NIGHT_MODE_OPACITY: '0.6' });
+  assert.equal(ok.config.visual.nightModeOpacity, 0.6);
+});
+
+test('VISUAL_NIGHT_MODE_ENTITY round-trips into config', () => {
+  const { config } = loadConfig({
+    SUPERVISOR_TOKEN: 'x',
+    VISUAL_NIGHT_MODE_ENTITY: 'input_boolean.bedroom_kiosk_dim',
+  });
+  assert.equal(config.visual.nightModeEntity, 'input_boolean.bedroom_kiosk_dim');
+});
+
 test('switcher is off by default, on requires FULLY_KIOSKS', () => {
   const off = loadConfig({ SUPERVISOR_TOKEN: 'x' });
   assert.equal(off.config.switcherEnabled, false);

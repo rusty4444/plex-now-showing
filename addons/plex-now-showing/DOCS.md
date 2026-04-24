@@ -42,6 +42,11 @@ and HA tokens never leave the add-on.
 | `visual_use_backdrops` | `false` | Master switch for the backdrop-art feature. Needs `plex_url` + `plex_token`. |
 | `visual_backdrop_style` | `fullscreen` | `fullscreen` (landscape-only crossfade after `visual_backdrop_delay_ms`) or `ambient` (blurred fanart behind the poster, both orientations). |
 | `visual_backdrop_delay_ms` | `10000` | Pause threshold before the fullscreen backdrop fades in (ms, clamped 1000–600000). |
+| `visual_burn_in_mitigation` | `false` | Master switch for burn-in mitigation (pixel nudge + optional night mode overlay). |
+| `visual_nudge_interval_ms` | `60000` | How often the UI shifts by a few pixels, in ms. Clamped to `5000` – `600000`. |
+| `visual_nudge_amplitude_px` | `4` | Maximum shift in pixels. Clamped to `1` – `16`. |
+| `visual_night_mode_entity` | _empty_ | Optional HA `input_boolean` / `switch` / `binary_sensor`. When `on`, dims the kiosk. Leave empty to fall back to the OS `prefers-color-scheme: dark` media query. |
+| `visual_night_mode_opacity` | `0.4` | Dim overlay opacity when night mode is active. Clamped to `0` – `0.95`. |
 | `log_level` | `info` | s6 / add-on log verbosity. |
 
 ### Visual toggles (V2)
@@ -57,15 +62,21 @@ through to the browser automatically — no rebuild, no per-tablet config.
 | `visual_genre_chips` | Adds genre pills (Action, Sci-Fi, …) next to the content rating in the info panel. Tags are pulled from Plex metadata (`item.Genre[]`) via `/api/media-info/:ratingKey` — requires `plex_url` + `plex_token`. Personal media libraries without metadata agents will simply render nothing, which is fine. Capped at 6 chips to keep the meta row tidy. |
 | `visual_info_panel_mode` | Controls **when** the whole info panel appears. `on_tap` (default) matches v1 behaviour — hidden until you tap the poster, auto-hides after 8 s. `on_pause` pins the panel open whenever the player is paused (tap-to-peek still works during playback). `always` keeps the panel open the entire time media is active; tap is suppressed. Combine with `visual_ratings_badges` if you want ratings visible on pause or always. |
 | `visual_use_backdrops` / `visual_backdrop_style` / `visual_backdrop_delay_ms` | Backdrop art on pause (#21). **Master switch** is `visual_use_backdrops`. **Style** picks between `fullscreen` (after the item has been paused for `visual_backdrop_delay_ms`, the poster view crossfades to the Plex fanart — landscape orientations only, portrait is silently skipped because fanart crops look bad there) and `ambient` (a blurred + darkened copy of the fanart replaces the yellow bulb-lit background whenever media is active; works on both orientations because the blur makes aspect ratio moot). Images are proxied through the server at `/api/plex-art?path=…` so the Plex token never leaves the server. Requires `plex_url` + `plex_token`. |
+| `visual_burn_in_mitigation` | Master switch for long-running-kiosk protection. When on, the whole UI drifts by a few pixels every minute (configurable via `visual_nudge_interval_ms` + `visual_nudge_amplitude_px`) using a smooth 400 ms GPU transform, and a dim overlay can be triggered by an HA entity or the OS dark-mode media query. Off by default. |
+| `visual_night_mode_entity` | Optional HA entity id (`input_boolean`, `switch`, or `binary_sensor`). When its state is `on`, the kiosk fades in a dim overlay (opacity from `visual_night_mode_opacity`, default 40%). Leave empty and the kiosk uses `window.matchMedia('(prefers-color-scheme: dark)')` instead — handy for tablets that flip themselves at night. Requires `visual_burn_in_mitigation: true`. |
 
 HACS-only users (no add-on / server) can flip any visual toggle per tablet
 by setting `pns.visualProgressBar=true` / `pns.visualRatingsBadges=true` /
 `pns.visualGenreChips=true` / `pns.visualInfoPanelMode=on_pause` /
-`pns.visualUseBackdrops=true` / `pns.visualBackdropStyle=ambient` in
+`pns.visualUseBackdrops=true` / `pns.visualBackdropStyle=ambient` /
+`pns.visualBurnInMitigation=true` (with optional
+`pns.visualNudgeIntervalMs`, `pns.visualNudgeAmplitudePx`,
+`pns.visualNightModeEntity`, `pns.visualNightModeOpacity`) in
 `localStorage`, or adding the matching
 `#visualProgressBar=true` / `#visualRatingsBadges=true` /
 `#visualGenreChips=true` / `#visualInfoPanelMode=always` /
-`#visualUseBackdrops=true` / `#visualBackdropStyle=ambient`
+`#visualUseBackdrops=true` / `#visualBackdropStyle=ambient` /
+`#visualBurnInMitigation=true`
 to the kiosk URL hash.
 
 ### Fully Kiosk auto-switcher (#48)

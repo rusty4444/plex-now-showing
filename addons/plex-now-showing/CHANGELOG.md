@@ -50,3 +50,14 @@ The project follows [Semantic Versioning](https://semver.org/).
   Plex token never reaches the browser; the proxy rejects any path that
   doesn't start with `/library/` to block SSRF-style abuse. Requires
   `plex_url` + `plex_token`.
+- Burn-in mitigation (closes #28). Opt-in via
+  `visual_burn_in_mitigation: true`. Combines two subsystems: (1) a pixel
+  nudge that shifts the whole UI by ±N pixels every N ms via a 400 ms GPU
+  transform (tunable via `visual_nudge_interval_ms` 5 000–600 000 and
+  `visual_nudge_amplitude_px` 1–16, defaults 60 000 / 4), and (2) an
+  optional night-mode dim overlay driven by an HA
+  `input_boolean` / `switch` / `binary_sensor`
+  (`visual_night_mode_entity`) with the OS `prefers-color-scheme: dark`
+  media query as automatic fallback; overlay opacity tunable via
+  `visual_night_mode_opacity` (0–0.95, default 0.4). New `GET
+  /api/night-mode` endpoint surfaces entity state to the kiosk.
