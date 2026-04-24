@@ -481,10 +481,223 @@
       text-align: center;
     }
 
+    /* ===== SETUP PAGE (#setup) ===== */
+    .setup-overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 20%, #1a1a1a 0%, #050505 100%);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      overflow-y: auto;
+      padding: 40px 20px;
+    }
+
+    .setup-overlay.visible { display: flex; }
+
+    .setup-card {
+      width: 100%;
+      max-width: 520px;
+      background: rgba(20, 20, 20, 0.92);
+      border: 1px solid rgba(200, 160, 50, 0.25);
+      border-radius: 12px;
+      padding: 28px 28px 24px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 30px rgba(200, 160, 50, 0.08);
+      font-family: 'Inter', sans-serif;
+    }
+
+    .setup-card h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.2rem;
+      letter-spacing: 0.2em;
+      color: var(--gold-light);
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    .setup-card .setup-sub {
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      margin-bottom: 20px;
+    }
+
+    .setup-field { margin-bottom: 14px; }
+    .setup-field label {
+      display: block;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--gold-light);
+      margin-bottom: 4px;
+    }
+    .setup-field .hint {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      margin-top: 3px;
+      opacity: 0.7;
+    }
+    .setup-field input {
+      width: 100%;
+      background: #0a0a0a;
+      border: 1px solid rgba(200, 160, 50, 0.25);
+      border-radius: 6px;
+      padding: 10px 12px;
+      color: var(--text-light);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+    }
+    .setup-field input:focus {
+      outline: none;
+      border-color: var(--gold-light);
+      box-shadow: 0 0 0 3px rgba(200, 160, 50, 0.15);
+    }
+    .setup-field input::placeholder { color: #555; }
+
+    .setup-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-top: 18px;
+    }
+    .setup-btn {
+      flex: 1;
+      padding: 11px 14px;
+      border-radius: 6px;
+      border: 1px solid rgba(200, 160, 50, 0.35);
+      background: transparent;
+      color: var(--text-light);
+      font-family: 'Bebas Neue', sans-serif;
+      letter-spacing: 0.15em;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .setup-btn:hover { border-color: var(--gold-light); color: var(--gold-light); }
+    .setup-btn.primary {
+      background: linear-gradient(180deg, var(--gold-light), var(--gold-dark));
+      color: #1a1205;
+      border-color: var(--gold-light);
+      font-weight: 600;
+    }
+    .setup-btn.primary:hover { filter: brightness(1.1); }
+    .setup-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .setup-status {
+      min-height: 1.2em;
+      margin-top: 10px;
+      font-size: 0.8rem;
+      text-align: center;
+      color: var(--text-dim);
+    }
+    .setup-status.ok  { color: #8ce28c; }
+    .setup-status.err { color: #ff8a8a; }
+
+    .setup-advanced summary {
+      cursor: pointer;
+      color: var(--text-dim);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 8px 0;
+      margin-top: 6px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .setup-advanced[open] summary { color: var(--gold-light); }
+
+    /* Gear icon on the live display to reopen setup */
+    .setup-gear {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      width: 28px;
+      height: 28px;
+      z-index: 30;
+      opacity: 0.18;
+      cursor: pointer;
+      transition: opacity 0.2s ease;
+      color: var(--gold-light);
+    }
+    .setup-gear:hover { opacity: 0.85; }
+    .setup-gear svg { width: 100%; height: 100%; }
+
   </style>
 </head>
 <body>
   <div class="ambient-glow" id="ambientGlow"></div>
+
+  <!-- SETUP GEAR (reopen setup from the live display) -->
+  <div class="setup-gear" id="setupGear" title="Open setup" style="display:none;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+  </div>
+
+  <!-- SETUP OVERLAY (#setup) -->
+  <div class="setup-overlay" id="setupOverlay">
+    <form class="setup-card" id="setupForm" autocomplete="off" onsubmit="return false;">
+      <h1>Now Showing &mdash; Setup</h1>
+      <div class="setup-sub">Values are saved to this device's localStorage. Nothing is sent anywhere else.</div>
+
+      <div class="setup-field">
+        <label for="cfgHaUrl">Home Assistant URL</label>
+        <input id="cfgHaUrl" type="url" placeholder="http://homeassistant.local:8123" autocomplete="off">
+        <div class="hint">Leave blank to use this page's origin.</div>
+      </div>
+
+      <div class="setup-field">
+        <label for="cfgHaToken">HA Long-Lived Access Token</label>
+        <input id="cfgHaToken" type="password" placeholder="eyJhbGciOi..." autocomplete="off" spellcheck="false">
+        <div class="hint">Create one at HA profile &rarr; Long-Lived Access Tokens.</div>
+      </div>
+
+      <div class="setup-field">
+        <label for="cfgPlexUsername">Plex Username</label>
+        <input id="cfgPlexUsername" type="text" placeholder="your_plex_username" autocomplete="off">
+        <div class="hint">Filters playback to only your sessions.</div>
+      </div>
+
+      <details class="setup-advanced">
+        <summary>Optional &mdash; specific player &amp; Plex API</summary>
+
+        <div class="setup-field" style="margin-top:10px;">
+          <label for="cfgPlexPlayer">Specific Player (entity id)</label>
+          <input id="cfgPlexPlayer" type="text" placeholder="media_player.plex_plex_for_lg_tv" autocomplete="off">
+          <div class="hint">Optional. Lock the display to one player.</div>
+        </div>
+
+        <div class="setup-field">
+          <label for="cfgPlexUrl">Plex Server URL</label>
+          <input id="cfgPlexUrl" type="url" placeholder="http://192.168.1.10:32400" autocomplete="off">
+          <div class="hint">Enables media-file details (resolution, codec, bitrate).</div>
+        </div>
+
+        <div class="setup-field">
+          <label for="cfgPlexToken">Plex Token</label>
+          <input id="cfgPlexToken" type="password" placeholder="xxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
+          <div class="hint">Required if Plex URL is set.</div>
+        </div>
+
+        <div class="setup-field">
+          <label for="cfgLandscape">
+            <input id="cfgLandscape" type="checkbox" style="width:auto;margin-right:8px;vertical-align:middle;">
+            Landscape mode (fit whole poster)
+          </label>
+        </div>
+      </details>
+
+      <div class="setup-row">
+        <button class="setup-btn" id="setupTestBtn" type="button">Test Connection</button>
+        <button class="setup-btn primary" id="setupSaveBtn" type="submit">Save &amp; Launch</button>
+      </div>
+      <div class="setup-status" id="setupStatus">&nbsp;</div>
+      <div class="setup-row" style="margin-top:8px;">
+        <button class="setup-btn" id="setupClearBtn" type="button" style="font-size:0.8rem;opacity:0.7;">Clear saved settings</button>
+      </div>
+    </form>
+  </div>
 
   <!-- OUTER BULBS (around entire screen edge) -->
   <div class="bulbs-outer" id="bulbsOuter"></div>
@@ -552,17 +765,241 @@
     </div>
   </div>
 
+  <!--
+    Optional runtime config. Copy www/now_showing.config.example.js to
+    www/now_showing.config.js and edit it. The file is git-ignored so your
+    tokens never end up in source control. See DEV_README.md.
+  -->
+  <script src="now_showing.config.js" onerror="void 0"></script>
+
   <script>
-    // ===== CONFIGURATION =====
-    const params = new URLSearchParams(window.location.search);
-    const HA_URL = params.get('ha_url') || window.location.origin;
-    const HA_TOKEN = params.get('token') || 'YOUR_LONG_LIVED_ACCESS_TOKEN';
-    const POLL_INTERVAL = 5000;
-    const PLEX_USERNAME = 'YOUR_PLEX_USERNAME';
-    const PLEX_PLAYER = '';  // Optional: set to a specific entity_id (e.g., 'media_player.plex_plex_for_lg_tv') to only show media from that player. Leave empty to show any player for your user.
-    const LANDSCAPE_MODE = false;  // Set to true to fit the entire poster on screen (adds letterboxing). Default: false (poster fills the screen, may crop edges).
-    const PLEX_URL = '';  // Optional: Plex server URL for fetching media file info (resolution, codec, bitrate). Leave empty to skip.
-    const PLEX_TOKEN = '';  // Optional: Plex token (needed if PLEX_URL is set).
+    // ===== CONFIGURATION RESOLVER =====
+    //
+    // Tokens must NEVER be hard-coded in this file. They're resolved at
+    // runtime in this priority order:
+    //
+    //   1. URL hash fragment   e.g. #token=abc&plex_token=xyz  (not sent to referrers)
+    //   2. localStorage        keys: pns.haToken / pns.plexToken / pns.*
+    //   3. window.NOW_SHOWING_CONFIG   (from now_showing.config.js)
+    //   4. URL query string    e.g. ?token=abc   (logs a warning — leaks via referrer)
+    //
+    // Non-sensitive values (plexUsername, plexPlayer, landscape, etc.) follow
+    // the same precedence but skip the leakage warning.
+    //
+    // If no HA token can be resolved, the page redirects to #setup (handled
+    // in a follow-up PR — see issue #2).
+
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    const queryParams = new URLSearchParams(window.location.search);
+    const runtimeConfig = (window.NOW_SHOWING_CONFIG && typeof window.NOW_SHOWING_CONFIG === 'object')
+      ? window.NOW_SHOWING_CONFIG
+      : {};
+
+    function readConfig(key, { sensitive = false, defaultValue = '', aliases = [] } = {}) {
+      const keys = [key, ...aliases];
+      // 1. hash fragment
+      for (const k of keys) {
+        const v = hashParams.get(k);
+        if (v != null && v !== '') return v;
+      }
+      // 2. localStorage (prefixed with pns.)
+      try {
+        for (const k of keys) {
+          const v = window.localStorage.getItem('pns.' + k);
+          if (v != null && v !== '') return v;
+        }
+      } catch (_) { /* storage may be disabled */ }
+      // 3. runtime config object
+      for (const k of keys) {
+        if (runtimeConfig[k] != null && runtimeConfig[k] !== '') return runtimeConfig[k];
+      }
+      // 4. query string (warn for sensitive values)
+      for (const k of keys) {
+        const v = queryParams.get(k);
+        if (v != null && v !== '') {
+          if (sensitive) {
+            console.warn('[plex-now-showing] Reading', k, 'from URL query string — this can leak via HTTP referrers. Prefer the hash fragment or localStorage.');
+          }
+          return v;
+        }
+      }
+      return defaultValue;
+    }
+
+    function readBool(key, defaultValue = false) {
+      const v = readConfig(key);
+      if (v === '' || v == null) return defaultValue;
+      if (typeof v === 'boolean') return v;
+      return /^(1|true|yes|on)$/i.test(String(v));
+    }
+
+    function readInt(key, defaultValue) {
+      const v = readConfig(key);
+      const n = parseInt(v, 10);
+      return Number.isFinite(n) ? n : defaultValue;
+    }
+
+    const HA_URL        = readConfig('haUrl',        { aliases: ['ha_url'], defaultValue: window.location.origin });
+    const HA_TOKEN      = readConfig('haToken',      { aliases: ['token', 'ha_token'], sensitive: true });
+    const PLEX_USERNAME = readConfig('plexUsername', { aliases: ['username', 'plex_username'] });
+    const PLEX_PLAYER   = readConfig('plexPlayer',   { aliases: ['player', 'plex_player'] });
+    const PLEX_URL      = readConfig('plexUrl',      { aliases: ['plex_url'] });
+    const PLEX_TOKEN    = readConfig('plexToken',    { aliases: ['plex_token'], sensitive: true });
+    const LANDSCAPE_MODE = readBool('landscape', runtimeConfig.landscape === true);
+    const POLL_INTERVAL  = readInt('poll', 5000);
+
+    // ===== SETUP PAGE CONTROLLER (#setup) =====
+    //
+    // Handles the first-run setup form, the gear icon on the live display,
+    // and the connection test. All values are persisted under pns.* keys
+    // in localStorage — the same keys the config resolver reads above.
+
+    const SETUP_FIELDS = [
+      // [localStorage key (without pns. prefix), input element id]
+      ['haUrl',        'cfgHaUrl'],
+      ['haToken',      'cfgHaToken'],
+      ['plexUsername', 'cfgPlexUsername'],
+      ['plexPlayer',   'cfgPlexPlayer'],
+      ['plexUrl',      'cfgPlexUrl'],
+      ['plexToken',    'cfgPlexToken'],
+    ];
+
+    function setupVisible(show) {
+      const el = document.getElementById('setupOverlay');
+      if (!el) return;
+      el.classList.toggle('visible', !!show);
+    }
+
+    function populateSetupForm() {
+      try {
+        for (const [key, id] of SETUP_FIELDS) {
+          const input = document.getElementById(id);
+          if (input) input.value = window.localStorage.getItem('pns.' + key) || '';
+        }
+        const landscape = document.getElementById('cfgLandscape');
+        if (landscape) {
+          landscape.checked = window.localStorage.getItem('pns.landscape') === 'true';
+        }
+      } catch (_) { /* storage unavailable */ }
+    }
+
+    function setupStatus(msg, kind) {
+      const s = document.getElementById('setupStatus');
+      if (!s) return;
+      s.textContent = msg || '\u00a0';
+      s.classList.remove('ok', 'err');
+      if (kind) s.classList.add(kind);
+    }
+
+    async function setupTest() {
+      const haUrl = document.getElementById('cfgHaUrl').value.trim() || window.location.origin;
+      const haTok = document.getElementById('cfgHaToken').value.trim();
+      const plexUrl = document.getElementById('cfgPlexUrl').value.trim();
+      const plexTok = document.getElementById('cfgPlexToken').value.trim();
+
+      if (!haTok) { setupStatus('Enter an HA token first.', 'err'); return; }
+      setupStatus('Testing Home Assistant\u2026');
+      try {
+        const r = await fetch(haUrl.replace(/\/$/, '') + '/api/', {
+          headers: { 'Authorization': 'Bearer ' + haTok, 'Content-Type': 'application/json' }
+        });
+        if (!r.ok) { setupStatus('HA returned ' + r.status + '. Check URL and token.', 'err'); return; }
+      } catch (e) {
+        setupStatus('Could not reach HA: ' + e.message, 'err');
+        return;
+      }
+
+      if (plexUrl && plexTok) {
+        setupStatus('HA ok. Testing Plex\u2026');
+        try {
+          const r = await fetch(plexUrl.replace(/\/$/, '') + '/identity?X-Plex-Token=' + encodeURIComponent(plexTok), {
+            headers: { 'Accept': 'application/json' }
+          });
+          if (!r.ok) { setupStatus('Plex returned ' + r.status + '. Check URL and token.', 'err'); return; }
+        } catch (e) {
+          setupStatus('HA ok, but Plex unreachable: ' + e.message, 'err');
+          return;
+        }
+        setupStatus('Home Assistant and Plex both responded.', 'ok');
+      } else {
+        setupStatus('Home Assistant responded.', 'ok');
+      }
+    }
+
+    function setupSave() {
+      const haTok = document.getElementById('cfgHaToken').value.trim();
+      if (!haTok) { setupStatus('HA token is required.', 'err'); return; }
+      try {
+        for (const [key, id] of SETUP_FIELDS) {
+          const v = document.getElementById(id).value.trim();
+          if (v) window.localStorage.setItem('pns.' + key, v);
+          else window.localStorage.removeItem('pns.' + key);
+        }
+        window.localStorage.setItem('pns.landscape',
+          document.getElementById('cfgLandscape').checked ? 'true' : 'false');
+      } catch (e) {
+        setupStatus('Could not write to localStorage: ' + e.message, 'err');
+        return;
+      }
+      setupStatus('Saved. Reloading\u2026', 'ok');
+      // Drop any token in the hash/query so it's not kept in history, then reload.
+      const clean = window.location.pathname;
+      setTimeout(() => { window.location.replace(clean); }, 350);
+    }
+
+    function setupClear() {
+      if (!confirm('Clear all saved Now Showing settings on this device?')) return;
+      try {
+        for (const [key] of SETUP_FIELDS) window.localStorage.removeItem('pns.' + key);
+        window.localStorage.removeItem('pns.landscape');
+      } catch (_) {}
+      populateSetupForm();
+      setupStatus('Cleared.', 'ok');
+    }
+
+    function initSetup() {
+      const form  = document.getElementById('setupForm');
+      const test  = document.getElementById('setupTestBtn');
+      const save  = document.getElementById('setupSaveBtn');
+      const clear = document.getElementById('setupClearBtn');
+      const gear  = document.getElementById('setupGear');
+      if (form)  form.addEventListener('submit', (e) => { e.preventDefault(); setupSave(); });
+      if (test)  test.addEventListener('click', setupTest);
+      if (save)  save.addEventListener('click', setupSave);
+      if (clear) clear.addEventListener('click', setupClear);
+      if (gear)  gear.addEventListener('click', () => {
+        populateSetupForm();
+        setupVisible(true);
+      });
+
+      // Show the gear icon on the live display whenever we have any saved
+      // config — it's the escape hatch to reopen setup.
+      const hasSavedConfig = (() => {
+        try { return !!window.localStorage.getItem('pns.haToken'); } catch (_) { return false; }
+      })();
+      if (gear && hasSavedConfig) gear.style.display = 'block';
+
+      // First-run: if we have no HA token at all and no config script supplied
+      // one, auto-open setup. Also honour explicit `#setup` in the hash.
+      const forceSetup = /(^|&)setup(=|&|$)/.test(window.location.hash.replace(/^#/, ''));
+      if (forceSetup || !HA_TOKEN) {
+        populateSetupForm();
+        setupVisible(true);
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initSetup);
+    } else {
+      initSetup();
+    }
+
+    if (!HA_TOKEN) {
+      console.warn('[plex-now-showing] No HA token configured — opening setup.');
+    }
+    if (HA_TOKEN && !PLEX_USERNAME) {
+      console.warn('[plex-now-showing] No Plex username configured — user filtering disabled.');
+    }
 
     // ===== DOM REFS =====
     const posterArea = document.getElementById('posterArea');
