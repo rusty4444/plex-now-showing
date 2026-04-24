@@ -296,6 +296,88 @@
       opacity: 1;
     }
 
+    /* ===== BACKDROP ART ON PAUSE (#21) =====
+       Two layers, both opt-in via body classes. They never steal pointer
+       events so info-overlay taps still reach the poster underneath.
+
+       1. .backdrop-image — fullscreen crossfade layer. Only revealed when
+          `body.backdrop-fullscreen-visible` is added by the pause timer.
+          Landscape-only via matchMedia in JS: on portrait devices the body
+          class is never added, so this layer stays hidden even when the
+          toggle is on.
+
+       2. .backdrop-ambient — blurred, heavily darkened fanart behind
+          everything, replacing the yellow bulb-lit background. Gated by
+          `body.backdrop-ambient-mode`; once lit it stays for the entire
+          session (doesn't swap on pause, doesn't care about orientation
+          because the blur makes aspect ratio moot). */
+    .backdrop-image {
+      position: fixed;
+      inset: 0;
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+      opacity: 0;
+      /* 1.2 s is the feel the spec asks for: long enough to read as a
+         deliberate scene change, short enough that someone pausing briefly
+         doesn't get a jarring flash halfway through. */
+      transition: opacity 1.2s ease;
+      pointer-events: none;
+      /* Must sit above .bulbs-outer (z:10) and .marquee (z:2) so the pause
+         takeover is a true cinema-style full-bleed, not fanart peeking
+         through gaps in the theatre chrome. Still below .info-overlay (z:20)
+         so tap-to-show info can still appear over it. */
+      z-index: 15;
+    }
+
+    body.backdrop-fullscreen-visible .backdrop-image {
+      opacity: 1;
+    }
+
+    /* When the fullscreen pause-art is visible, fade the theatre chrome out
+       so the fanart gets the whole screen. We fade rather than hide so the
+       transition in/out matches the backdrop's own 1.2 s crossfade. */
+    .frame-wrapper,
+    .bulbs-outer {
+      transition: opacity 1.2s ease;
+    }
+    body.backdrop-fullscreen-visible .frame-wrapper,
+    body.backdrop-fullscreen-visible .bulbs-outer {
+      opacity: 0;
+    }
+
+    .backdrop-ambient {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+      /* Heavy blur + darken so the image reads as atmosphere, not content. */
+      filter: blur(60px) brightness(0.25) saturate(1.1);
+      /* The blur samples transparent pixels at the edges, which can leave
+         a dim halo. Scale up so the blurred crop covers the whole viewport. */
+      transform: scale(1.2);
+      opacity: 0;
+      transition: opacity 1.5s ease;
+      pointer-events: none;
+      z-index: 0; /* below .ambient-glow’s bulb wash */
+    }
+
+    body.backdrop-ambient-mode .backdrop-ambient {
+      display: block;
+    }
+
+    body.backdrop-ambient-mode .backdrop-ambient.loaded {
+      opacity: 1;
+    }
+
+    /* In ambient mode the yellow bulb wash fights the fanart, so dial it
+       back. Keeps the warmth, lets the art breathe. */
+    body.backdrop-ambient-mode .ambient-glow.active {
+      opacity: 0.35;
+    }
+
     /* Gradient overlay at bottom of poster */
     .poster-overlay {
       position: absolute;
@@ -812,7 +894,15 @@
   </style>
 </head>
 <body>
+  <!-- #21 Backdrop ambient layer. Behind everything; JS only paints the
+       image when useBackdrops+ambient are on. Kept as its own element so the
+       `loaded` class can drive its fade-in after the jpg decode. -->
+  <div class="backdrop-ambient" id="backdropAmbient"></div>
   <div class="ambient-glow" id="ambientGlow"></div>
+  <!-- #21 Backdrop fullscreen layer. Crossfades in after >backdropDelayMs
+       of pause (landscape only). Sits above poster-area, below info-overlay
+       so tap-to-peek still lands on the info panel. -->
+  <div class="backdrop-image" id="backdropImage"></div>
 
   <!-- SETUP GEAR (reopen setup from the live display) -->
   <div class="setup-gear" id="setupGear" title="Open setup" style="display:none;">
@@ -1078,7 +1168,17 @@
     // Server config wins so operators can ship a consistent look across the
     // fleet without touching every tablet.
     const INFO_PANEL_MODES = ['on_tap', 'on_pause', 'always'];
-    const VISUAL = { progressBar: false, ratingsBadges: false, genreChips: false, infoPanelMode: 'on_tap' };
+    const BACKDROP_STYLES = ['fullscreen', 'ambient'];
+    const VISUAL = {
+      progressBar: false,
+      ratingsBadges: false,
+      genreChips: false,
+      infoPanelMode: 'on_tap',
+      // #21 backdrop art on pause.
+      useBackdrops: false,
+      backdropStyle: 'fullscreen', // 'fullscreen' | 'ambient'
+      backdropDelayMs: 10000,
+    };
 
     function readInfoPanelMode(defaultValue) {
       // Hash override takes precedence over localStorage so tablet operators can
@@ -1091,6 +1191,26 @@
       return defaultValue;
     }
 
+    function readBackdropStyle(defaultValue) {
+      // Same resolution order as readInfoPanelMode — hash > localStorage >
+      // default. Only known enum values are honoured.
+      const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
+      const fromHash = hash.get('visualBackdropStyle');
+      if (fromHash && BACKDROP_STYLES.includes(fromHash)) return fromHash;
+      const fromStorage = localStorage.getItem('pns.visualBackdropStyle');
+      if (fromStorage && BACKDROP_STYLES.includes(fromStorage)) return fromStorage;
+      return defaultValue;
+    }
+
+    function readIntClamped(key, defaultValue, min, max) {
+      const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
+      const raw = hash.get(key) || localStorage.getItem('pns.' + key);
+      if (raw == null || raw === '') return defaultValue;
+      const n = parseInt(String(raw), 10);
+      if (!Number.isFinite(n)) return defaultValue;
+      return Math.max(min, Math.min(max, n));
+    }
+
     async function loadVisualConfig() {
       // Local overrides apply first so the tablet still looks right even if
       // the server is briefly unreachable.
@@ -1098,6 +1218,9 @@
       VISUAL.ratingsBadges = readBool('visualRatingsBadges', false);
       VISUAL.genreChips = readBool('visualGenreChips', false);
       VISUAL.infoPanelMode = readInfoPanelMode('on_tap');
+      VISUAL.useBackdrops = readBool('visualUseBackdrops', false);
+      VISUAL.backdropStyle = readBackdropStyle('fullscreen');
+      VISUAL.backdropDelayMs = readIntClamped('visualBackdropDelayMs', 10000, 1000, 600000);
 
       await serverModeReady;
       if (!SERVER_MODE) return;
@@ -1111,6 +1234,13 @@
         if (v && typeof v.genreChips === 'boolean') VISUAL.genreChips = v.genreChips;
         if (v && typeof v.infoPanelMode === 'string' && INFO_PANEL_MODES.includes(v.infoPanelMode)) {
           VISUAL.infoPanelMode = v.infoPanelMode;
+        }
+        if (v && typeof v.useBackdrops === 'boolean') VISUAL.useBackdrops = v.useBackdrops;
+        if (v && typeof v.backdropStyle === 'string' && BACKDROP_STYLES.includes(v.backdropStyle)) {
+          VISUAL.backdropStyle = v.backdropStyle;
+        }
+        if (v && Number.isFinite(v.backdropDelayMs)) {
+          VISUAL.backdropDelayMs = Math.max(1000, Math.min(600000, v.backdropDelayMs));
         }
       } catch (err) {
         console.warn('[plex-now-showing] /api/config fetch failed — using local defaults.', err);
@@ -1126,6 +1256,17 @@
       document.body.classList.toggle('info-mode-on-tap', VISUAL.infoPanelMode === 'on_tap');
       document.body.classList.toggle('info-mode-on-pause', VISUAL.infoPanelMode === 'on_pause');
       document.body.classList.toggle('info-mode-always', VISUAL.infoPanelMode === 'always');
+      // #21 backdrop art. Two body classes:
+      //   backdrop-ambient-mode  — flag for CSS to reveal the blurred layer
+      //   backdrop-fullscreen-visible — set dynamically by the pause timer,
+      //                                 so applyVisualToggles() only *clears*
+      //                                 it here (don't leak stale state when
+      //                                 toggles change at runtime).
+      const ambientOn = VISUAL.useBackdrops && VISUAL.backdropStyle === 'ambient';
+      document.body.classList.toggle('backdrop-ambient-mode', ambientOn);
+      if (!VISUAL.useBackdrops || VISUAL.backdropStyle !== 'fullscreen') {
+        document.body.classList.remove('backdrop-fullscreen-visible');
+      }
     }
 
     // ===== SETUP PAGE CONTROLLER (#setup) =====
@@ -1293,6 +1434,8 @@
     const mediaType = document.getElementById('mediaType');
     const playerName = document.getElementById('playerName');
     const ambientGlow = document.getElementById('ambientGlow');
+    const backdropAmbient = document.getElementById('backdropAmbient');
+    const backdropImage = document.getElementById('backdropImage');
     const bulbsOuterContainer = document.getElementById('bulbsOuter');
     const marquee = document.getElementById('marquee');
 
@@ -1424,6 +1567,12 @@
           width: media.width || 0,
           height: media.height || 0,
           ratings: parseRatingsClient(item),
+          // #21 backdrop art. HACS-only users still fetch directly from Plex,
+          // which means the token is already in the URL — we can use item.art
+          // as a full URL (path + token). The unified-server path never hits
+          // this branch; it uses /api/plex-art?path=... which strips the
+          // token server-side.
+          art: typeof item?.art === 'string' ? item.art : '',
         };
         cachedMediaInfo[ratingKey] = info;
         return info;
@@ -1880,6 +2029,142 @@
       progressBar.classList.remove('paused');
     }
 
+    // ===== BACKDROP ART ON PAUSE (#21) =====
+    //
+    // Two presentation modes, both opt-in. The master switch VISUAL.useBackdrops
+    // and VISUAL.backdropStyle pick which path runs; the others are no-ops.
+    //
+    //   fullscreen — landscape-only crossfade. After backdropDelayMs of
+    //                 sustained pause, swap the poster-area view to the
+    //                 fanart. Clears on play or state change.
+    //   ambient    — a blurred + dimmed copy of the fanart sits behind the
+    //                 poster frame at all times, regardless of pause state.
+    //                 Works in portrait because blur hides the crop.
+    //
+    // The frontend never sees the Plex token: it hits /api/plex-art?path=...
+    // which adds the token server-side. HACS-only users fall back to the
+    // full artUrl returned from the direct-to-Plex fetch (token is already
+    // baked into item.art via PLEX_URL).
+    const backdropCtx = {
+      ratingKey: null,      // last ratingKey we resolved art for
+      artUrl: null,         // resolved CDN/proxy URL, or null
+      pauseTimer: null,     // setTimeout handle for the fullscreen fade-in
+    };
+
+    function resolveBackdropUrl(art) {
+      if (!art || typeof art !== 'string') return null;
+      if (SERVER_MODE) {
+        // Only /library/ paths go through the proxy — anything else would
+        // be rejected server-side anyway.
+        if (!art.startsWith('/library/')) return null;
+        return `/api/plex-art?path=${encodeURIComponent(art)}`;
+      }
+      // HACS-only: item.art may already be an absolute URL with token baked
+      // in, or a /library/ path we can stitch to PLEX_URL + token.
+      if (art.startsWith('http')) return art;
+      if (art.startsWith('/library/') && PLEX_URL && PLEX_TOKEN) {
+        const sep = art.includes('?') ? '&' : '?';
+        return `${PLEX_URL}${art}${sep}X-Plex-Token=${PLEX_TOKEN}`;
+      }
+      return null;
+    }
+
+    function clearBackdropFullscreen() {
+      if (backdropCtx.pauseTimer) {
+        clearTimeout(backdropCtx.pauseTimer);
+        backdropCtx.pauseTimer = null;
+      }
+      document.body.classList.remove('backdrop-fullscreen-visible');
+    }
+
+    function scheduleBackdropFullscreen() {
+      clearBackdropFullscreen();
+      if (!VISUAL.useBackdrops || VISUAL.backdropStyle !== 'fullscreen') return;
+      if (!backdropCtx.artUrl) return;
+      // Landscape-only gate. On portrait we silently skip — the poster look
+      // on phones doesn't benefit from a fanart crossfade and usually crops
+      // badly. Ambient mode covers portrait instead.
+      try {
+        if (!window.matchMedia('(orientation: landscape)').matches) return;
+      } catch (_) { /* matchMedia unsupported — fall through */ }
+      const delay = Math.max(1000, VISUAL.backdropDelayMs || 10000);
+      backdropCtx.pauseTimer = setTimeout(() => {
+        // Double-check state at fire time — user may have resumed before the
+        // timer elapsed (showMedia would have called clearBackdropFullscreen
+        // already, but belt-and-braces so a stale timer can't flash the art).
+        if (!currentMediaData || currentMediaData.state !== 'paused') return;
+        if (!backdropCtx.artUrl) return;
+        backdropImage.style.backgroundImage = `url("${backdropCtx.artUrl}")`;
+        document.body.classList.add('backdrop-fullscreen-visible');
+      }, delay);
+    }
+
+    function applyBackdropAmbient() {
+      if (!VISUAL.useBackdrops || VISUAL.backdropStyle !== 'ambient') {
+        backdropAmbient.classList.remove('loaded');
+        return;
+      }
+      if (!backdropCtx.artUrl) {
+        // No fanart for this item — fade out gracefully.
+        backdropAmbient.classList.remove('loaded');
+        return;
+      }
+      // Preload the image before painting so the fade-in doesn't show a
+      // half-decoded frame.
+      const img = new Image();
+      img.onload = () => {
+        backdropAmbient.style.backgroundImage = `url("${backdropCtx.artUrl}")`;
+        backdropAmbient.classList.add('loaded');
+      };
+      img.onerror = () => {
+        // Art failed to load — keep the previous image up rather than
+        // flashing to black.
+        console.warn('[plex-now-showing] backdrop art failed to load');
+      };
+      img.src = backdropCtx.artUrl;
+    }
+
+    // Called after media-info resolves so we've got the Plex `art` path.
+    // Idempotent per ratingKey: repeat calls with the same key are no-ops.
+    function setBackdropArtFromMediaInfo(ratingKey, art) {
+      if (!VISUAL.useBackdrops) return;
+      if (ratingKey === backdropCtx.ratingKey && backdropCtx.artUrl) return;
+      backdropCtx.ratingKey = ratingKey;
+      backdropCtx.artUrl = resolveBackdropUrl(art);
+      applyBackdropAmbient();
+      // If we're currently paused the fullscreen timer may already be
+      // running with a stale URL — reschedule so the fresh art lands.
+      if (currentMediaData && currentMediaData.state === 'paused') {
+        scheduleBackdropFullscreen();
+      }
+    }
+
+    function resetBackdropForIdle() {
+      clearBackdropFullscreen();
+      backdropCtx.ratingKey = null;
+      backdropCtx.artUrl = null;
+      backdropImage.style.backgroundImage = '';
+      backdropAmbient.style.backgroundImage = '';
+      backdropAmbient.classList.remove('loaded');
+    }
+
+    // Keep the backdrop's landscape gate honest when the device rotates.
+    // A portrait→landscape flip while paused should reveal the fanart;
+    // landscape→portrait should hide it immediately.
+    try {
+      const mql = window.matchMedia('(orientation: landscape)');
+      const handler = () => {
+        if (!VISUAL.useBackdrops || VISUAL.backdropStyle !== 'fullscreen') return;
+        if (mql.matches && currentMediaData && currentMediaData.state === 'paused') {
+          scheduleBackdropFullscreen();
+        } else {
+          clearBackdropFullscreen();
+        }
+      };
+      if (typeof mql.addEventListener === 'function') mql.addEventListener('change', handler);
+      else if (typeof mql.addListener === 'function') mql.addListener(handler); // Safari
+    } catch (_) { /* matchMedia unsupported — skip */ }
+
     // ===== UPDATE DISPLAY =====
     function showMedia(data) {
       const artworkUrl = data.artwork.startsWith('http')
@@ -1901,6 +2186,15 @@
         // the progress bar's paused class, then bail out of the full re-render.
         syncInfoPanelForMode(data);
         setProgressFromState(data);
+        // #21 fullscreen backdrop reacts to pause/play transitions only (the
+        // ambient layer doesn't change on state). The media key hasn't
+        // changed, so backdropCtx.artUrl is still valid — (re)schedule on
+        // pause, clear on play.
+        if (data.state === 'paused') {
+          scheduleBackdropFullscreen();
+        } else {
+          clearBackdropFullscreen();
+        }
         return;
       }
 
@@ -1967,6 +2261,28 @@
       // Info-panel mode may need the panel to appear on first frame of new
       // media (always), on pause state (on_pause), or not at all (on_tap).
       syncInfoPanelForMode(data);
+
+      // #21 backdrop. New media — clear any stale fullscreen overlay, reset
+      // the context, and kick off a media-info fetch to resolve the `art`
+      // path. fetchPlexMediaInfo caches per ratingKey so this is cheap; we
+      // call it here (rather than only from showInfo) because ambient mode
+      // needs the art even when the info panel isn't shown.
+      clearBackdropFullscreen();
+      backdropCtx.ratingKey = null;
+      backdropCtx.artUrl = null;
+      backdropAmbient.classList.remove('loaded');
+      if (VISUAL.useBackdrops && data.ratingKey && (SERVER_MODE || PLEX_URL)) {
+        const rk = data.ratingKey;
+        fetchPlexMediaInfo(rk).then(mi => {
+          // Guard against stale responses arriving after the user changed
+          // media. currentMediaData.ratingKey is the source of truth.
+          if (!currentMediaData || currentMediaData.ratingKey !== rk) return;
+          if (mi && mi.art) {
+            setBackdropArtFromMediaInfo(rk, mi.art);
+            if (data.state === 'paused') scheduleBackdropFullscreen();
+          }
+        }).catch(() => { /* swallow — backdrop is best-effort */ });
+      }
     }
 
     function showIdle() {
@@ -1987,6 +2303,8 @@
       idleContent.classList.add('visible');
       ambientGlow.classList.remove('active');
       hideProgressBar();
+      // #21 backdrop — nothing playing, so tear the art layers down.
+      resetBackdropForIdle();
     }
 
     // ===== POLLING LOOP =====

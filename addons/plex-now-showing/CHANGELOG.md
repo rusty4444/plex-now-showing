@@ -40,3 +40,13 @@ The project follows [Semantic Versioning](https://semver.org/).
   existing media-info pipeline; requires `plex_url` + `plex_token`. Capped
   at 6 entries and deduped so a long sub-genre list can't blow out the
   layout.
+- Backdrop art on pause (closes #21). Opt-in via `visual_use_backdrops:
+  true`. Two styles: `fullscreen` (default) crossfades the poster view to
+  the Plex fanart after `visual_backdrop_delay_ms` of sustained pause on
+  landscape devices; `ambient` replaces the yellow bulb-lit background
+  with a blurred and darkened copy of the fanart whenever media is active,
+  and works in both orientations because the blur makes aspect ratio moot.
+  Fanart is proxied through a new `/api/plex-art?path=…` endpoint so the
+  Plex token never reaches the browser; the proxy rejects any path that
+  doesn't start with `/library/` to block SSRF-style abuse. Requires
+  `plex_url` + `plex_token`.

@@ -19,6 +19,10 @@ export function configRoute({ config }) {
         ratingsBadges: !!config.visual?.ratingsBadges,
         genreChips: !!config.visual?.genreChips,
         infoPanelMode: config.visual?.infoPanelMode || 'on_tap',
+        useBackdrops: !!config.visual?.useBackdrops,
+        backdropStyle: config.visual?.backdropStyle || 'fullscreen',
+        backdropDelayMs: Number.isFinite(config.visual?.backdropDelayMs)
+          ? config.visual.backdropDelayMs : 10000,
       },
     });
   });

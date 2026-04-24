@@ -178,5 +178,37 @@ export async function fetchMediaInfo({ plexUrl, plexToken, ratingKey, fetchImpl 
     height: media.height || 0,
     ratings: parseRatings(item),
     genres: parseGenres(item),
+    // #21 backdrop art. Plex stores fanart on the item as `art` — a path
+    // like '/library/metadata/12345/art/1700000000'. The browser never sees
+    // this directly; it goes through /api/plex-art?path=… so the token stays
+    // server-side. Empty string when the item has no fanart (e.g. personal
+    // media) so the frontend can gate rendering cleanly.
+    art: typeof item.art === 'string' ? item.art : '',
   };
+}
+
+// fetchArts — #21 backdrop cycling. Plex exposes the full collection of
+// fanart for an item at /library/metadata/{id}/arts. Returns a `Photo[]`
+// shape under MediaContainer.Metadata; each photo has a `key` that can be
+// proxied the same way as `item.art`. Returns [] on any failure so callers
+// can always render something (the primary `art` is still usable).
+export async function fetchArts({ plexUrl, plexToken, ratingKey, fetchImpl = globalThis.fetch }) {
+  if (!plexUrl || !plexToken || !ratingKey) return [];
+  const url = `${plexUrl}/library/metadata/${encodeURIComponent(ratingKey)}/arts?X-Plex-Token=${encodeURIComponent(plexToken)}`;
+  try {
+    const resp = await fetchImpl(url, { headers: { Accept: 'application/json' } });
+    if (!resp.ok) return [];
+    const data = await resp.json();
+    const photos = data?.MediaContainer?.Metadata ?? data?.MediaContainer?.Photo ?? [];
+    if (!Array.isArray(photos)) return [];
+    const out = [];
+    for (const p of photos) {
+      if (p && typeof p.key === 'string' && p.key.startsWith('/library/')) {
+        out.push(p.key);
+      }
+    }
+    return out;
+  } catch {
+    return [];
+  }
 }

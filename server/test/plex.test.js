@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
-import { parseRatingKey, fetchMediaInfo, parseRatings, parseGenres } from '../src/plex.js';
+import { parseRatingKey, fetchMediaInfo, parseRatings, parseGenres, fetchArts } from '../src/plex.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const metadata = JSON.parse(
@@ -231,4 +231,85 @@ test('fetchMediaInfo: surfaces genres from the canned fixture', async () => {
     plexUrl: 'u', plexToken: 't', ratingKey: '12345', fetchImpl,
   });
   assert.deepEqual(info.genres, ['Action', 'Adventure', 'Science Fiction']);
+});
+
+// ----- #21 backdrop art ---------------------------------------------------
+
+test('fetchMediaInfo: surfaces the item.art path', async () => {
+  const fetchImpl = async () => ({ ok: true, async json() { return metadata; } });
+  const info = await fetchMediaInfo({
+    plexUrl: 'u', plexToken: 't', ratingKey: '12345', fetchImpl,
+  });
+  assert.equal(info.art, '/library/metadata/12345/art/1700000000');
+});
+
+test('fetchMediaInfo: art falls back to empty string when missing', async () => {
+  const fixture = { MediaContainer: { Metadata: [{
+    Media: [{ Part: [{}] }],
+  }] } };
+  const fetchImpl = async () => ({ ok: true, async json() { return fixture; } });
+  const info = await fetchMediaInfo({
+    plexUrl: 'u', plexToken: 't', ratingKey: '1', fetchImpl,
+  });
+  assert.equal(info.art, '');
+});
+
+test('fetchArts: returns /library/ keys from the arts endpoint', async () => {
+  const fetchImpl = async (url) => {
+    assert.ok(url.includes('/library/metadata/12345/arts'));
+    assert.ok(url.includes('X-Plex-Token=tok'));
+    return {
+      ok: true,
+      async json() {
+        return {
+          MediaContainer: {
+            Metadata: [
+              { key: '/library/metadata/12345/arts/100' },
+              { key: '/library/metadata/12345/arts/200' },
+              { key: 'upload://something-else' }, // filtered
+              { key: 42 },                       // filtered (non-string)
+              {},                                // filtered
+            ],
+          },
+        };
+      },
+    };
+  };
+  const arts = await fetchArts({
+    plexUrl: 'https://plex.example:32400', plexToken: 'tok', ratingKey: '12345', fetchImpl,
+  });
+  assert.deepEqual(arts, [
+    '/library/metadata/12345/arts/100',
+    '/library/metadata/12345/arts/200',
+  ]);
+});
+
+test('fetchArts: returns [] on missing plex creds', async () => {
+  assert.deepEqual(await fetchArts({ plexUrl: '', plexToken: 't', ratingKey: '1' }), []);
+  assert.deepEqual(await fetchArts({ plexUrl: 'u', plexToken: '', ratingKey: '1' }), []);
+  assert.deepEqual(await fetchArts({ plexUrl: 'u', plexToken: 't', ratingKey: '' }), []);
+});
+
+test('fetchArts: returns [] on non-ok response', async () => {
+  const fetchImpl = async () => ({ ok: false, status: 500, async json() { return {}; } });
+  const arts = await fetchArts({
+    plexUrl: 'u', plexToken: 't', ratingKey: '1', fetchImpl,
+  });
+  assert.deepEqual(arts, []);
+});
+
+test('fetchArts: returns [] when fetch throws', async () => {
+  const fetchImpl = async () => { throw new Error('network down'); };
+  const arts = await fetchArts({
+    plexUrl: 'u', plexToken: 't', ratingKey: '1', fetchImpl,
+  });
+  assert.deepEqual(arts, []);
+});
+
+test('fetchArts: returns [] when MediaContainer shape is unexpected', async () => {
+  const fetchImpl = async () => ({ ok: true, async json() { return { foo: 'bar' }; } });
+  const arts = await fetchArts({
+    plexUrl: 'u', plexToken: 't', ratingKey: '1', fetchImpl,
+  });
+  assert.deepEqual(arts, []);
 });
