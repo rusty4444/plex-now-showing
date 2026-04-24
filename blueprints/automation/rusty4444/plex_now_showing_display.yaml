@@ -1,0 +1,108 @@
+blueprint:
+  name: Plex Now Showing — Tablet Display
+  description: >
+    Switches a Fully Kiosk Browser tablet to the Plex "Now Showing" marquee
+    page when Plex starts playing, and back to a dashboard when playback
+    stops.
+
+    **Auto-switching options:** use this Blueprint **or** the plex-now-showing
+    add-on's built-in Fully Kiosk switcher (issue #48). Don't enable both
+    against the same tablet.
+  domain: automation
+  source_url: https://github.com/rusty4444/plex-now-showing/blob/main/blueprints/automation/rusty4444/plex_now_showing_display.yaml
+  author: Sam Russell (rusty4444)
+
+  input:
+    plex_sessions_sensor:
+      name: Plex session-count sensor
+      description: >
+        The sensor that reports how many Plex sessions are active. Its state
+        must be a number (e.g. `0`, `1`, `2`). Usually named `sensor.<your_plex_server>`.
+      selector:
+        entity:
+          domain: sensor
+
+    fully_kiosk_device:
+      name: Fully Kiosk Browser tablet
+      description: The tablet device to switch between Now Showing and your dashboard.
+      selector:
+        device:
+          integration: fully_kiosk
+
+    now_showing_url:
+      name: Now Showing URL
+      description: >
+        Full URL of the Now Showing page on this tablet. For a plain HTML
+        install: `http://YOUR_HA_IP:8123/local/now_showing.html`. For the
+        plex-now-showing add-on: `http://YOUR_HA_IP:8099/`.
+      selector:
+        text:
+
+    dashboard_url:
+      name: Dashboard URL
+      description: >
+        URL the tablet should return to when playback stops. Typically your
+        main Lovelace dashboard, e.g. `http://YOUR_HA_IP:8123/lovelace/0`.
+      selector:
+        text:
+
+    on_delay:
+      name: Delay before switching to Now Showing (seconds)
+      description: Short delay so Plex metadata settles before the page loads.
+      default: 5
+      selector:
+        number:
+          min: 0
+          max: 60
+          unit_of_measurement: seconds
+          mode: slider
+
+    off_delay:
+      name: Delay before returning to dashboard (seconds)
+      description: >
+        Stops the tablet flipping back immediately during brief pauses or
+        ad breaks.
+      default: 10
+      selector:
+        number:
+          min: 0
+          max: 300
+          unit_of_measurement: seconds
+          mode: slider
+
+mode: restart
+max_exceeded: silent
+
+triggers:
+  - platform: state
+    entity_id: !input plex_sessions_sensor
+
+action:
+  - choose:
+      # Playback started (sessions ≥ 1)
+      - conditions:
+          - condition: numeric_state
+            entity_id: !input plex_sessions_sensor
+            above: 0
+        sequence:
+          - delay:
+              seconds: !input on_delay
+          - action: fully_kiosk.load_url
+            target:
+              device_id: !input fully_kiosk_device
+            data:
+              url: !input now_showing_url
+
+      # Playback stopped (sessions < 1)
+      - conditions:
+          - condition: numeric_state
+            entity_id: !input plex_sessions_sensor
+            below: 1
+        sequence:
+          - delay:
+              seconds: !input off_delay
+          - action: fully_kiosk.load_url
+            target:
+              device_id: !input fully_kiosk_device
+            data:
+              url: !input dashboard_url
