@@ -10,11 +10,29 @@
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
+    /* ===== THEME PRESETS (#23) =====
+     *
+     * Each theme is one block of CSS custom-property overrides applied via
+     * <body data-theme="…">. The fine-grained per-axis controls (#viz-13
+     * through #viz-19) layer on top by setting their own properties, so
+     * picking a preset and then customising one axis works as expected.
+     *
+     * Presets only redefine the variables that differ from classic-gold so
+     * the diff between themes stays readable at a glance.
+     *
+     * Adding a new preset: pick a 4-stop accent ramp (light/mid/dark/glow),
+     * a body bg + marquee bg, and decide whether the bulb gradient still
+     * fits or needs a custom --bulb-on/off pair. Then add an entry to the
+     * VISUAL_THEMES enum in server/src/config.js + the readVisualTheme
+     * resolver below. */
     :root {
-      --gold-light: #e8c84a;
-      --gold-mid: #c9a73b;
-      --gold-dark: #8b6f2a;
-      --gold-glow: #ffd75e;
+      /* classic-gold (default) values — also duplicated in the data-theme
+       * block below so an explicit data-theme="classic-gold" works the
+       * same as the bare :root fallback. */
+      --accent-light: #e8c84a;
+      --accent-mid: #c9a73b;
+      --accent-dark: #8b6f2a;
+      --accent-glow: #ffd75e;
       --bulb-on: #ffe69c;
       --bulb-off: #665522;
       --frame-border: #a0842e;
@@ -24,6 +42,89 @@
       --text-dim: #998c6e;
       --red-curtain: #5c1010;
       --marquee-height: 14vh;
+    }
+
+    body[data-theme="classic-gold"] {
+      /* explicit no-op — same values as :root, present so theme switching
+       * back to classic-gold from another preset reliably resets every var. */
+      --accent-light: #e8c84a;
+      --accent-mid: #c9a73b;
+      --accent-dark: #8b6f2a;
+      --accent-glow: #ffd75e;
+      --bulb-on: #ffe69c;
+      --bulb-off: #665522;
+      --frame-border: #a0842e;
+      --bg-dark: #0a0a0a;
+      --bg-marquee: #111111;
+      --text-light: #f5f0e0;
+      --text-dim: #998c6e;
+      --red-curtain: #5c1010;
+    }
+
+    body[data-theme="art-deco-silver"] {
+      /* Cool platinum ramp + slightly cooler curtain, evokes a 1930s
+       * picture-palace lobby. Bulbs stay warm-white because cool bulbs read
+       * as fluorescent / clinical. */
+      --accent-light: #e6e8ee;
+      --accent-mid: #b9bcc6;
+      --accent-dark: #6f7480;
+      --accent-glow: #f7f9ff;
+      --bulb-on: #fff4d6;
+      --bulb-off: #4a4d55;
+      --frame-border: #8c909a;
+      --bg-dark: #0c0e12;
+      --bg-marquee: #14171c;
+      --text-light: #ecedf2;
+      --text-dim: #8d909a;
+      --red-curtain: #2b3340; /* navy curtain instead of crimson */
+    }
+
+    body[data-theme="neon-80s"] {
+      /* Synthwave: hot pink → cyan accent, deep purple bg. Bulbs become
+       * magenta because you can't have a neon theme without neon bulbs. */
+      --accent-light: #ff5cf0;
+      --accent-mid: #c026d3;
+      --accent-dark: #6b21a8;
+      --accent-glow: #00e5ff;
+      --bulb-on: #ff77ff;
+      --bulb-off: #2a0a3a;
+      --frame-border: #8b1d8b;
+      --bg-dark: #0a0420;
+      --bg-marquee: #15082e;
+      --text-light: #fff0ff;
+      --text-dim: #a878c8;
+      --red-curtain: #1a0838;
+    }
+
+    body[data-theme="minimalist-dark"] {
+      /* No-frills monochrome — pairs well with frame-style: none + corner
+       * radius (#19). Subtle off-white accent, charcoal everywhere else. */
+      --accent-light: #e5e7eb;
+      --accent-mid: #9ca3af;
+      --accent-dark: #4b5563;
+      --accent-glow: #f9fafb;
+      --bulb-on: #d1d5db;
+      --bulb-off: #1f2937;
+      --frame-border: #374151;
+      --bg-dark: #050505;
+      --bg-marquee: #0a0a0a;
+      --text-light: #f3f4f6;
+      --text-dim: #6b7280;
+      --red-curtain: #18181b;
+    }
+
+    /* The accent-colour picker (#66) writes a single hex into
+     * --accent-override on <body>. We then derive a 4-stop ramp from it
+     * via colour-mix() so the picker works without needing the user to
+     * pick four hexes themselves. Browsers without color-mix support
+     * (Chrome <111, Safari <16.2) just see the theme defaults — acceptable
+     * because the kiosk is locked to a known browser. */
+    body[style*="--accent-override"] {
+      --accent-light: var(--accent-override);
+      --accent-mid:   color-mix(in srgb, var(--accent-override) 80%, #000 20%);
+      --accent-dark:  color-mix(in srgb, var(--accent-override) 50%, #000 50%);
+      --accent-glow:  color-mix(in srgb, var(--accent-override) 70%, #fff 30%);
+      --frame-border: color-mix(in srgb, var(--accent-override) 70%, #000 30%);
     }
 
     html, body {
@@ -70,11 +171,20 @@
       width: 28px;
       height: 28px;
       border-radius: 50%;
-      background: radial-gradient(circle at 40% 35%, #fff8dc, var(--bulb-on) 40%, #d4a820 100%);
+      /* Three-stop bulb gradient: hot core (--bulb-on lightened) → main
+       * bulb colour → dark rim (--accent-mid). Now reads from the accent
+       * ramp so non-gold themes get a coherent bulb tint instead of always
+       * fading to gold. */
+      background: radial-gradient(circle at 40% 35%,
+        color-mix(in srgb, var(--bulb-on) 70%, #fff 30%),
+        var(--bulb-on) 40%,
+        var(--accent-mid) 100%);
+      /* All three glow layers read from --accent-glow so theme presets
+       * recolour the entire bulb halo, not just the bulb body. */
       box-shadow:
-        0 0 16px 6px rgba(255, 215, 94, 0.7),
-        0 0 32px 12px rgba(255, 215, 94, 0.3),
-        0 0 4px 2px rgba(255, 230, 156, 0.9);
+        0 0 16px 6px color-mix(in srgb, var(--accent-glow) 70%, transparent),
+        0 0 32px 12px color-mix(in srgb, var(--accent-glow) 30%, transparent),
+        0 0 4px 2px color-mix(in srgb, var(--bulb-on) 90%, transparent);
       transition: all 0.35s ease;
     }
 
@@ -90,7 +200,7 @@
       height: var(--marquee-height);
       flex-shrink: 0;
       border: 4px solid;
-      border-image: linear-gradient(135deg, var(--gold-light), var(--gold-dark), var(--gold-light), var(--gold-dark)) 1;
+      border-image: linear-gradient(135deg, var(--accent-light), var(--accent-dark), var(--accent-light), var(--accent-dark)) 1;
       overflow: hidden;
       z-index: 2;
     }
@@ -155,8 +265,8 @@
       letter-spacing: 0.35em;
       color: var(--text-light);
       text-shadow:
-        0 0 20px rgba(255, 215, 94, 0.4),
-        0 0 40px rgba(255, 215, 94, 0.2),
+        0 0 20px color-mix(in srgb, var(--accent-glow) 40%, transparent),
+        0 0 40px color-mix(in srgb, var(--accent-glow) 20%, transparent),
         0 2px 4px rgba(0, 0, 0, 0.6);
     }
 
@@ -168,7 +278,7 @@
       min-height: 0;
       border: 4px solid;
       border-top: none;
-      border-image: linear-gradient(135deg, var(--gold-light), var(--gold-dark), var(--gold-light), var(--gold-dark)) 1;
+      border-image: linear-gradient(135deg, var(--accent-light), var(--accent-dark), var(--accent-light), var(--accent-dark)) 1;
       overflow: hidden;
       background: var(--bg-marquee);
     }
@@ -241,13 +351,13 @@
       bottom: 0;
       width: 0%;
       background: linear-gradient(90deg,
-        var(--gold-dark) 0%,
-        var(--gold-mid) 40%,
-        var(--gold-light) 70%,
-        var(--gold-glow) 100%);
+        var(--accent-dark) 0%,
+        var(--accent-mid) 40%,
+        var(--accent-light) 70%,
+        var(--accent-glow) 100%);
       box-shadow:
-        0 0 10px rgba(255, 215, 94, 0.55),
-        0 0 22px rgba(255, 215, 94, 0.3);
+        0 0 10px color-mix(in srgb, var(--accent-glow) 55%, transparent),
+        0 0 22px color-mix(in srgb, var(--accent-glow) 30%, transparent);
       will-change: width;
     }
     /* Soft leading edge so the bar feels like a spotlight sweep */
@@ -259,7 +369,7 @@
       bottom: 0;
       width: 10px;
       background: radial-gradient(ellipse at left center,
-        rgba(255, 230, 156, 0.95) 0%, transparent 70%);
+        color-mix(in srgb, var(--bulb-on) 95%, transparent) 0%, transparent 70%);
     }
     /* Dimmed fill while paused */
     .progress-bar.paused .progress-bar-fill {
@@ -480,7 +590,7 @@
       font-family: 'Bebas Neue', sans-serif;
       font-size: clamp(0.85rem, 2vw, 1.1rem);
       letter-spacing: 0.15em;
-      color: var(--gold-light);
+      color: var(--accent-light);
       text-transform: uppercase;
       text-shadow: 0 1px 4px rgba(0,0,0,0.8);
     }
@@ -532,7 +642,7 @@
       font-family: 'Bebas Neue', sans-serif;
       font-size: clamp(1.2rem, 3vw, 1.8rem);
       letter-spacing: 0.2em;
-      color: var(--gold-dark);
+      color: var(--accent-dark);
       opacity: 0.6;
     }
 
@@ -631,7 +741,7 @@
       font-family: 'Bebas Neue', sans-serif;
       font-size: clamp(0.8rem, 2vw, 1rem);
       letter-spacing: 0.1em;
-      color: var(--gold-light);
+      color: var(--accent-light);
       background: rgba(200, 160, 50, 0.12);
       padding: 4px 12px;
       border-radius: 4px;
@@ -814,7 +924,7 @@
       font-family: 'Bebas Neue', sans-serif;
       font-size: 2.2rem;
       letter-spacing: 0.2em;
-      color: var(--gold-light);
+      color: var(--accent-light);
       text-align: center;
       margin-bottom: 4px;
     }
@@ -832,7 +942,7 @@
       font-size: 0.75rem;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: var(--gold-light);
+      color: var(--accent-light);
       margin-bottom: 4px;
     }
     .setup-field .hint {
@@ -853,7 +963,7 @@
     }
     .setup-field input:focus {
       outline: none;
-      border-color: var(--gold-light);
+      border-color: var(--accent-light);
       box-shadow: 0 0 0 3px rgba(200, 160, 50, 0.15);
     }
     .setup-field input::placeholder { color: #555; }
@@ -877,11 +987,11 @@
       cursor: pointer;
       transition: all 0.15s ease;
     }
-    .setup-btn:hover { border-color: var(--gold-light); color: var(--gold-light); }
+    .setup-btn:hover { border-color: var(--accent-light); color: var(--accent-light); }
     .setup-btn.primary {
-      background: linear-gradient(180deg, var(--gold-light), var(--gold-dark));
+      background: linear-gradient(180deg, var(--accent-light), var(--accent-dark));
       color: #1a1205;
-      border-color: var(--gold-light);
+      border-color: var(--accent-light);
       font-weight: 600;
     }
     .setup-btn.primary:hover { filter: brightness(1.1); }
@@ -907,7 +1017,7 @@
       margin-top: 6px;
       border-top: 1px solid rgba(255, 255, 255, 0.06);
     }
-    .setup-advanced[open] summary { color: var(--gold-light); }
+    .setup-advanced[open] summary { color: var(--accent-light); }
 
     /* Gear icon on the live display to reopen setup */
     .setup-gear {
@@ -920,7 +1030,7 @@
       opacity: 0.18;
       cursor: pointer;
       transition: opacity 0.2s ease;
-      color: var(--gold-light);
+      color: var(--accent-light);
     }
     .setup-gear:hover { opacity: 0.85; }
     .setup-gear svg { width: 100%; height: 100%; }
@@ -1208,6 +1318,10 @@
     // fleet without touching every tablet.
     const INFO_PANEL_MODES = ['on_tap', 'on_pause', 'always'];
     const BACKDROP_STYLES = ['fullscreen', 'ambient'];
+    // #23 — theme presets. Must mirror the enum in server/src/config.js.
+    // Adding one here without updating the server will leak through (the
+    // setup page reads localStorage), but the add-on schema will reject it.
+    const VISUAL_THEMES = ['classic-gold', 'art-deco-silver', 'neon-80s', 'minimalist-dark'];
     // VISUAL holds the resolved values for every visual toggle. Defaults
     // mirror the server-side defaults so a hard-refresh before /api/config
     // resolves still renders sanely.
@@ -1226,6 +1340,10 @@
       nudgeAmplitudePx: 4,
       nightModeEntity: '',
       nightModeOpacity: 0.4,
+      // #23 theme preset + #66 accent colour. Empty accentColor means "use
+      // the active theme's default".
+      theme: 'classic-gold',
+      accentColor: '',
     };
 
     // #28 helper — clamp a float read from URL hash / localStorage. Mirrors
@@ -1262,6 +1380,32 @@
       return defaultValue;
     }
 
+    // #23 theme preset resolver — hash > localStorage > default. Unknown
+    // names fall back instead of throwing so a stale tablet picking a theme
+    // that's been renamed server-side still renders.
+    function readVisualTheme(defaultValue) {
+      const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
+      const fromHash = hash.get('visualTheme');
+      if (fromHash && VISUAL_THEMES.includes(fromHash)) return fromHash;
+      const fromStorage = localStorage.getItem('pns.visualTheme');
+      if (fromStorage && VISUAL_THEMES.includes(fromStorage)) return fromStorage;
+      return defaultValue;
+    }
+
+    // #66 accent colour resolver — hash > localStorage > default. Same
+    // strict #RRGGBB validation as the server's parseHexColor() so the
+    // contract is identical on both sides; bad input falls through to the
+    // theme default.
+    const HEX_RE = /^#[0-9a-f]{6}$/;
+    function readAccentColor(defaultValue) {
+      const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
+      const fromHash = (hash.get('visualAccentColor') || '').trim().toLowerCase();
+      if (fromHash && HEX_RE.test(fromHash)) return fromHash;
+      const fromStorage = (localStorage.getItem('pns.visualAccentColor') || '').trim().toLowerCase();
+      if (fromStorage && HEX_RE.test(fromStorage)) return fromStorage;
+      return defaultValue;
+    }
+
     function readIntClamped(key, defaultValue, min, max) {
       const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
       const raw = hash.get(key) || localStorage.getItem('pns.' + key);
@@ -1291,6 +1435,10 @@
           || localStorage.getItem('pns.visualNightModeEntity') || '';
       }
       VISUAL.nightModeOpacity = readFloatClamped('visualNightModeOpacity', 0.4, 0, 0.95);
+      // #23/#66 theme + accent. Local resolution first; server overrides
+      // below if /api/config responds with non-empty values.
+      VISUAL.theme = readVisualTheme('classic-gold');
+      VISUAL.accentColor = readAccentColor('');
 
       await serverModeReady;
       if (!SERVER_MODE) return;
@@ -1317,6 +1465,16 @@
         if (v && Number.isFinite(v.nudgeAmplitudePx))    VISUAL.nudgeAmplitudePx  = v.nudgeAmplitudePx;
         if (v && typeof v.nightModeEntity === 'string')  VISUAL.nightModeEntity   = v.nightModeEntity;
         if (v && Number.isFinite(v.nightModeOpacity))    VISUAL.nightModeOpacity  = v.nightModeOpacity;
+        if (v && typeof v.theme === 'string' && VISUAL_THEMES.includes(v.theme)) {
+          VISUAL.theme = v.theme;
+        }
+        // Server validates accentColor as #RRGGBB or empty; trust it but
+        // double-check on the client to defend against a stale or modified
+        // response.
+        if (v && typeof v.accentColor === 'string') {
+          const c = v.accentColor.trim().toLowerCase();
+          VISUAL.accentColor = (c === '' || HEX_RE.test(c)) ? c : '';
+        }
       } catch (err) {
         console.warn('[plex-now-showing] /api/config fetch failed — using local defaults.', err);
       }
@@ -1452,6 +1610,22 @@
         burnInCtx.start();
       } else {
         burnInCtx.stop();
+      }
+
+      // #23 theme preset — a single data-theme attribute on body. The CSS
+      // selectors in the :root/data-theme blocks at the top of the file do
+      // the rest. Re-applied on every call so swapping theme at runtime
+      // (setup form save, hash change) takes effect without reload.
+      document.body.dataset.theme = VISUAL.theme;
+
+      // #66 accent colour override — written as an inline custom property
+      // so the body[style*="--accent-override"] selector can derive a full
+      // 4-stop ramp via color-mix(). Empty string clears it so the active
+      // theme regains control of the accent.
+      if (VISUAL.accentColor) {
+        document.body.style.setProperty('--accent-override', VISUAL.accentColor);
+      } else {
+        document.body.style.removeProperty('--accent-override');
       }
     }
 

@@ -72,6 +72,8 @@ For HA Container users running via Docker Compose. Set:
 | `VISUAL_NUDGE_AMPLITUDE_PX` | `4` | Maximum pixel shift (clamped 1–16) |
 | `VISUAL_NIGHT_MODE_ENTITY` | _empty_ | Optional HA `input_boolean` / `switch` / `binary_sensor`; when `on`, dims the kiosk. Empty → fall back to `prefers-color-scheme: dark` |
 | `VISUAL_NIGHT_MODE_OPACITY` | `0.4` | Dim overlay opacity (clamped 0–0.95) |
+| `VISUAL_THEME` | `classic-gold` | Theme preset — one of `classic-gold` / `art-deco-silver` / `neon-80s` / `minimalist-dark`. Drives `<body data-theme>` |
+| `VISUAL_ACCENT_COLOR` | _empty_ | Optional `#RRGGBB` accent override applied on top of the theme. Strict (no `#abc`, no named colours, no `rgb()`) |
 | `STATIC_DIR` | `../www` | Override where `now_showing.html` is served from |
 
 ## Local development

@@ -61,3 +61,16 @@ The project follows [Semantic Versioning](https://semver.org/).
   media query as automatic fallback; overlay opacity tunable via
   `visual_night_mode_opacity` (0–0.95, default 0.4). New `GET
   /api/night-mode` endpoint surfaces entity state to the kiosk.
+- Theme presets (closes #23). New `visual_theme` option — one of
+  `classic-gold` (default, original bulb look), `art-deco-silver` (cooler
+  chrome accents), `neon-80s` (hot pink + cyan), or `minimalist-dark`
+  (clean dark UI, ornament off). Drives `<body data-theme>` so all
+  accent-derived elements (bulbs, marquee text glow, progress bar,
+  ratings badges) reskin together. Existing installs default to
+  `classic-gold` so nothing changes until the user picks another preset.
+- Accent colour picker (closes #66). Opt-in `visual_accent_color` — a
+  strict `#RRGGBB` hex (e.g. `#ff5500`) that overrides the active theme's
+  accent ramp via `--accent-override`; the four-stop ramp is derived with
+  CSS `color-mix(in srgb, ...)`. Empty value (the default) leaves the
+  theme's ramp untouched. Short form (`#abc`) and named colours are
+  rejected at both server and client validation layers.

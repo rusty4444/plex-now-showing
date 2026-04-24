@@ -97,6 +97,21 @@ export function loadConfig(env = process.env) {
       // Overlay opacity when night mode is active. 0.4 reads as "clearly
       // dimmed but the title is still legible from across the room".
       nightModeOpacity: parseFloatClamped(env.VISUAL_NIGHT_MODE_OPACITY, 0.4, 0, 0.95),
+      // Theme presets (#23). Each preset is a small block of CSS custom
+      // property overrides applied via <body data-theme="…">. The default
+      // 'classic-gold' matches the bulb-lit cinema look that's been the only
+      // option until now — existing installs render identically.
+      // Composes with the per-axis controls below; explicit values beat
+      // preset defaults.
+      theme: parseEnum(env.VISUAL_THEME,
+        ['classic-gold', 'art-deco-silver', 'neon-80s', 'minimalist-dark'],
+        'classic-gold'),
+      // Accent colour override (#66). Drives --accent-light/mid/dark/glow,
+      // which the marquee trim, gold-line frame, ratings highlight and chip
+      // borders all read from. Empty string = use the active theme's accent.
+      // Hex validation is strict (#RRGGBB only) so a typo can't break the
+      // whole UI — falls back to '' (theme default) on bad input.
+      accentColor: parseHexColor(env.VISUAL_ACCENT_COLOR, ''),
     },
     // Where the static HTML lives (overridden in tests)
     staticDir: env.STATIC_DIR || new URL('../../www', import.meta.url).pathname,
@@ -131,6 +146,17 @@ function parseFloatClamped(v, defaultValue, min, max) {
   const n = parseFloat(String(v));
   if (!Number.isFinite(n)) return defaultValue;
   return Math.min(Math.max(n, min), max);
+}
+
+// Validate a #RRGGBB hex colour string. Anything else (including #RGB short
+// form, named colours, rgba(), garbage) returns defaultValue so a typo in
+// add-on config can't render the kiosk unstyled. Trims and lower-cases for
+// stable equality.
+function parseHexColor(v, defaultValue) {
+  if (v == null) return defaultValue;
+  const s = String(v).trim().toLowerCase();
+  if (s === '') return defaultValue;
+  return /^#[0-9a-f]{6}$/.test(s) ? s : defaultValue;
 }
 
 function validate(c) {

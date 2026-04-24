@@ -60,6 +60,8 @@ services:
       VISUAL_NUDGE_AMPLITUDE_PX: "${VISUAL_NUDGE_AMPLITUDE_PX:-4}"
       VISUAL_NIGHT_MODE_ENTITY: "${VISUAL_NIGHT_MODE_ENTITY:-}"
       VISUAL_NIGHT_MODE_OPACITY: "${VISUAL_NIGHT_MODE_OPACITY:-0.4}"
+      VISUAL_THEME: "${VISUAL_THEME:-classic-gold}"
+      VISUAL_ACCENT_COLOR: "${VISUAL_ACCENT_COLOR:-}"
 
       # ---- Optional hardening (recommended if exposed off-LAN) ----
       PROXY_SECRET: "${PROXY_SECRET:-}"

@@ -179,6 +179,51 @@ test('VISUAL_NIGHT_MODE_ENTITY round-trips into config', () => {
   assert.equal(config.visual.nightModeEntity, 'input_boolean.bedroom_kiosk_dim');
 });
 
+// ===== #23 theme presets + #66 accent colour =====
+
+test('VISUAL_THEME defaults to classic-gold and accepts the four presets', () => {
+  const def = loadConfig({ SUPERVISOR_TOKEN: 'x' });
+  assert.equal(def.config.visual.theme, 'classic-gold');
+
+  for (const t of ['classic-gold', 'art-deco-silver', 'neon-80s', 'minimalist-dark']) {
+    const { config } = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_THEME: t });
+    assert.equal(config.visual.theme, t);
+  }
+
+  const bogus = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_THEME: 'rainbow-puke' });
+  assert.equal(bogus.config.visual.theme, 'classic-gold');
+});
+
+test('VISUAL_ACCENT_COLOR defaults to empty string (theme owns it)', () => {
+  const { config } = loadConfig({ SUPERVISOR_TOKEN: 'x' });
+  assert.equal(config.visual.accentColor, '');
+});
+
+test('VISUAL_ACCENT_COLOR accepts #RRGGBB and rejects everything else', () => {
+  const lower = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_ACCENT_COLOR: '#c0ffee' });
+  assert.equal(lower.config.visual.accentColor, '#c0ffee');
+
+  const upper = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_ACCENT_COLOR: '#FF8800' });
+  assert.equal(upper.config.visual.accentColor, '#ff8800'); // normalised lower-case
+
+  const padded = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_ACCENT_COLOR: '  #aabbcc  ' });
+  assert.equal(padded.config.visual.accentColor, '#aabbcc');
+
+  // 3-digit short form is intentionally rejected (no auto-expand) so users
+  // don't get surprised by lossy hex conversion.
+  const short = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_ACCENT_COLOR: '#abc' });
+  assert.equal(short.config.visual.accentColor, '');
+
+  const named = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_ACCENT_COLOR: 'gold' });
+  assert.equal(named.config.visual.accentColor, '');
+
+  const noHash = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_ACCENT_COLOR: 'aabbcc' });
+  assert.equal(noHash.config.visual.accentColor, '');
+
+  const garbage = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_ACCENT_COLOR: 'rgb(255,0,0)' });
+  assert.equal(garbage.config.visual.accentColor, '');
+});
+
 test('switcher is off by default, on requires FULLY_KIOSKS', () => {
   const off = loadConfig({ SUPERVISOR_TOKEN: 'x' });
   assert.equal(off.config.switcherEnabled, false);

@@ -76,6 +76,12 @@ options:
   visual_nudge_amplitude_px: 4
   visual_night_mode_entity: ""
   visual_night_mode_opacity: 0.4
+  # Theme presets (#23) + accent colour picker (#66). Both are presentation-
+  # only and safe to leave at defaults; classic-gold mirrors the original
+  # bulb look. Accent colour is a strict #RRGGBB override (empty = theme
+  # default ramp).
+  visual_theme: classic-gold
+  visual_accent_color: ""
   log_level: info
 schema:
   plex_url: "str?"
@@ -109,5 +115,7 @@ schema:
   visual_nudge_amplitude_px: "int(1,16)"
   visual_night_mode_entity: "str?"
   visual_night_mode_opacity: "float(0,0.95)"
+  visual_theme: "list(classic-gold|art-deco-silver|neon-80s|minimalist-dark)"
+  visual_accent_color: "str?"
   log_level: "list(trace|debug|info|notice|warning|error|fatal)?"
 image: ghcr.io/rusty4444/plex-now-showing-{arch}
