@@ -39,6 +39,7 @@ and HA tokens never leave the add-on.
 | `visual_ratings_badges` | `false` | IMDb / Rotten Tomatoes / audience badges on the info panel. Needs `plex_url` + `plex_token`. |
 | `visual_genre_chips` | `false` | Genre pills (Action, Sci-Fi, …) next to the content rating in the info panel. Needs `plex_url` + `plex_token`. |
 | `visual_info_panel_mode` | `on_tap` | When to show the info panel. `on_tap` (default), `on_pause` (pinned while paused), `always` (pinned whenever media is active). |
+| `visual_frame_style` | `bulbs` | Screen-edge frame style: `bulbs` (animated marquee bulbs), `gold-line` (thin accent double border), or `none`. |
 | `visual_use_backdrops` | `false` | Master switch for the backdrop-art feature. Needs `plex_url` + `plex_token`. |
 | `visual_backdrop_style` | `fullscreen` | `fullscreen` (landscape-only crossfade after `visual_backdrop_delay_ms`) or `ambient` (blurred fanart behind the poster, both orientations). |
 | `visual_backdrop_delay_ms` | `10000` | Pause threshold before the fullscreen backdrop fades in (ms, clamped 1000–600000). |
@@ -63,6 +64,7 @@ through to the browser automatically — no rebuild, no per-tablet config.
 | `visual_ratings_badges` | Adds IMDb, Rotten Tomatoes (fresh/rotten), and audience score chips on the info panel that slides up when you tap the kiosk. Scores are pulled server-side from Plex's `/library/metadata/{id}` via the existing `/api/media-info/:ratingKey` endpoint — requires `plex_url` + `plex_token` to be set. |
 | `visual_genre_chips` | Adds genre pills (Action, Sci-Fi, …) next to the content rating in the info panel. Tags are pulled from Plex metadata (`item.Genre[]`) via `/api/media-info/:ratingKey` — requires `plex_url` + `plex_token`. Personal media libraries without metadata agents will simply render nothing, which is fine. Capped at 6 chips to keep the meta row tidy. |
 | `visual_info_panel_mode` | Controls **when** the whole info panel appears. `on_tap` (default) matches v1 behaviour — hidden until you tap the poster, auto-hides after 8 s. `on_pause` pins the panel open whenever the player is paused (tap-to-peek still works during playback). `always` keeps the panel open the entire time media is active; tap is suppressed. Combine with `visual_ratings_badges` if you want ratings visible on pause or always. |
+| `visual_frame_style` | Frame style picker (#65). `bulbs` keeps the existing animated outer bulb string. `gold-line` hides the bulbs and draws a quiet double border around the screen edge using the active accent colour, including `visual_accent_color` overrides. `none` removes the decorative frame entirely and stops the bulb animation timer. |
 | `visual_use_backdrops` / `visual_backdrop_style` / `visual_backdrop_delay_ms` | Backdrop art on pause (#21). **Master switch** is `visual_use_backdrops`. **Style** picks between `fullscreen` (after the item has been paused for `visual_backdrop_delay_ms`, the poster view crossfades to the Plex fanart — landscape orientations only, portrait is silently skipped because fanart crops look bad there) and `ambient` (a blurred + darkened copy of the fanart replaces the yellow bulb-lit background whenever media is active; works on both orientations because the blur makes aspect ratio moot). Images are proxied through the server at `/api/plex-art?path=…` so the Plex token never leaves the server. Requires `plex_url` + `plex_token`. |
 | `visual_burn_in_mitigation` | Master switch for long-running-kiosk protection. When on, the whole UI drifts by a few pixels every minute (configurable via `visual_nudge_interval_ms` + `visual_nudge_amplitude_px`) using a smooth 400 ms GPU transform, and a dim overlay can be triggered by an HA entity or the OS dark-mode media query. Off by default. |
 | `visual_night_mode_entity` | Optional HA entity id (`input_boolean`, `switch`, or `binary_sensor`). When its state is `on`, the kiosk fades in a dim overlay (opacity from `visual_night_mode_opacity`, default 40%). Leave empty and the kiosk uses `window.matchMedia('(prefers-color-scheme: dark)')` instead — handy for tablets that flip themselves at night. Requires `visual_burn_in_mitigation: true`. |
@@ -71,6 +73,7 @@ through to the browser automatically — no rebuild, no per-tablet config.
 HACS-only users (no add-on / server) can flip any visual toggle per tablet
 by setting `pns.visualProgressBar=true` / `pns.visualRatingsBadges=true` /
 `pns.visualGenreChips=true` / `pns.visualInfoPanelMode=on_pause` /
+`pns.visualFrameStyle=gold-line` /
 `pns.visualUseBackdrops=true` / `pns.visualBackdropStyle=ambient` /
 `pns.visualBurnInMitigation=true` (with optional
 `pns.visualNudgeIntervalMs`, `pns.visualNudgeAmplitudePx`,
@@ -80,6 +83,7 @@ by setting `pns.visualProgressBar=true` / `pns.visualRatingsBadges=true` /
 `localStorage`, or adding the matching
 `#visualProgressBar=true` / `#visualRatingsBadges=true` /
 `#visualGenreChips=true` / `#visualInfoPanelMode=always` /
+`#visualFrameStyle=none` /
 `#visualUseBackdrops=true` / `#visualBackdropStyle=ambient` /
 `#visualBurnInMitigation=true` /
 `#visualTheme=neon-80s` / `#visualAccentColor=%23ff5500`

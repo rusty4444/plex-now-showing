@@ -62,6 +62,7 @@ options:
   visual_ratings_badges: false
   visual_genre_chips: false
   visual_info_panel_mode: on_tap
+  visual_frame_style: bulbs
   # Backdrop art on pause (#21). Master switch is off; backdrop_style picks
   # fullscreen (landscape-only crossfade, default) vs ambient (blurred
   # fanart behind the poster on every orientation). Delay is the pause
@@ -107,6 +108,7 @@ schema:
   visual_ratings_badges: "bool"
   visual_genre_chips: "bool"
   visual_info_panel_mode: "list(on_tap|on_pause|always)"
+  visual_frame_style: "list(bulbs|gold-line|none)"
   visual_use_backdrops: "bool"
   visual_backdrop_style: "list(fullscreen|ambient)"
   visual_backdrop_delay_ms: "int(1000,600000)"

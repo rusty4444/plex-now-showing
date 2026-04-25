@@ -63,6 +63,11 @@ export function loadConfig(env = process.env) {
       // Backdrop art on pause (#21). Master switch; off keeps the original
       // poster-only look.
       useBackdrops: parseBool(env.VISUAL_USE_BACKDROPS, false),
+      // Frame style picker (#65). Defaults to the current animated bulb
+      // string. gold-line keeps a quiet accent border; none removes the
+      // decorative screen-edge frame for OLED / minimalist installs.
+      frameStyle: parseEnum(env.VISUAL_FRAME_STYLE,
+        ['bulbs', 'gold-line', 'none'], 'bulbs'),
       // Two presentation styles:
       //   'fullscreen' — landscape only; after backdropDelayMs of pause,
       //                   crossfade the poster view to the Plex fanart.

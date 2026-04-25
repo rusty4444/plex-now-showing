@@ -155,6 +155,55 @@
       flex-direction: column;
     }
 
+    /* ===== FRAME STYLE PICKER (#65) =====
+     * bulbs (default) keeps the original animated bulb string. gold-line
+     * hides bulbs and draws a quiet double border from the active accent.
+     * none removes the decorative frame entirely for OLED/minimalist kiosks. */
+    .frame-wrapper::before,
+    .frame-wrapper::after {
+      content: '';
+      display: none;
+      position: absolute;
+      pointer-events: none;
+      z-index: 12;
+    }
+
+    body[data-frame-style="gold-line"] .bulbs-outer,
+    body[data-frame-style="none"] .bulbs-outer {
+      display: none;
+    }
+
+    body[data-frame-style="gold-line"] .frame-wrapper {
+      padding: 8px;
+    }
+
+    body[data-frame-style="gold-line"] .frame-wrapper::before {
+      display: block;
+      inset: 4px;
+      border: 1px solid color-mix(in srgb, var(--accent-light) 80%, transparent);
+      box-shadow: 0 0 14px color-mix(in srgb, var(--accent-glow) 18%, transparent);
+    }
+
+    body[data-frame-style="gold-line"] .frame-wrapper::after {
+      display: block;
+      inset: 10px;
+      border: 1px solid color-mix(in srgb, var(--frame-border) 78%, transparent);
+    }
+
+    body[data-frame-style="none"] .frame-wrapper {
+      padding: 0;
+    }
+
+    body[data-frame-style="none"] .marquee,
+    body[data-frame-style="none"] .poster-section {
+      border: 0;
+    }
+
+    body[data-frame-style="none"] .marquee::after,
+    body[data-frame-style="none"] .poster-section::after {
+      display: none;
+    }
+
     /* ===== OUTER BULBS (around entire screen) ===== */
     .bulbs-outer {
       position: fixed;
@@ -1318,6 +1367,7 @@
     // fleet without touching every tablet.
     const INFO_PANEL_MODES = ['on_tap', 'on_pause', 'always'];
     const BACKDROP_STYLES = ['fullscreen', 'ambient'];
+    const FRAME_STYLES = ['bulbs', 'gold-line', 'none'];
     // #23 — theme presets. Must mirror the enum in server/src/config.js.
     // Adding one here without updating the server will leak through (the
     // setup page reads localStorage), but the add-on schema will reject it.
@@ -1330,6 +1380,7 @@
       ratingsBadges: false,
       genreChips: false,
       infoPanelMode: 'on_tap',
+      frameStyle: 'bulbs',
       // #21 backdrop art on pause.
       useBackdrops: false,
       backdropStyle: 'fullscreen', // 'fullscreen' | 'ambient'
@@ -1380,6 +1431,15 @@
       return defaultValue;
     }
 
+    function readFrameStyle(defaultValue) {
+      const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
+      const fromHash = (hash.get('visualFrameStyle') || '').trim().toLowerCase();
+      if (fromHash && FRAME_STYLES.includes(fromHash)) return fromHash;
+      const fromStorage = (localStorage.getItem('pns.visualFrameStyle') || '').trim().toLowerCase();
+      if (fromStorage && FRAME_STYLES.includes(fromStorage)) return fromStorage;
+      return defaultValue;
+    }
+
     // #23 theme preset resolver — hash > localStorage > default. Unknown
     // names fall back instead of throwing so a stale tablet picking a theme
     // that's been renamed server-side still renders.
@@ -1422,6 +1482,7 @@
       VISUAL.ratingsBadges = readBool('visualRatingsBadges', false);
       VISUAL.genreChips = readBool('visualGenreChips', false);
       VISUAL.infoPanelMode = readInfoPanelMode('on_tap');
+      VISUAL.frameStyle = readFrameStyle('bulbs');
       VISUAL.useBackdrops = readBool('visualUseBackdrops', false);
       VISUAL.backdropStyle = readBackdropStyle('fullscreen');
       VISUAL.backdropDelayMs = readIntClamped('visualBackdropDelayMs', 10000, 1000, 600000);
@@ -1452,6 +1513,9 @@
         if (v && typeof v.genreChips === 'boolean') VISUAL.genreChips = v.genreChips;
         if (v && typeof v.infoPanelMode === 'string' && INFO_PANEL_MODES.includes(v.infoPanelMode)) {
           VISUAL.infoPanelMode = v.infoPanelMode;
+        }
+        if (v && typeof v.frameStyle === 'string' && FRAME_STYLES.includes(v.frameStyle)) {
+          VISUAL.frameStyle = v.frameStyle;
         }
         if (v && typeof v.useBackdrops === 'boolean') VISUAL.useBackdrops = v.useBackdrops;
         if (v && typeof v.backdropStyle === 'string' && BACKDROP_STYLES.includes(v.backdropStyle)) {
@@ -1587,6 +1651,10 @@
       document.body.classList.toggle('info-mode-on-tap', VISUAL.infoPanelMode === 'on_tap');
       document.body.classList.toggle('info-mode-on-pause', VISUAL.infoPanelMode === 'on_pause');
       document.body.classList.toggle('info-mode-always', VISUAL.infoPanelMode === 'always');
+      // #65 frame style. The data attribute drives CSS, while syncFrameStyle()
+      // owns the bulb DOM and chase timer so non-bulb modes do no extra work.
+      document.body.dataset.frameStyle = VISUAL.frameStyle;
+      syncFrameStyle();
       // #21 backdrop art. Two body classes:
       //   backdrop-ambient-mode  — flag for CSS to reveal the blurred layer
       //   backdrop-fullscreen-visible — set dynamically by the pause timer,
@@ -2178,7 +2246,14 @@
     }
 
     // ===== OUTER BULB LIGHTS (around screen edge) =====
+    let chaseOffset = 0;
+    let chaseTimer = null;
+
     function createOuterBulbs() {
+      if (VISUAL.frameStyle !== 'bulbs') {
+        bulbsOuterContainer.innerHTML = '';
+        return;
+      }
       const w = window.innerWidth;
       const h = window.innerHeight;
       const spacing = 42;
@@ -2234,9 +2309,27 @@
 
 
 
-    // Chase light animation — both outer and marquee bulbs
-    let chaseOffset = 0;
+    function syncFrameStyle() {
+      if (VISUAL.frameStyle !== 'bulbs') {
+        if (chaseTimer != null) {
+          clearInterval(chaseTimer);
+          chaseTimer = null;
+        }
+        chaseOffset = 0;
+        bulbsOuterContainer.innerHTML = '';
+        return;
+      }
+
+      createOuterBulbs();
+      if (chaseTimer == null) {
+        animateChase();
+        chaseTimer = setInterval(animateChase, 500);
+      }
+    }
+
+    // Chase light animation — outer bulbs only, and only while #65 is 'bulbs'.
     function animateChase() {
+      if (VISUAL.frameStyle !== 'bulbs') return;
       const outerBulbs = bulbsOuterContainer.querySelectorAll('.bulb');
       outerBulbs.forEach((el, i) => {
         const phase = (i + chaseOffset) % 3;
@@ -2679,8 +2772,6 @@
 
     // ===== INIT =====
     async function init() {
-      createOuterBulbs();
-      setInterval(animateChase, 500);
       // Runtime visual config must resolve before the first render so we don't
       // flash the default UI and then repaint.
       await loadVisualConfig();
@@ -2694,7 +2785,7 @@
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
-        createOuterBulbs();
+        if (VISUAL.frameStyle === 'bulbs') createOuterBulbs();
       }, 200);
     });
 
