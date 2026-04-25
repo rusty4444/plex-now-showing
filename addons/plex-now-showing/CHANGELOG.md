@@ -74,3 +74,7 @@ The project follows [Semantic Versioning](https://semver.org/).
   CSS `color-mix(in srgb, ...)`. Empty value (the default) leaves the
   theme's ramp untouched. Short form (`#abc`) and named colours are
   rejected at both server and client validation layers.
+- Backend abstraction (closes #34). New `backend` / `BACKEND` option selects
+  `plex`, `jellyfin`, `emby`, or `kodi`; new generic `player` / `PLAYER`
+  option can pin any exact `media_player` entity. Existing Plex defaults and
+  `plex_player` / `PLEX_PLAYER` remain backward-compatible.

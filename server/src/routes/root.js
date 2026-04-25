@@ -11,6 +11,7 @@ export function rootRoute({ config, version }) {
       name: 'plex-now-showing-server',
       version,
       mode: config.mode,
+      backend: config.backend || 'plex',
       endpoints: {
         state: '/api/state',
         config: '/api/config',

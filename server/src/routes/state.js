@@ -14,6 +14,8 @@ export function stateRoute({ haClient, cache, config }) {
       if (payload === undefined) {
         const states = await haClient.getStates();
         payload = normalise(states, {
+          backend: config.backend,
+          player: config.player,
           plexPlayer: config.plexPlayer,
           plexUsername: config.plexUsername,
         });

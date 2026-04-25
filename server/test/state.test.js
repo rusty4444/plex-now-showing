@@ -58,6 +58,55 @@ test('absolute artwork URLs are left alone', () => {
   assert.equal(r.artwork, 'https://cdn.example/poster.jpg');
 });
 
+test('generic player pins work for non-Plex backends', () => {
+  const providerStates = [{
+    entity_id: 'media_player.jellyfin_den',
+    state: 'playing',
+    attributes: {
+      friendly_name: 'Jellyfin Den',
+      media_title: 'Foundation',
+      media_content_type: 'episode',
+      entity_picture: '/api/media_player_proxy/media_player.jellyfin_den',
+    },
+  }];
+  const r = normalise(providerStates, {
+    backend: 'jellyfin',
+    player: 'media_player.jellyfin_den',
+  });
+  assert.equal(r.title, 'Foundation');
+  assert.equal(r.playerName, 'Jellyfin Den');
+  assert.ok(r.artwork.startsWith('/api/artwork?path='));
+});
+
+test('Jellyfin, Emby, and Kodi scan their matching media_player entities', () => {
+  const providerStates = [
+    {
+      entity_id: 'media_player.jellyfin_living_room',
+      state: 'playing',
+      attributes: { media_title: 'Jellyfin Movie', friendly_name: 'Jellyfin' },
+    },
+    {
+      entity_id: 'media_player.emby',
+      state: 'paused',
+      attributes: { media_title: 'Emby Show', friendly_name: 'Emby' },
+    },
+    {
+      entity_id: 'media_player.kodi_theater',
+      state: 'playing',
+      attributes: { media_title: 'Kodi Clip', friendly_name: 'Kodi' },
+    },
+  ];
+
+  assert.equal(normalise(providerStates, { backend: 'jellyfin' }).title, 'Jellyfin Movie');
+  assert.equal(normalise(providerStates, { backend: 'emby' }).title, 'Emby Show');
+  assert.equal(normalise(providerStates, { backend: 'kodi' }).title, 'Kodi Clip');
+});
+
+test('backend falls back to plex on unknown values', () => {
+  const r = normalise(states, { backend: 'laserdisc', plexUsername: 'rusty' });
+  assert.ok(r, 'should still find an active Plex player');
+});
+
 test('pinned player that is idle returns null', () => {
   const r = normalise(states, { plexPlayer: 'media_player.plex_plex_for_ios_iphone' });
   assert.equal(r, null);

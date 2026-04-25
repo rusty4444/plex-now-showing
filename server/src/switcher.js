@@ -1,6 +1,6 @@
 // Fully Kiosk auto-switcher — the in-server alternative to the HA Blueprint
 // (PR #51). Watches HA state for playing/stopped transitions on the
-// configured Plex player(s) and tells Fully Kiosk Browser tablets to load the
+// configured media player(s) and tells Fully Kiosk Browser tablets to load the
 // Now Showing URL (or go back) via its REST API:
 //
 //   GET http://<tablet>:2323/?cmd=loadURL&url=<...>&password=<fully-password>
@@ -112,7 +112,7 @@ export function createSwitcher({
 
   let prev = null;
   let timer = null;
-  // Default cadence: the Plex idle-timeout budget. 5s is tight enough that
+  // Default cadence: the media-player idle-timeout budget. 5s is tight enough that
   // the tablet feels responsive and loose enough to not hammer HA.
   const every = intervalMs ?? 5000;
 
@@ -137,6 +137,8 @@ export function createSwitcher({
     try {
       const states = await haClient.getStates();
       curr = normalise(states, {
+        backend: config.backend,
+        player: config.player,
         plexPlayer: config.plexPlayer,
         plexUsername: config.plexUsername,
       });

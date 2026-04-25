@@ -107,6 +107,8 @@ test('GET /api/config defaults every visual toggle off', async () => {
     assert.equal(resp.headers.get('cache-control'), 'no-store');
     const body = await resp.json();
     assert.deepEqual(body, {
+      backend: 'plex',
+      player: '',
       visual: {
         progressBar: false,
         ratingsBadges: false,
@@ -124,6 +126,16 @@ test('GET /api/config defaults every visual toggle off', async () => {
         accentColor: '',
       },
     });
+  } finally { server.close(); }
+});
+
+test('GET /api exposes the configured backend', async () => {
+  const haClient = { getStates: async () => haStates };
+  const { server, url } = await startApp(baseConfig({ backend: 'jellyfin' }), haClient);
+  try {
+    const body = await fetch(`${url}/api`).then(r => r.json());
+    assert.equal(body.name, 'plex-now-showing-server');
+    assert.equal(body.backend, 'jellyfin');
   } finally { server.close(); }
 });
 

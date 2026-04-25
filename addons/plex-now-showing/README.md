@@ -1,8 +1,8 @@
 # Plex Now Showing — Home Assistant Add-on
 
-Cinema-style now-playing kiosk for Plex, installed straight from the Home
-Assistant add-on store. One click, no long-lived access token, no Docker
-command line.
+Cinema-style now-playing kiosk for Plex, Jellyfin, Emby, or Kodi, installed
+straight from the Home Assistant add-on store. One click, no long-lived access
+token, no Docker command line.
 
 ## What this is
 
@@ -10,7 +10,7 @@ This add-on wraps the unified Node 20 server (`../../server/`) and serves:
 
 - `/now_showing.html` — the kiosk UI (opens via Ingress or on port `8099`)
 - `/api/state` — normalised now-playing payload (no HA token in the browser)
-- `/api/media-info/:ratingKey` — Plex metadata proxy
+- `/api/media-info/:ratingKey` — Plex metadata proxy when `backend: plex`
 - `/api/artwork` — same-origin artwork proxy
 - `/healthz` — liveness probe
 

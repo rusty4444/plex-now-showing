@@ -25,6 +25,32 @@ test('standalone mode strips trailing slash on HA_URL', () => {
   assert.equal(config.haUrl, 'https://ha.example.com:8123');
 });
 
+test('backend defaults to plex and accepts Jellyfin, Emby, and Kodi', () => {
+  const def = loadConfig({ SUPERVISOR_TOKEN: 'x' });
+  assert.equal(def.config.backend, 'plex');
+
+  for (const backend of ['plex', 'jellyfin', 'emby', 'kodi']) {
+    const { config } = loadConfig({ SUPERVISOR_TOKEN: 'x', BACKEND: backend });
+    assert.equal(config.backend, backend);
+  }
+
+  const upper = loadConfig({ SUPERVISOR_TOKEN: 'x', BACKEND: 'JELLYFIN' });
+  assert.equal(upper.config.backend, 'jellyfin');
+
+  const bogus = loadConfig({ SUPERVISOR_TOKEN: 'x', BACKEND: 'vhs' });
+  assert.equal(bogus.config.backend, 'plex');
+});
+
+test('generic PLAYER is parsed separately from legacy PLEX_PLAYER', () => {
+  const { config } = loadConfig({
+    SUPERVISOR_TOKEN: 'x',
+    PLAYER: 'media_player.living_room',
+    PLEX_PLAYER: 'media_player.plex_legacy',
+  });
+  assert.equal(config.player, 'media_player.living_room');
+  assert.equal(config.plexPlayer, 'media_player.plex_legacy');
+});
+
 test('plexUrl without plexToken is an error', () => {
   const { errors } = loadConfig({
     SUPERVISOR_TOKEN: 'x',

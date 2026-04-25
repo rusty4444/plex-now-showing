@@ -7,8 +7,8 @@ This add-on runs the unified Node 20 server in **add-on mode**: it reads
 `http://supervisor/core`. You don't need to create a long-lived access token.
 
 The kiosk HTML auto-detects it's running against the server (via a one-shot
-probe of `/api`) and switches to `/api/state` + `/api/media-info`, so Plex
-and HA tokens never leave the add-on.
+probe of `/api`) and switches to `/api/state`. Plex-only metadata calls use
+`/api/media-info`, so Plex and HA tokens never leave the add-on.
 
 ## How to open the kiosk
 
@@ -21,10 +21,12 @@ and HA tokens never leave the add-on.
 
 | Option | Default | Purpose |
 |--------|---------|---------|
+| `backend` | `plex` | Media backend to watch: `plex`, `jellyfin`, `emby`, or `kodi`. |
+| `player` | _empty_ | Optional exact `media_player` entity id. Leave empty to auto-detect active players for `backend`. |
 | `plex_url` | _empty_ | e.g. `https://plex.example.com:32400`. Needed for the info panel. |
 | `plex_token` | _empty_ | Plex `X-Plex-Token`. Required together with `plex_url`. |
 | `plex_username` | _empty_ | Filter `media_player.plex_*` entities to your username. |
-| `plex_player` | _empty_ | Pin to one entity id, e.g. `media_player.plex_plex_for_lg_tv`. Takes priority over `plex_username`. |
+| `plex_player` | _empty_ | Legacy Plex-only player pin. Prefer `player` for new installs. |
 | `landscape` | `false` | Forces landscape layout on portrait tablets. |
 | `theme` | `classic-gold` | Visual theme. |
 | `poll_interval` | `5000` | Kiosk poll interval (ms). |
@@ -95,7 +97,7 @@ add one `fully_kiosks` entry per tablet:
 | `host` | yes | `http://tablet.lan:2323` |
 | `password` | yes | Fully → Settings → Remote Admin → “Set Password” |
 | `playing_url` | yes | `http://<ha-ip>:8099/now_showing.html` |
-| `stopped_url` | no | Any URL to return to when Plex stops; leave empty to use Fully’s start URL |
+| `stopped_url` | no | Any URL to return to when media stops; leave empty to use Fully’s start URL |
 
 Under the hood the add-on watches HA for `playing` / `paused` / idle
 transitions on your pinned player (or username-filtered players) and calls
@@ -133,7 +135,7 @@ both — the server refuses non-matching requests.
   required. Without them the server returns `503 plex_not_configured` from
   `/api/media-info/:ratingKey` and the HTML falls back to the bare player
   attributes it already had.
-- **Artwork doesn't load** — check that the HA `media_player.plex_*` entity
+- **Artwork doesn't load** — check that the HA `media_player` entity
   has `entity_picture`. If it's a remote URL the server passes it through
   untouched; if it's HA-relative the server serves it via `/api/artwork`.
 - **I want to use this without the add-on** — either run the Docker Compose
