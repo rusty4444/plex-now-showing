@@ -113,6 +113,7 @@ test('GET /api/config defaults every visual toggle off', async () => {
         genreChips: false,
         infoPanelMode: 'on_tap',
         useBackdrops: false,
+        frameStyle: 'bulbs',
         backdropStyle: 'fullscreen',
         backdropDelayMs: 10000,
         burnInMitigation: false,
@@ -124,6 +125,23 @@ test('GET /api/config defaults every visual toggle off', async () => {
         accentColor: '',
       },
     });
+  } finally { server.close(); }
+});
+
+test('GET /api/config surfaces frameStyle when configured', async () => {
+  const haClient = { getStates: async () => haStates };
+  const { server, url } = await startApp(
+    baseConfig({
+      visual: {
+        progressBar: false, ratingsBadges: false, infoPanelMode: 'on_tap',
+        frameStyle: 'gold-line',
+      },
+    }),
+    haClient,
+  );
+  try {
+    const body = await fetch(`${url}/api/config`).then(r => r.json());
+    assert.equal(body.visual.frameStyle, 'gold-line');
   } finally { server.close(); }
 });
 
