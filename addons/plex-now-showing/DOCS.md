@@ -25,7 +25,7 @@ probe of `/api`) and switches to `/api/state`. Plex-only metadata calls use
 | `player` | _empty_ | Optional exact `media_player` entity id. Leave empty to auto-detect active players for `backend`. |
 | `plex_url` | _empty_ | e.g. `https://plex.example.com:32400`. Needed for the info panel. |
 | `plex_token` | _empty_ | Plex `X-Plex-Token`. Required together with `plex_url`. |
-| `plex_username` | _empty_ | Filter `media_player.plex_*` entities to your username. |
+| `plex_username` | _empty_ | Optional filter for `media_player.plex_*` entities. Leave empty to show the first active Plex player. |
 | `plex_player` | _empty_ | Legacy Plex-only player pin. Prefer `player` for new installs. |
 | `landscape` | `false` | Forces landscape layout on portrait tablets. |
 | `theme` | `classic-gold` | Visual theme. |

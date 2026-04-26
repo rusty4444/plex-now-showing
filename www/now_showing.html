@@ -2756,10 +2756,13 @@
 
         if (backend !== 'plex') return buildMediaData(active[0]);
 
+        const wantedPlexUser = String(PLEX_USERNAME || '').trim();
+        if (!wantedPlexUser) return buildMediaData(active[0]);
+
         const myPlayers = active.filter(p => {
           const attrs = p.attributes || {};
           if (attrs.username) {
-            return attrs.username === PLEX_USERNAME;
+            return attrs.username === wantedPlexUser;
           }
           const id = p.entity_id.replace('media_player.plex_', '');
           const isGenericClient = id.startsWith('plex_for_') || id.startsWith('plex_web_');

@@ -119,6 +119,12 @@ test('falls back to user-filtered active players when no plexPlayer', () => {
   assert.ok(['Pilot', 'Dune: Part Two'].includes(r.title));
 });
 
+test('blank Plex username does not filter active Plex playback', () => {
+  const r = normalise(states, { backend: 'plex', plexUsername: '' });
+  assert.ok(r, 'should show the first active Plex player when username is blank');
+  assert.equal(r.title, 'Pilot');
+});
+
 test('username mismatch filters the player out', () => {
   const r = normalise(states, { plexUsername: 'nobody' });
   // No matching user and no plex_for_* generic match → null.
