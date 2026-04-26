@@ -93,3 +93,6 @@ The project follows [Semantic Versioning](https://semver.org/).
   (`0.1.0-dev`) and the build workflow publishes the exact `config.yaml`
   version tag alongside the rolling `:dev` alias, so Supervisor no longer
   tries to pull a missing `:0.1.0` image from GHCR.
+- Blank Plex username now correctly disables user filtering in both server and
+  frontend-only mode, so HA Plex entities with a `username` attribute still
+  show as active playback.

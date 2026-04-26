@@ -26,16 +26,20 @@ export function normalise(states, {
   }
 
   // Otherwise pick from active media_player entities for the configured
-  // backend. Plex keeps its username filter; the other providers use the
+  // backend. Plex only filters by username when one is configured; blank
+  // means "show the first active Plex player". The other providers use the
   // first active matching player, mirroring their standalone repos.
   const active = states.filter(s => isBackendPlayer(s, rule) && PLAYING.has(s.state));
   if (active.length === 0) return null;
 
   if (backendId !== 'plex') return shape(active[0]);
 
+  const wantedUser = String(plexUsername || '').trim();
+  if (!wantedUser) return shape(active[0]);
+
   const mine = active.filter(p => {
     const attrs = p.attributes || {};
-    if (attrs.username) return attrs.username === plexUsername;
+    if (attrs.username) return attrs.username === wantedUser;
     const id = p.entity_id.replace('media_player.plex_', '');
     return id.startsWith('plex_for_') || id.startsWith('plex_web_');
   });

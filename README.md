@@ -267,7 +267,7 @@ Equivalent URL hash example:
 |---------|---------------|------------|--------------|--------|
 | Media backend | `backend` | `BACKEND` | `backend` | `plex`, `jellyfin`, `emby`, `kodi` |
 | Exact player pin | `player` | `PLAYER` | `player` | Any `media_player.*` entity ID |
-| Plex username filter | `plex_username` | `PLEX_USERNAME` | `plexUsername` | Plex username |
+| Plex username filter | `plex_username` | `PLEX_USERNAME` | `plexUsername` | Optional Plex username; blank shows the first active Plex player |
 | Legacy Plex player pin | `plex_player` | `PLEX_PLAYER` | `plexPlayer` | Prefer `player` for new installs |
 | Plex server URL | `plex_url` | `PLEX_URL` | `plexUrl` | Optional; enables Plex metadata |
 | Plex token | `plex_token` | `PLEX_TOKEN` | `plexToken` | Required with `plex_url` |
