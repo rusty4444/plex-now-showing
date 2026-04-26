@@ -9,7 +9,7 @@
 # Docs on each field: https://developers.home-assistant.io/docs/add-ons/configuration
 
 name: Plex Now Showing
-version: "0.1.0"
+version: "0.1.0-dev"
 slug: plex_now_showing
 description: Cinema-style now-playing kiosk for Plex, served directly from Home Assistant.
 url: https://github.com/rusty4444/plex-now-showing

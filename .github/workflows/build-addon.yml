@@ -12,9 +12,12 @@
 #   ghcr.io/rusty4444/plex-now-showing-i386
 #
 # Tagging strategy:
-#   - push to `dev`                -> :dev           (rolling pre-release)
+#   - push to `dev` / `main`        -> :<config.yaml version> + :dev/:main
 #   - push a Git tag `addon-vX.Y.Z` -> :X.Y.Z + :latest (proper release)
 #   - pull_request                  -> build-only, no push (CI proof)
+#
+# Supervisor pulls the Docker tag from config.yaml's `version` field when
+# `image:` is set, so branch builds must publish that exact tag.
 
 name: Build add-on
 
@@ -103,22 +106,40 @@ jobs:
         id: ver
         run: |
           # addon-vX.Y.Z tag → release
+          ADDON_VERSION="$(python3 - <<'PY'
+          from pathlib import Path
+
+          config = Path('addons/plex-now-showing/config.yaml')
+          for line in config.read_text(encoding='utf-8').splitlines():
+              if line.strip().startswith('version:'):
+                  value = line.split(':', 1)[1].split('#', 1)[0].strip()
+                  print(value.strip('"').strip("'"))
+                  break
+          else:
+              raise SystemExit('version not found in addons/plex-now-showing/config.yaml')
+          PY
+          )"
+          ROLLING_TAG=""
+
           if [[ "${GITHUB_REF}" == refs/tags/addon-v* ]]; then
             VERSION="${GITHUB_REF#refs/tags/addon-v}"
             CHANNEL="release"
-          elif [[ "${GITHUB_REF}" == refs/heads/dev ]]; then
-            VERSION="dev"
-            CHANNEL="dev"
-          elif [[ "${GITHUB_REF}" == refs/heads/main ]]; then
-            VERSION="main"
-            CHANNEL="main"
+            if [[ "${VERSION}" != "${ADDON_VERSION}" ]]; then
+              echo "::error::Tag addon-v${VERSION} does not match config.yaml version ${ADDON_VERSION}"
+              exit 1
+            fi
+          elif [[ "${GITHUB_REF}" == refs/heads/dev || "${GITHUB_REF}" == refs/heads/main ]]; then
+            VERSION="${ADDON_VERSION}"
+            CHANNEL="${GITHUB_REF#refs/heads/}"
+            ROLLING_TAG="${CHANNEL}"
           else
             VERSION="pr-${{ github.event.pull_request.number || 'x' }}"
             CHANNEL="pr"
           fi
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "channel=${CHANNEL}" >> "$GITHUB_OUTPUT"
-          echo "Building version=${VERSION} channel=${CHANNEL}"
+          echo "rolling_tag=${ROLLING_TAG}" >> "$GITHUB_OUTPUT"
+          echo "Building version=${VERSION} channel=${CHANNEL} rolling_tag=${ROLLING_TAG}"
 
       - name: Set up QEMU
         if: matrix.arch != 'amd64'
@@ -143,7 +164,8 @@ jobs:
           tags: |
             type=raw,value=${{ steps.ver.outputs.version }}
             type=raw,value=latest,enable=${{ steps.ver.outputs.channel == 'release' }}
-            type=raw,value=dev,enable=${{ steps.ver.outputs.channel == 'dev' }}
+            type=raw,value=dev,enable=${{ steps.ver.outputs.rolling_tag == 'dev' }}
+            type=raw,value=main,enable=${{ steps.ver.outputs.rolling_tag == 'main' }}
           labels: |
             org.opencontainers.image.title=Plex Now Showing (${{ matrix.arch }})
             org.opencontainers.image.description=HA add-on image for Plex Now Showing

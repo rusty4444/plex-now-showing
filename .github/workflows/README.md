@@ -10,8 +10,8 @@ Registry (GHCR), one image per arch.
 | Trigger                               | Image tag(s)       | Pushed? |
 |---------------------------------------|--------------------|---------|
 | Pull request touching the add-on      | — (build-only)     | no      |
-| Push to `dev`                         | `:dev`             | yes     |
-| Push to `main`                        | `:main`            | yes     |
+| Push to `dev`                         | `:<config version>` + `:dev` | yes |
+| Push to `main`                        | `:<config version>` + `:main` | yes |
 | Tag `addon-v1.2.3`                    | `:1.2.3` + `:latest` | yes   |
 
 ### Image names
@@ -26,13 +26,14 @@ ghcr.io/rusty4444/plex-now-showing-i386
 
 These exactly match `image: ghcr.io/rusty4444/plex-now-showing-{arch}` in
 `addons/plex-now-showing/config.yaml` — Supervisor substitutes `{arch}` at
-install time.
+install time and pulls the tag named by the add-on `version`.
 
 ### Cutting a release
 
 ```bash
-# On dev, bump the version in addons/plex-now-showing/config.yaml and
-# CHANGELOG.md, merge to main, then:
+# On dev, change the pre-release version in
+# addons/plex-now-showing/config.yaml (for example 0.1.0-dev) to the release
+# version, update CHANGELOG.md, merge to main, then:
 git tag addon-v0.1.0
 git push origin addon-v0.1.0
 ```
