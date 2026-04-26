@@ -74,6 +74,11 @@ The project follows [Semantic Versioning](https://semver.org/).
   CSS `color-mix(in srgb, ...)`. Empty value (the default) leaves the
   theme's ramp untouched. Short form (`#abc`) and named colours are
   rejected at both server and client validation layers.
+- Frame style picker (closes #65). New `visual_frame_style` option with
+  `bulbs` (default, current animated bulb string), `gold-line` (thin
+  accent-coloured double border with no bulb glow), and `none` (no
+  decorative screen-edge frame). Non-bulb modes clear the bulb DOM and stop
+  the chase timer so idle kiosks do no wasted animation work.
 - Backend abstraction (closes #34). New `backend` / `BACKEND` option selects
   `plex`, `jellyfin`, `emby`, or `kodi`; new generic `player` / `PLAYER`
   option can pin any exact `media_player` entity. Existing Plex defaults and

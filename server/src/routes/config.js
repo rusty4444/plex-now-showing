@@ -22,6 +22,9 @@ export function configRoute({ config }) {
         genreChips: !!config.visual?.genreChips,
         infoPanelMode: config.visual?.infoPanelMode || 'on_tap',
         useBackdrops: !!config.visual?.useBackdrops,
+        // #65 frame style. Presentation-only; frontend maps this to body
+        // data-frame-style and starts/stops the bulb timer as needed.
+        frameStyle: config.visual?.frameStyle || 'bulbs',
         backdropStyle: config.visual?.backdropStyle || 'fullscreen',
         backdropDelayMs: Number.isFinite(config.visual?.backdropDelayMs)
           ? config.visual.backdropDelayMs : 10000,

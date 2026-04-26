@@ -143,6 +143,24 @@ test('VISUAL_BACKDROP_STYLE accepts fullscreen and ambient, rejects others', () 
   assert.equal(bogus.config.visual.backdropStyle, 'fullscreen');
 });
 
+// ===== #65 frame style =====
+
+test('VISUAL_FRAME_STYLE defaults to bulbs and accepts the three frame modes', () => {
+  const def = loadConfig({ SUPERVISOR_TOKEN: 'x' });
+  assert.equal(def.config.visual.frameStyle, 'bulbs');
+
+  for (const s of ['bulbs', 'gold-line', 'none']) {
+    const { config } = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_FRAME_STYLE: s });
+    assert.equal(config.visual.frameStyle, s);
+  }
+
+  const upper = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_FRAME_STYLE: 'GOLD-LINE' });
+  assert.equal(upper.config.visual.frameStyle, 'gold-line');
+
+  const bogus = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_FRAME_STYLE: 'bulb-ish' });
+  assert.equal(bogus.config.visual.frameStyle, 'bulbs');
+});
+
 test('VISUAL_BACKDROP_DELAY_MS is clamped to [1000, 600000]', () => {
   const ok = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_BACKDROP_DELAY_MS: '15000' });
   assert.equal(ok.config.visual.backdropDelayMs, 15000);

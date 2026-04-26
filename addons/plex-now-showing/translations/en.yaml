@@ -100,6 +100,12 @@ configuration:
       after 8 s. "on_pause" — shows persistently whenever the player is
       paused; tap-to-peek still works while playing. "always" — pinned open
       the entire time media is active.
+  visual_frame_style:
+    name: Frame style
+    description: >-
+      Decorative screen-edge frame. "bulbs" (default) keeps the animated
+      marquee bulbs. "gold-line" replaces them with a thin double border
+      using the active accent colour. "none" removes the frame entirely.
   visual_use_backdrops:
     name: Show backdrop art on pause
     description: >-
