@@ -72,17 +72,18 @@ through to the browser automatically — no rebuild, no per-tablet config.
 | `visual_night_mode_entity` | Optional HA entity id (`input_boolean`, `switch`, or `binary_sensor`). When its state is `on`, the kiosk fades in a dim overlay (opacity from `visual_night_mode_opacity`, default 40%). Leave empty and the kiosk uses `window.matchMedia('(prefers-color-scheme: dark)')` instead — handy for tablets that flip themselves at night. Requires `visual_burn_in_mitigation: true`. |
 | `visual_theme` / `visual_accent_color` | Top-level look-and-feel (#23 + #66). `visual_theme` picks one of four presets via `<body data-theme>`: `classic-gold` (default, original warm bulb look), `art-deco-silver` (cooler chrome highlights and brushed-metal glow), `neon-80s` (hot pink + cyan with magenta bulbs), or `minimalist-dark` (clean dark UI, ornament backed off). `visual_accent_color` is an optional strict `#RRGGBB` override (e.g. `#ff5500`) that re-derives the four-stop accent ramp via CSS `color-mix(in srgb, ...)` — leave blank to use the theme's default ramp. Both are presentation-only; nothing on the server changes. |
 
-HACS-only users (no add-on / server) can flip any visual toggle per tablet
-by setting `pns.visualProgressBar=true` / `pns.visualRatingsBadges=true` /
-`pns.visualGenreChips=true` / `pns.visualInfoPanelMode=on_pause` /
-`pns.visualFrameStyle=gold-line` /
+HACS-only users (no add-on / server) can open `#setup`, switch to the
+**Display** tab, and configure every visual toggle without editing code. The
+form writes the same per-tablet `pns.*` keys the kiosk reads at runtime.
+Advanced users can still set `pns.visualProgressBar=true` /
+`pns.visualRatingsBadges=true` / `pns.visualGenreChips=true` /
+`pns.visualInfoPanelMode=on_pause` / `pns.visualFrameStyle=gold-line` /
 `pns.visualUseBackdrops=true` / `pns.visualBackdropStyle=ambient` /
 `pns.visualBurnInMitigation=true` (with optional
 `pns.visualNudgeIntervalMs`, `pns.visualNudgeAmplitudePx`,
 `pns.visualNightModeEntity`, `pns.visualNightModeOpacity`) /
-`pns.visualTheme=art-deco-silver` /
-`pns.visualAccentColor=#ff5500` in
-`localStorage`, or adding the matching
+`pns.visualTheme=art-deco-silver` / `pns.visualAccentColor=#ff5500` in
+`localStorage`, or add the matching
 `#visualProgressBar=true` / `#visualRatingsBadges=true` /
 `#visualGenreChips=true` / `#visualInfoPanelMode=always` /
 `#visualFrameStyle=none` /

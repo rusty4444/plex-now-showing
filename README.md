@@ -207,12 +207,11 @@ tablet browser must hold the HA token.
    ```
 
 3. If no token is configured, the page opens `#setup`. Fill:
-   - Home Assistant URL
-   - HA long-lived access token
-   - backend
-   - optional player
-   - optional Plex URL/token
-   - landscape mode
+   - **Connection**: Home Assistant URL, HA token, backend, optional player,
+     optional Plex URL/token, and landscape mode
+   - **Display**: theme preset, accent color, frame style, progress bar,
+     ratings badges, genre chips, info-panel mode, backdrops, burn-in
+     mitigation, pixel nudge, and night dimming
 
 4. Save and launch. Values are stored in that browser's `localStorage`.
 
@@ -245,9 +244,9 @@ the URL hash:
 http://<ha-ip>:8123/local/now_showing.html#haToken=...&backend=jellyfin&player=media_player.jellyfin_living_room
 ```
 
-The frontend setup form currently covers connection/backend basics. For
-frontend-only installs, visual toggles are set via `localStorage` or URL hash,
-for example:
+The setup form writes the same `pns.*` keys the kiosk reads at runtime. URL
+hash and manual `localStorage` values still work as advanced overrides, for
+example:
 
 ```javascript
 localStorage.setItem('pns.visualTheme', 'neon-80s');
@@ -389,9 +388,9 @@ paused, or always visible while media is active.
   `plex_url` and `plex_token`. These are Plex-only enhanced metadata features.
 - **Only another Plex user's playback appears**: set `plex_username`, or set
   `player` to the exact player entity you want.
-- **Visual options do not change in frontend-only mode**: add-on/Docker expose
-  visual controls through server config. Frontend-only installs currently use
-  `localStorage` or URL hash for visual toggles.
+- **Visual options do not change in frontend-only mode**: open the setup gear,
+  switch to the Display tab, save, and let the page reload. URL hash values
+  still override saved settings for one-off testing.
 - **Fully Kiosk switches twice**: disable either the Blueprint or the built-in
   switcher for that tablet.
 
