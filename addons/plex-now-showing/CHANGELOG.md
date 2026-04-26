@@ -83,3 +83,9 @@ The project follows [Semantic Versioning](https://semver.org/).
   `plex`, `jellyfin`, `emby`, or `kodi`; new generic `player` / `PLAYER`
   option can pin any exact `media_player` entity. Existing Plex defaults and
   `plex_player` / `PLEX_PLAYER` remain backward-compatible.
+
+### Fixed
+- Dev add-on installs now use a matching pre-release image tag
+  (`0.1.0-dev`) and the build workflow publishes the exact `config.yaml`
+  version tag alongside the rolling `:dev` alias, so Supervisor no longer
+  tries to pull a missing `:0.1.0` image from GHCR.
