@@ -8,7 +8,7 @@
 
 
 
-A full-screen cinema marquee display for Home Assistant that shows what's currently playing on Plex. Designed for wall-mounted tablets using Fully Kiosk Browser.
+A full-screen cinema marquee display for Home Assistant that shows what's currently playing on Plex, Jellyfin, Emby, or Kodi. Designed for wall-mounted tablets using Fully Kiosk Browser.
 
 Features animated chase bulb lights, a red curtain banner, poster art with title overlays, and automatic switching between your dashboard and the Now Showing page.
 
@@ -32,7 +32,8 @@ Features animated chase bulb lights, a red curtain banner, poster art with title
 - Title, episode info (for TV), and playback state overlays
 - **Tap for info** — tap the poster to see synopsis, content rating, duration, and media file details (resolution, codec, audio, bitrate, file size)
 - **Landscape mode** — optional flag to fit the entire poster on widescreen displays
-- Filters to a specific Plex user or specific player so other users' playback doesn't show up
+- Selects a Plex, Jellyfin, Emby, or Kodi backend and can pin to a specific player
+- Plex installs can still filter to a specific Plex user
 - Idle state when nothing is playing
 - Optional automation to switch a Fully Kiosk Browser tablet between your dashboard and the Now Showing page
 
@@ -40,8 +41,8 @@ Features animated chase bulb lights, a red curtain banner, poster art with title
 
 ## What You Need
 
-- **Home Assistant** with the [Plex integration](https://www.home-assistant.io/integrations/plex/) configured
-- A **Plex Media Server** on your local network
+- **Home Assistant** with the Plex, Jellyfin, Emby, or Kodi integration configured
+- A **Plex, Jellyfin, Emby, or Kodi** server/player on your local network
 - **Fully Kiosk Browser** (optional) — for automatic switching between your dashboard and the Now Showing page
 
 ## Files
@@ -78,8 +79,9 @@ Tokens are never hard-coded in `now_showing.html` anymore. Instead, the page rea
 window.NOW_SHOWING_CONFIG = {
   haUrl:        'http://YOUR_HA_IP:8123',
   haToken:      'YOUR_LONG_LIVED_ACCESS_TOKEN',
+  backend:      'plex', // plex | jellyfin | emby | kodi
+  player:       '',     // optional, e.g. 'media_player.kodi'
   plexUsername: 'your_plex_username',
-  plexPlayer:   '',    // optional, e.g. 'media_player.plex_plex_for_lg_tv'
   plexUrl:      '',    // optional, enables detailed media-file info
   plexToken:    '',    // optional
   landscape:    false, // true for widescreen displays
@@ -92,7 +94,7 @@ window.NOW_SHOWING_CONFIG = {
 Open the page with the tokens after the `#`, so they stay out of referrer headers and server logs:
 
 ```
-http://YOUR_HA_IP:8123/local/now_showing.html#haToken=...&plexUsername=...&plexPlayer=media_player.plex_lg_tv
+http://YOUR_HA_IP:8123/local/now_showing.html#haToken=...&backend=jellyfin&player=media_player.jellyfin_living_room
 ```
 
 **Option C — localStorage (set once per device)**
@@ -101,12 +103,14 @@ Open DevTools on the tablet and run:
 
 ```javascript
 localStorage.setItem('pns.haToken', 'YOUR_LONG_LIVED_ACCESS_TOKEN');
+localStorage.setItem('pns.backend', 'plex');
+localStorage.setItem('pns.player', '');
 localStorage.setItem('pns.plexUsername', 'your_plex_username');
 ```
 
-A full in-page setup form is coming in [#2](https://github.com/rusty4444/plex-now-showing/issues/2).
+The in-page setup form can save these values for each tablet.
 
-`plexPlayer` is optional. When set to a specific `media_player` entity ID, the page will only show media from that player. When left empty, it shows media from any active player for your Plex user. You can find your player entity IDs in **Developer Tools → States** by searching for `media_player.plex_`.
+`backend` defaults to `plex`. `player` is optional. When set to a specific `media_player` entity ID, the page will only show media from that player. When left empty, it scans active players for the selected backend. You can find your player entity IDs in **Developer Tools -> States** by searching for `media_player.plex_`, `media_player.jellyfin`, `media_player.emby`, or `media_player.kodi`.
 
 `plexUrl` and `plexToken` are optional. When configured, the info overlay will show detailed media file information (resolution, codec, bitrate, audio format, file size). Without them, the info overlay still works but only shows what Home Assistant provides (title, synopsis, duration, content rating).
 
@@ -137,8 +141,8 @@ If you want a Fully Kiosk Browser tablet to automatically switch to the Now Show
 
 ## How It Works
 
-- Polls Home Assistant's API every 5 seconds for active Plex `media_player` entities
-- Filters to only your user's playback sessions
+- Polls Home Assistant's API every 5 seconds for active `media_player` entities matching the selected backend
+- Filters Plex sessions to only your user's playback when `plexUsername` is set
 - Displays the current media's poster art as a full-bleed background
 - Shows title, episode info (for TV), and playback state
 - When nothing is playing, shows an idle "Waiting for playback" state
@@ -171,8 +175,9 @@ The panel auto-dismisses after 8 seconds, or tap again to close it.
 | Setting | Where | Default |
 |---------|-------|---------|
 | Poll interval | `poll` in config | 5000ms (5 seconds) |
+| Backend | `backend` in config | `plex` |
+| Specific player only | `player` in config | Empty (auto-detect for backend) |
 | Plex username filter | `plexUsername` in config | Your Plex username |
-| Specific player only | `plexPlayer` in config | Empty (any player for your user) |
 | Landscape mode | `landscape` in config | `false` (poster fills screen, may crop) |
 | Plex server URL | `plexUrl` in config | Empty (media file info disabled) |
 | Plex token | `plexToken` in config | Empty |
@@ -201,11 +206,7 @@ Looking for a dashboard card showing recently added media? Check out [recently-a
 
 Want to show upcoming movies and TV episodes alongside your recently added media? Check out [coming-soon-card](https://github.com/rusty4444/coming-soon-card) — a companion card powered by Radarr, Sonarr and Trakt.
 
-Using Kodi instead of Plex? Check out [kodi-now-showing](https://github.com/rusty4444/kodi-now-showing).
-
-Using Jellyfin? Check out [jellyfin-now-showing](https://github.com/rusty4444/jellyfin-now-showing).
-
-Using Emby? Check out [emby-now-showing](https://github.com/rusty4444/emby-now-showing).
+Using Kodi, Jellyfin, or Emby? Set `backend` to `kodi`, `jellyfin`, or `emby`.
 
 ---
 

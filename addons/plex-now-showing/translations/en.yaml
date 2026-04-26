@@ -2,6 +2,16 @@
 # Translations for the Options tab in the HA add-on UI.
 # Keys match fields in config.yaml's `options:` / `schema:` blocks.
 configuration:
+  backend:
+    name: Backend
+    description: >-
+      Media backend to watch in Home Assistant: Plex, Jellyfin, Emby, or Kodi.
+  player:
+    name: Player entity
+    description: >-
+      Optional media_player entity id to pin, e.g. media_player.kodi or
+      media_player.jellyfin_living_room. Leave empty to auto-detect active
+      players for the selected backend.
   plex_url:
     name: Plex URL
     description: >-
@@ -17,10 +27,10 @@ configuration:
       Filters which media_player.plex_* entities count as "yours" when no
       specific player is pinned.
   plex_player:
-    name: Pinned Plex player
+    name: Legacy pinned Plex player
     description: >-
-      Entity id to pin, e.g. media_player.plex_plex_for_lg_tv. Takes priority
-      over username filtering.
+      Backward-compatible Plex-only player pin. Prefer the generic Player
+      entity option above for new installs.
   landscape:
     name: Landscape mode
     description: Force the kiosk layout into landscape regardless of orientation.
@@ -62,8 +72,8 @@ configuration:
     description: >-
       One entry per tablet. “Host” is the Fully REST URL (e.g.
       http://tablet.lan:2323). “Password” is the Remote Admin password set
-      in Fully. “Playing URL” is loaded when Plex starts. “Stopped URL” is
-      loaded when Plex stops — leave empty to return to Fully’s start URL.
+      in Fully. “Playing URL” is loaded when media starts. “Stopped URL” is
+      loaded when media stops — leave empty to return to Fully’s start URL.
   visual_progress_bar:
     name: Show playback progress bar
     description: >-

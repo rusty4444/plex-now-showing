@@ -1,31 +1,37 @@
-// State normaliser — direct port of fetchPlexData() in www/now_showing.html so
-// the /api/state endpoint returns exactly the same shape the HTML already
-// consumes. The browser path will then be:
-//
-//   HACS-only install  → HTML calls HA directly (today's behaviour, unchanged)
-//   Add-on / Compose   → HTML calls /api/state on the server, and tokens never
-//                        leave the box.
+// State normaliser. The /api/state endpoint returns the same shape the HTML
+// consumes in direct-to-HA mode, with provider-specific player discovery kept
+// behind the backend rules below.
+
+import { getBackendRule, normaliseBackend } from './backends.js';
 
 const PLAYING = new Set(['playing', 'paused']);
 
-export function normalise(states, { plexPlayer = '', plexUsername = '' } = {}) {
+export function normalise(states, {
+  backend = 'plex',
+  player = '',
+  plexPlayer = '',
+  plexUsername = '',
+} = {}) {
   if (!Array.isArray(states)) return null;
 
-  // Specific player pinned in config → use only that one.
-  if (plexPlayer) {
-    const playerState = states.find(s => s.entity_id === plexPlayer);
+  const backendId = normaliseBackend(backend);
+  const rule = getBackendRule(backendId);
+  const pinnedPlayer = player || plexPlayer || rule.defaultPlayer || '';
+
+  // Specific player pinned in config -> use only that one.
+  if (pinnedPlayer) {
+    const playerState = states.find(s => s.entity_id === pinnedPlayer);
     if (!playerState || !PLAYING.has(playerState.state)) return null;
     return shape(playerState);
   }
 
-  // Otherwise pick from active Plex media_player entities, filtered to this
-  // user where possible.
-  const active = states.filter(s =>
-    typeof s.entity_id === 'string'
-    && s.entity_id.startsWith('media_player.plex_')
-    && PLAYING.has(s.state),
-  );
+  // Otherwise pick from active media_player entities for the configured
+  // backend. Plex keeps its username filter; the other providers use the
+  // first active matching player, mirroring their standalone repos.
+  const active = states.filter(s => isBackendPlayer(s, rule) && PLAYING.has(s.state));
   if (active.length === 0) return null;
+
+  if (backendId !== 'plex') return shape(active[0]);
 
   const mine = active.filter(p => {
     const attrs = p.attributes || {};
@@ -36,6 +42,12 @@ export function normalise(states, { plexPlayer = '', plexUsername = '' } = {}) {
   if (mine.length === 0) return null;
 
   return shape(mine[0]);
+}
+
+function isBackendPlayer(state, rule) {
+  if (!state || typeof state.entity_id !== 'string') return false;
+  return state.entity_id.startsWith(rule.entityPrefix)
+    || rule.exactEntities.includes(state.entity_id);
 }
 
 function shape(playerState) {

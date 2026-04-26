@@ -1,7 +1,8 @@
 # plex-now-showing-server
 
 Unified backend that serves the Now Showing HTML **and** proxies Home
-Assistant + Plex so API tokens never leave the server. This is the shared
+Assistant + the selected media backend so API tokens never leave the server.
+This is the shared
 runtime used by:
 
 - **#addon-2** — the Home Assistant add-on wrapper
@@ -15,7 +16,7 @@ Standalone (HACS-only) installs continue to work against the unmodified
 | Method | Path                              | Purpose                                                 |
 |-------:|-----------------------------------|---------------------------------------------------------|
 | GET    | `/now_showing.html`               | The kiosk UI (served from `STATIC_DIR`, default `../www`) |
-| GET    | `/api`                            | Version + mode + endpoint listing                        |
+| GET    | `/api`                            | Version + mode + backend + endpoint listing              |
 | GET    | `/api/state`                      | Normalised now-playing payload (3 s TTL cache)          |
 | GET    | `/api/config`                     | Browser-safe runtime flags (visual toggles)              |
 | GET    | `/api/night-mode`                 | `{configured, on}` for the optional night-mode HA entity |
@@ -47,9 +48,11 @@ For HA Container users running via Docker Compose. Set:
 | `PORT` | `8099` | Listen port |
 | `SUPERVISOR_TOKEN` | – | Set by Supervisor; switches to add-on mode |
 | `HA_URL` / `HA_TOKEN` | – | Standalone mode |
+| `BACKEND` | `plex` | Media backend to watch: `plex`, `jellyfin`, `emby`, or `kodi` |
+| `PLAYER` | – | Optional exact `media_player` entity id. Leave empty to auto-detect active players for `BACKEND` |
 | `PLEX_URL` / `PLEX_TOKEN` | – | Required together if you want `/api/media-info/:ratingKey` |
 | `PLEX_USERNAME` | – | Filters which `media_player.plex_*` entities count as "yours" |
-| `PLEX_PLAYER` | – | Pin to one entity id, e.g. `media_player.plex_plex_for_lg_tv` |
+| `PLEX_PLAYER` | – | Legacy Plex-only player pin; prefer `PLAYER` for new installs |
 | `LANDSCAPE` | `false` | Passed through to the HTML |
 | `THEME` | `classic-gold` | Passed through to the HTML |
 | `POLL` | `5000` | Kiosk poll interval in ms |

@@ -79,3 +79,7 @@ The project follows [Semantic Versioning](https://semver.org/).
   accent-coloured double border with no bulb glow), and `none` (no
   decorative screen-edge frame). Non-bulb modes clear the bulb DOM and stop
   the chase timer so idle kiosks do no wasted animation work.
+- Backend abstraction (closes #34). New `backend` / `BACKEND` option selects
+  `plex`, `jellyfin`, `emby`, or `kodi`; new generic `player` / `PLAYER`
+  option can pin any exact `media_player` entity. Existing Plex defaults and
+  `plex_player` / `PLEX_PLAYER` remain backward-compatible.

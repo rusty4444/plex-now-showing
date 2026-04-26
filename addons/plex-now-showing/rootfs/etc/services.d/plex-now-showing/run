@@ -27,6 +27,8 @@ export_opt() {
 }
 
 # ---- User options → env ----
+export_opt BACKEND           backend
+export_opt PLAYER            player
 export_opt PLEX_URL          plex_url
 export_opt PLEX_TOKEN        plex_token
 export_opt PLEX_USERNAME     plex_username
@@ -78,9 +80,11 @@ export_opt VISUAL_THEME               visual_theme
 export_opt VISUAL_ACCENT_COLOR        visual_accent_color
 
 # ---- Diagnostics (no secrets) ----
+bashio::log.info "Backend:                  ${BACKEND:-plex}"
+bashio::log.info "Player entity:            ${PLAYER:-<auto>}"
 bashio::log.info "Plex URL configured:      $([[ -n "${PLEX_URL}"   ]] && echo yes || echo no)"
 bashio::log.info "Plex token configured:    $([[ -n "${PLEX_TOKEN}" ]] && echo yes || echo no)"
-bashio::log.info "Pinned player:            ${PLEX_PLAYER:-<none, using username filter>}"
+bashio::log.info "Legacy Plex player:       ${PLEX_PLAYER:-<none>}"
 bashio::log.info "Plex username:            ${PLEX_USERNAME:-<none>}"
 bashio::log.info "Landscape mode:           ${LANDSCAPE}"
 bashio::log.info "Theme:                    ${THEME}"

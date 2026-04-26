@@ -34,6 +34,10 @@ services:
       HA_URL: "${HA_URL}"
       HA_TOKEN: "${HA_TOKEN}"
 
+      # ---- Backend selection ----
+      BACKEND: "${BACKEND:-plex}"
+      PLAYER: "${PLAYER:-}"
+
       # ---- Plex (optional; needed for codec/HDR info panel) ----
       PLEX_URL: "${PLEX_URL:-}"
       PLEX_TOKEN: "${PLEX_TOKEN:-}"

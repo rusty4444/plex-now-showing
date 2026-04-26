@@ -112,6 +112,6 @@ if (isDirectRun) {
   }
 
   app.listen(config.port, () => {
-    console.log(`plex-now-showing-server v${pkg.version} listening on :${config.port} (mode=${config.mode})`);
+    console.log(`plex-now-showing-server v${pkg.version} listening on :${config.port} (mode=${config.mode}, backend=${config.backend})`);
   });
 }

@@ -40,6 +40,8 @@ ports_description:
 map:
   - ssl
 options:
+  backend: plex
+  player: ""
   plex_url: ""
   plex_token: ""
   plex_username: ""
@@ -85,6 +87,8 @@ options:
   visual_accent_color: ""
   log_level: info
 schema:
+  backend: "list(plex|jellyfin|emby|kodi)"
+  player: "str?"
   plex_url: "str?"
   plex_token: "password?"
   plex_username: "str?"

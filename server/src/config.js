@@ -10,7 +10,9 @@
 //                         Used by HA Container users running docker compose.
 //
 // Plex access (plex_url + plex_token) is always optional and purely for the
-// media-info endpoint.
+// Plex-only media-info endpoint.
+
+import { normaliseBackend } from './backends.js';
 
 export function loadConfig(env = process.env) {
   const supervisorToken = env.SUPERVISOR_TOKEN || '';
@@ -20,12 +22,15 @@ export function loadConfig(env = process.env) {
     ? 'http://supervisor/core'
     : (env.HA_URL || '').replace(/\/$/, '');
   const haToken = mode === 'addon' ? supervisorToken : (env.HA_TOKEN || '');
+  const backend = normaliseBackend(env.BACKEND || env.MEDIA_SERVER || env.SERVER_TYPE, 'plex');
 
   const config = {
     mode,
     port: parseInt(env.PORT || '8099', 10),
+    backend,
     haUrl,
     haToken,
+    player: env.PLAYER || env.MEDIA_PLAYER || '',
     plexUrl: (env.PLEX_URL || '').replace(/\/$/, ''),
     plexToken: env.PLEX_TOKEN || '',
     plexUsername: env.PLEX_USERNAME || '',

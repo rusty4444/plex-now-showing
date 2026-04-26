@@ -1000,7 +1000,8 @@
       margin-top: 3px;
       opacity: 0.7;
     }
-    .setup-field input {
+    .setup-field input,
+    .setup-field select {
       width: 100%;
       background: #0a0a0a;
       border: 1px solid rgba(200, 160, 50, 0.25);
@@ -1010,7 +1011,8 @@
       font-family: 'Inter', sans-serif;
       font-size: 0.9rem;
     }
-    .setup-field input:focus {
+    .setup-field input:focus,
+    .setup-field select:focus {
       outline: none;
       border-color: var(--accent-light);
       box-shadow: 0 0 0 3px rgba(200, 160, 50, 0.15);
@@ -1129,17 +1131,27 @@
       </div>
 
       <div class="setup-field">
+        <label for="cfgBackend">Backend</label>
+        <select id="cfgBackend" autocomplete="off">
+          <option value="plex">Plex</option>
+          <option value="jellyfin">Jellyfin</option>
+          <option value="emby">Emby</option>
+          <option value="kodi">Kodi</option>
+        </select>
+      </div>
+
+      <div class="setup-field">
         <label for="cfgPlexUsername">Plex Username</label>
         <input id="cfgPlexUsername" type="text" placeholder="your_plex_username" autocomplete="off">
         <div class="hint">Filters playback to only your sessions.</div>
       </div>
 
       <details class="setup-advanced">
-        <summary>Optional &mdash; specific player &amp; Plex API</summary>
+        <summary>Optional &mdash; player &amp; Plex API</summary>
 
         <div class="setup-field" style="margin-top:10px;">
-          <label for="cfgPlexPlayer">Specific Player (entity id)</label>
-          <input id="cfgPlexPlayer" type="text" placeholder="media_player.plex_plex_for_lg_tv" autocomplete="off">
+          <label for="cfgPlayer">Specific Player (entity id)</label>
+          <input id="cfgPlayer" type="text" placeholder="media_player.plex_plex_for_lg_tv" autocomplete="off">
           <div class="hint">Optional. Lock the display to one player.</div>
         </div>
 
@@ -1320,14 +1332,29 @@
       return Number.isFinite(n) ? n : defaultValue;
     }
 
+    const BACKENDS = ['plex', 'jellyfin', 'emby', 'kodi'];
+    const BACKEND_RULES = {
+      plex: { entityPrefix: 'media_player.plex_', exactEntities: [] },
+      jellyfin: { entityPrefix: 'media_player.jellyfin_', exactEntities: ['media_player.jellyfin'] },
+      emby: { entityPrefix: 'media_player.emby_', exactEntities: ['media_player.emby'] },
+      kodi: { entityPrefix: 'media_player.kodi_', exactEntities: ['media_player.kodi'] },
+    };
+    function readBackend(value) {
+      const v = String(value || '').trim().toLowerCase();
+      return BACKENDS.includes(v) ? v : 'plex';
+    }
+
     const HA_URL        = readConfig('haUrl',        { aliases: ['ha_url'], defaultValue: window.location.origin });
     const HA_TOKEN      = readConfig('haToken',      { aliases: ['token', 'ha_token'], sensitive: true });
+    const BACKEND       = readBackend(readConfig('backend', { aliases: ['server', 'serverType', 'server_type', 'mediaServer', 'media_server'], defaultValue: 'plex' }));
+    const PLAYER        = readConfig('player',       { aliases: ['mediaPlayer', 'media_player', 'entity', 'entityId', 'entity_id', 'jellyfinEntity', 'jellyfin_entity', 'embyEntity', 'emby_entity', 'kodiEntity', 'kodi_entity'] });
     const PLEX_USERNAME = readConfig('plexUsername', { aliases: ['username', 'plex_username'] });
-    const PLEX_PLAYER   = readConfig('plexPlayer',   { aliases: ['player', 'plex_player'] });
+    const PLEX_PLAYER   = readConfig('plexPlayer',   { aliases: ['player', 'plex_player'], defaultValue: PLAYER });
     const PLEX_URL      = readConfig('plexUrl',      { aliases: ['plex_url'] });
     const PLEX_TOKEN    = readConfig('plexToken',    { aliases: ['plex_token'], sensitive: true });
     const LANDSCAPE_MODE = readBool('landscape', runtimeConfig.landscape === true);
     const POLL_INTERVAL  = readInt('poll', 5000);
+    let ACTIVE_BACKEND = BACKEND;
 
     // ===== SERVER MODE DETECTION =====
     //
@@ -1344,6 +1371,7 @@
         if (!resp.ok) return false;
         const body = await resp.json();
         SERVER_MODE = body && body.name === 'plex-now-showing-server';
+        if (SERVER_MODE) ACTIVE_BACKEND = readBackend(body.backend || ACTIVE_BACKEND);
         if (SERVER_MODE) console.info('[plex-now-showing] Running against unified server — using /api/state proxy.');
         return SERVER_MODE;
       } catch (_) {
@@ -1507,6 +1535,7 @@
         const resp = await fetch('/api/config', { cache: 'no-store' });
         if (!resp.ok) return;
         const body = await resp.json();
+        if (body && body.backend) ACTIVE_BACKEND = readBackend(body.backend);
         const v = body && body.visual;
         if (v && typeof v.progressBar === 'boolean') VISUAL.progressBar = v.progressBar;
         if (v && typeof v.ratingsBadges === 'boolean') VISUAL.ratingsBadges = v.ratingsBadges;
@@ -1707,8 +1736,9 @@
       // [localStorage key (without pns. prefix), input element id]
       ['haUrl',        'cfgHaUrl'],
       ['haToken',      'cfgHaToken'],
+      ['backend',      'cfgBackend'],
       ['plexUsername', 'cfgPlexUsername'],
-      ['plexPlayer',   'cfgPlexPlayer'],
+      ['player',       'cfgPlayer'],
       ['plexUrl',      'cfgPlexUrl'],
       ['plexToken',    'cfgPlexToken'],
     ];
@@ -1725,11 +1755,32 @@
           const input = document.getElementById(id);
           if (input) input.value = window.localStorage.getItem('pns.' + key) || '';
         }
+        const backend = document.getElementById('cfgBackend');
+        if (backend && !backend.value) backend.value = BACKEND;
+        const player = document.getElementById('cfgPlayer');
+        if (player && !player.value) {
+          player.value = window.localStorage.getItem('pns.plexPlayer') || '';
+        }
         const landscape = document.getElementById('cfgLandscape');
         if (landscape) {
           landscape.checked = window.localStorage.getItem('pns.landscape') === 'true';
         }
+        syncSetupBackendFields();
       } catch (_) { /* storage unavailable */ }
+    }
+
+    function syncSetupBackendFields() {
+      const backend = readBackend(document.getElementById('cfgBackend')?.value || BACKEND);
+      for (const id of ['cfgPlexUsername', 'cfgPlexUrl', 'cfgPlexToken']) {
+        const field = document.getElementById(id)?.closest('.setup-field');
+        if (field) field.style.display = backend === 'plex' ? '' : 'none';
+      }
+      const player = document.getElementById('cfgPlayer');
+      if (player) {
+        player.placeholder = backend === 'plex'
+          ? 'media_player.plex_plex_for_lg_tv'
+          : `media_player.${backend}`;
+      }
     }
 
     function setupStatus(msg, kind) {
@@ -1743,6 +1794,7 @@
     async function setupTest() {
       const haUrl = document.getElementById('cfgHaUrl').value.trim() || window.location.origin;
       const haTok = document.getElementById('cfgHaToken').value.trim();
+      const backend = readBackend(document.getElementById('cfgBackend').value);
       const plexUrl = document.getElementById('cfgPlexUrl').value.trim();
       const plexTok = document.getElementById('cfgPlexToken').value.trim();
 
@@ -1758,7 +1810,7 @@
         return;
       }
 
-      if (plexUrl && plexTok) {
+      if (backend === 'plex' && plexUrl && plexTok) {
         setupStatus('HA ok. Testing Plex\u2026');
         try {
           const r = await fetch(plexUrl.replace(/\/$/, '') + '/identity?X-Plex-Token=' + encodeURIComponent(plexTok), {
@@ -1784,6 +1836,7 @@
           if (v) window.localStorage.setItem('pns.' + key, v);
           else window.localStorage.removeItem('pns.' + key);
         }
+        window.localStorage.removeItem('pns.plexPlayer');
         window.localStorage.setItem('pns.landscape',
           document.getElementById('cfgLandscape').checked ? 'true' : 'false');
       } catch (e) {
@@ -1800,6 +1853,7 @@
       if (!confirm('Clear all saved Now Showing settings on this device?')) return;
       try {
         for (const [key] of SETUP_FIELDS) window.localStorage.removeItem('pns.' + key);
+        window.localStorage.removeItem('pns.plexPlayer');
         window.localStorage.removeItem('pns.landscape');
       } catch (_) {}
       populateSetupForm();
@@ -1812,10 +1866,12 @@
       const save  = document.getElementById('setupSaveBtn');
       const clear = document.getElementById('setupClearBtn');
       const gear  = document.getElementById('setupGear');
+      const backend = document.getElementById('cfgBackend');
       if (form)  form.addEventListener('submit', (e) => { e.preventDefault(); setupSave(); });
       if (test)  test.addEventListener('click', setupTest);
       if (save)  save.addEventListener('click', setupSave);
       if (clear) clear.addEventListener('click', setupClear);
+      if (backend) backend.addEventListener('change', syncSetupBackendFields);
       if (gear)  gear.addEventListener('click', () => {
         populateSetupForm();
         setupVisible(true);
@@ -1846,7 +1902,7 @@
     if (!HA_TOKEN) {
       console.warn('[plex-now-showing] No HA token configured — opening setup.');
     }
-    if (HA_TOKEN && !PLEX_USERNAME) {
+    if (HA_TOKEN && ACTIVE_BACKEND === 'plex' && !PLEX_USERNAME) {
       console.warn('[plex-now-showing] No Plex username configured — user filtering disabled.');
     }
 
@@ -1948,6 +2004,7 @@
 
     async function fetchPlexMediaInfo(ratingKey) {
       if (!ratingKey) return null;
+      if (ACTIVE_BACKEND !== 'plex') return null;
       if (cachedMediaInfo[ratingKey]) return cachedMediaInfo[ratingKey];
 
       // Unified-server path: the server already shaped the response, so just
@@ -2156,7 +2213,7 @@
       // we fall through to the direct fetch which requires the URL + token.
       infoTech.innerHTML = '';
       renderRatingsBadges(null); // reset
-      if (d.ratingKey && (SERVER_MODE || PLEX_URL)) {
+      if (d.ratingKey && hasPlexMetadataAccess()) {
         const mi = await fetchPlexMediaInfo(d.ratingKey);
         if (mi) {
           renderRatingsBadges(mi.ratings);
@@ -2339,8 +2396,8 @@
       chaseOffset = (chaseOffset + 1) % 3;
     }
 
-    // ===== FETCH PLEX DATA FROM HA =====
-    async function fetchPlexData() {
+    // ===== FETCH NOW-SHOWING DATA FROM HA =====
+    async function fetchNowShowingData() {
       // Unified-server path: /api/state is already normalised.
       await serverModeReady;
       if (SERVER_MODE) {
@@ -2366,39 +2423,22 @@
         if (!resp.ok) return null;
         const states = await resp.json();
 
-        // If a specific player is configured, fetch just that entity
-        if (PLEX_PLAYER) {
-          const playerState = states.find(s => s.entity_id === PLEX_PLAYER);
-          if (!playerState || (playerState.state !== 'playing' && playerState.state !== 'paused')) return null;
-          const attrs = playerState.attributes || {};
-          return {
-            title: attrs.media_title || 'Unknown Title',
-            seriesTitle: attrs.media_series_title || '',
-            contentType: attrs.media_content_type || 'video',
-            artwork: attrs.entity_picture || '',
-            playerName: attrs.friendly_name || playerState.entity_id,
-            state: playerState.state,
-            season: attrs.media_season || '',
-            episode: attrs.media_episode || '',
-            contentRating: attrs.media_content_rating || '',
-            duration: attrs.media_duration || 0,
-            position: Number.isFinite(attrs.media_position) ? attrs.media_position : 0,
-            positionUpdatedAt: attrs.media_position_updated_at || '',
-            summary: attrs.media_summary || '',
-            ratingKey: attrs.media_content_id || ''
-          };
+        const backend = readBackend(ACTIVE_BACKEND);
+        const pinnedPlayer = backend === 'plex' ? (PLEX_PLAYER || PLAYER) : PLAYER;
+
+        if (pinnedPlayer) {
+          const playerState = states.find(s => s.entity_id === pinnedPlayer);
+          if (!playerState || !isPlayingState(playerState)) return null;
+          return buildMediaData(playerState);
         }
 
-        // Otherwise, find active Plex media_player entities for this user
-        const plexPlayers = states.filter(s =>
-          s.entity_id.startsWith('media_player.plex_') &&
-          (s.state === 'playing' || s.state === 'paused')
-        );
+        const rule = BACKEND_RULES[backend] || BACKEND_RULES.plex;
+        const active = states.filter(s => isBackendPlayer(s, rule) && isPlayingState(s));
+        if (active.length === 0) return null;
 
-        if (plexPlayers.length === 0) return null;
+        if (backend !== 'plex') return buildMediaData(active[0]);
 
-        // Filter to only this user's players
-        const myPlayers = plexPlayers.filter(p => {
+        const myPlayers = active.filter(p => {
           const attrs = p.attributes || {};
           if (attrs.username) {
             return attrs.username === PLEX_USERNAME;
@@ -2410,29 +2450,45 @@
 
         if (myPlayers.length === 0) return null;
 
-        const player = myPlayers[0];
-        const attrs = player.attributes || {};
-
-        return {
-          title: attrs.media_title || 'Unknown Title',
-          seriesTitle: attrs.media_series_title || '',
-          contentType: attrs.media_content_type || 'video',
-          artwork: attrs.entity_picture || '',
-          playerName: attrs.friendly_name || player.entity_id,
-          state: player.state,
-          season: attrs.media_season || '',
-          episode: attrs.media_episode || '',
-          contentRating: attrs.media_content_rating || '',
-          duration: attrs.media_duration || 0,
-          position: Number.isFinite(attrs.media_position) ? attrs.media_position : 0,
-          positionUpdatedAt: attrs.media_position_updated_at || '',
-          summary: attrs.media_summary || '',
-          ratingKey: attrs.media_content_id || ''
-        };
+        return buildMediaData(myPlayers[0]);
       } catch (err) {
         console.warn('Fetch error:', err);
         return null;
       }
+    }
+
+    function hasPlexMetadataAccess() {
+      return ACTIVE_BACKEND === 'plex' && (SERVER_MODE || (!!PLEX_URL && !!PLEX_TOKEN));
+    }
+
+    function isPlayingState(state) {
+      return state && (state.state === 'playing' || state.state === 'paused');
+    }
+
+    function isBackendPlayer(state, rule) {
+      if (!state || typeof state.entity_id !== 'string') return false;
+      return state.entity_id.startsWith(rule.entityPrefix)
+        || rule.exactEntities.includes(state.entity_id);
+    }
+
+    function buildMediaData(playerState) {
+      const attrs = playerState.attributes || {};
+      return {
+        title: attrs.media_title || 'Unknown Title',
+        seriesTitle: attrs.media_series_title || '',
+        contentType: attrs.media_content_type || 'video',
+        artwork: attrs.entity_picture || '',
+        playerName: attrs.friendly_name || playerState.entity_id,
+        state: playerState.state,
+        season: attrs.media_season || '',
+        episode: attrs.media_episode || '',
+        contentRating: attrs.media_content_rating || '',
+        duration: attrs.media_duration || 0,
+        position: Number.isFinite(attrs.media_position) ? attrs.media_position : 0,
+        positionUpdatedAt: attrs.media_position_updated_at || '',
+        summary: attrs.media_summary || '',
+        ratingKey: attrs.media_content_id || ''
+      };
     }
 
     // ===== PROGRESS BAR CONTROLLER (#17) =====
@@ -2724,7 +2780,7 @@
       backdropCtx.ratingKey = null;
       backdropCtx.artUrl = null;
       backdropAmbient.classList.remove('loaded');
-      if (VISUAL.useBackdrops && data.ratingKey && (SERVER_MODE || PLEX_URL)) {
+      if (VISUAL.useBackdrops && data.ratingKey && hasPlexMetadataAccess()) {
         const rk = data.ratingKey;
         fetchPlexMediaInfo(rk).then(mi => {
           // Guard against stale responses arriving after the user changed
@@ -2762,7 +2818,7 @@
 
     // ===== POLLING LOOP =====
     async function poll() {
-      const data = await fetchPlexData();
+      const data = await fetchNowShowingData();
       if (data) {
         showMedia(data);
       } else {

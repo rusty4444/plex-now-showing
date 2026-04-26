@@ -14,6 +14,8 @@ export function configRoute({ config }) {
     // browsers on the wall might live for days. Let them re-read on reload.
     res.set('Cache-Control', 'no-store');
     res.json({
+      backend: config.backend || 'plex',
+      player: config.player || '',
       visual: {
         progressBar: !!config.visual?.progressBar,
         ratingsBadges: !!config.visual?.ratingsBadges,
