@@ -960,7 +960,7 @@
 
     .setup-card {
       width: 100%;
-      max-width: 520px;
+      max-width: 680px;
       background: rgba(20, 20, 20, 0.92);
       border: 1px solid rgba(200, 160, 50, 0.25);
       border-radius: 12px;
@@ -985,7 +985,57 @@
       margin-bottom: 20px;
     }
 
+    .setup-tabs {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+    .setup-tab {
+      padding: 9px 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(200, 160, 50, 0.24);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-dim);
+      font-family: 'Bebas Neue', sans-serif;
+      letter-spacing: 0.14em;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .setup-tab.active {
+      border-color: var(--accent-light);
+      color: var(--accent-light);
+      background: rgba(200, 160, 50, 0.12);
+    }
+    .setup-tab-panel { display: none; }
+    .setup-tab-panel.active { display: block; }
+
+    .setup-section-title {
+      margin: 18px 0 10px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--text-light);
+      font-family: 'Bebas Neue', sans-serif;
+      letter-spacing: 0.13em;
+      font-size: 1rem;
+    }
+    .setup-section-title:first-child {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: 0;
+    }
+    .setup-field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    @media (max-width: 620px) {
+      .setup-field-grid { grid-template-columns: 1fr; }
+      .setup-card { padding: 24px 20px 22px; }
+    }
+
     .setup-field { margin-bottom: 14px; }
+    .setup-field.disabled { opacity: 0.52; }
     .setup-field label {
       display: block;
       font-size: 0.75rem;
@@ -1018,6 +1068,39 @@
       box-shadow: 0 0 0 3px rgba(200, 160, 50, 0.15);
     }
     .setup-field input::placeholder { color: #555; }
+    .setup-field input[type="checkbox"] {
+      width: auto;
+      padding: 0;
+      margin: 0 9px 0 0;
+      accent-color: var(--accent-light);
+    }
+    .setup-field input[type="color"] {
+      width: 48px;
+      min-width: 48px;
+      height: 41px;
+      padding: 4px;
+      cursor: pointer;
+    }
+    .setup-check {
+      display: flex;
+      align-items: center;
+      min-height: 41px;
+      padding: 10px 12px;
+      border: 1px solid rgba(200, 160, 50, 0.25);
+      border-radius: 6px;
+      background: #0a0a0a;
+      color: var(--text-light);
+      font-size: 0.86rem;
+      letter-spacing: 0;
+      text-transform: none;
+      cursor: pointer;
+    }
+    .setup-color-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+    }
 
     .setup-row {
       display: flex;
@@ -1118,62 +1201,177 @@
       <h1>Now Showing &mdash; Setup</h1>
       <div class="setup-sub">Values are saved to this device's localStorage. Nothing is sent anywhere else.</div>
 
-      <div class="setup-field">
-        <label for="cfgHaUrl">Home Assistant URL</label>
-        <input id="cfgHaUrl" type="url" placeholder="http://homeassistant.local:8123" autocomplete="off">
-        <div class="hint">Leave blank to use this page's origin.</div>
+      <div class="setup-tabs" role="tablist" aria-label="Setup sections">
+        <button class="setup-tab active" id="setupTabConnection" type="button" role="tab" aria-selected="true" aria-controls="setupPanelConnection" data-setup-tab="connection">Connection</button>
+        <button class="setup-tab" id="setupTabDisplay" type="button" role="tab" aria-selected="false" aria-controls="setupPanelDisplay" data-setup-tab="display">Display</button>
       </div>
 
-      <div class="setup-field">
-        <label for="cfgHaToken">HA Long-Lived Access Token</label>
-        <input id="cfgHaToken" type="password" placeholder="eyJhbGciOi..." autocomplete="off" spellcheck="false">
-        <div class="hint">Create one at HA profile &rarr; Long-Lived Access Tokens.</div>
-      </div>
-
-      <div class="setup-field">
-        <label for="cfgBackend">Backend</label>
-        <select id="cfgBackend" autocomplete="off">
-          <option value="plex">Plex</option>
-          <option value="jellyfin">Jellyfin</option>
-          <option value="emby">Emby</option>
-          <option value="kodi">Kodi</option>
-        </select>
-      </div>
-
-      <div class="setup-field">
-        <label for="cfgPlexUsername">Plex Username</label>
-        <input id="cfgPlexUsername" type="text" placeholder="your_plex_username" autocomplete="off">
-        <div class="hint">Filters playback to only your sessions.</div>
-      </div>
-
-      <details class="setup-advanced">
-        <summary>Optional &mdash; player &amp; Plex API</summary>
-
-        <div class="setup-field" style="margin-top:10px;">
-          <label for="cfgPlayer">Specific Player (entity id)</label>
-          <input id="cfgPlayer" type="text" placeholder="media_player.plex_plex_for_lg_tv" autocomplete="off">
-          <div class="hint">Optional. Lock the display to one player.</div>
+      <div class="setup-tab-panel active" id="setupPanelConnection" role="tabpanel" aria-labelledby="setupTabConnection" data-setup-panel="connection">
+        <div class="setup-field">
+          <label for="cfgHaUrl">Home Assistant URL</label>
+          <input id="cfgHaUrl" type="url" placeholder="http://homeassistant.local:8123" autocomplete="off">
+          <div class="hint">Leave blank to use this page's origin.</div>
         </div>
 
         <div class="setup-field">
-          <label for="cfgPlexUrl">Plex Server URL</label>
-          <input id="cfgPlexUrl" type="url" placeholder="http://192.168.1.10:32400" autocomplete="off">
-          <div class="hint">Enables media-file details (resolution, codec, bitrate).</div>
+          <label for="cfgHaToken">HA Long-Lived Access Token</label>
+          <input id="cfgHaToken" type="password" placeholder="eyJhbGciOi..." autocomplete="off" spellcheck="false">
+          <div class="hint">Create one at HA profile &rarr; Long-Lived Access Tokens.</div>
         </div>
 
         <div class="setup-field">
-          <label for="cfgPlexToken">Plex Token</label>
-          <input id="cfgPlexToken" type="password" placeholder="xxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
-          <div class="hint">Required if Plex URL is set.</div>
+          <label for="cfgBackend">Backend</label>
+          <select id="cfgBackend" autocomplete="off">
+            <option value="plex">Plex</option>
+            <option value="jellyfin">Jellyfin</option>
+            <option value="emby">Emby</option>
+            <option value="kodi">Kodi</option>
+          </select>
         </div>
 
         <div class="setup-field">
-          <label for="cfgLandscape">
-            <input id="cfgLandscape" type="checkbox" style="width:auto;margin-right:8px;vertical-align:middle;">
-            Landscape mode (fit whole poster)
+          <label for="cfgPlexUsername">Plex Username</label>
+          <input id="cfgPlexUsername" type="text" placeholder="your_plex_username" autocomplete="off">
+          <div class="hint">Filters playback to only your sessions.</div>
+        </div>
+
+        <details class="setup-advanced">
+          <summary>Optional &mdash; player &amp; Plex API</summary>
+
+          <div class="setup-field" style="margin-top:10px;">
+            <label for="cfgPlayer">Specific Player (entity id)</label>
+            <input id="cfgPlayer" type="text" placeholder="media_player.plex_plex_for_lg_tv" autocomplete="off">
+            <div class="hint">Optional. Lock the display to one player.</div>
+          </div>
+
+          <div class="setup-field">
+            <label for="cfgPlexUrl">Plex Server URL</label>
+            <input id="cfgPlexUrl" type="url" placeholder="http://192.168.1.10:32400" autocomplete="off">
+            <div class="hint">Enables media-file details (resolution, codec, bitrate).</div>
+          </div>
+
+          <div class="setup-field">
+            <label for="cfgPlexToken">Plex Token</label>
+            <input id="cfgPlexToken" type="password" placeholder="xxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
+            <div class="hint">Required if Plex URL is set.</div>
+          </div>
+
+          <div class="setup-field">
+            <label class="setup-check" for="cfgLandscape">
+              <input id="cfgLandscape" type="checkbox">
+              Landscape mode (fit whole poster)
+            </label>
+          </div>
+        </details>
+      </div>
+
+      <div class="setup-tab-panel" id="setupPanelDisplay" role="tabpanel" aria-labelledby="setupTabDisplay" data-setup-panel="display">
+        <div class="setup-section-title">Theme</div>
+        <div class="setup-field-grid">
+          <div class="setup-field">
+            <label for="cfgVisualTheme">Theme Preset</label>
+            <select id="cfgVisualTheme" autocomplete="off">
+              <option value="classic-gold">Classic Gold</option>
+              <option value="art-deco-silver">Art Deco Silver</option>
+              <option value="neon-80s">Neon 80s</option>
+              <option value="minimalist-dark">Minimalist Dark</option>
+            </select>
+          </div>
+          <div class="setup-field">
+            <label for="cfgVisualFrameStyle">Frame Style</label>
+            <select id="cfgVisualFrameStyle" autocomplete="off">
+              <option value="bulbs">Bulbs</option>
+              <option value="gold-line">Gold Line</option>
+              <option value="none">None</option>
+            </select>
+          </div>
+        </div>
+        <div class="setup-field">
+          <label for="cfgVisualAccentColor">Accent Color Override</label>
+          <div class="setup-color-row">
+            <input id="cfgVisualAccentColor" type="text" maxlength="7" placeholder="#ff5500" autocomplete="off" spellcheck="false">
+            <input id="cfgVisualAccentColorPicker" type="color" value="#c8a032" aria-label="Pick accent color">
+          </div>
+          <div class="hint">Leave blank for the theme default. Strict #RRGGBB only.</div>
+        </div>
+
+        <div class="setup-section-title">Info Panel</div>
+        <div class="setup-field-grid">
+          <div class="setup-field">
+            <label class="setup-check" for="cfgVisualProgressBar">
+              <input id="cfgVisualProgressBar" type="checkbox">
+              Progress bar
+            </label>
+          </div>
+          <div class="setup-field">
+            <label class="setup-check" for="cfgVisualRatingsBadges">
+              <input id="cfgVisualRatingsBadges" type="checkbox">
+              Ratings badges
+            </label>
+          </div>
+          <div class="setup-field">
+            <label class="setup-check" for="cfgVisualGenreChips">
+              <input id="cfgVisualGenreChips" type="checkbox">
+              Genre chips
+            </label>
+          </div>
+          <div class="setup-field">
+            <label for="cfgVisualInfoPanelMode">Info Panel Mode</label>
+            <select id="cfgVisualInfoPanelMode" autocomplete="off">
+              <option value="on_tap">On Tap</option>
+              <option value="on_pause">On Pause</option>
+              <option value="always">Always</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="setup-section-title">Backdrops</div>
+        <div class="setup-field">
+          <label class="setup-check" for="cfgVisualUseBackdrops">
+            <input id="cfgVisualUseBackdrops" type="checkbox">
+            Use backdrop art
           </label>
         </div>
-      </details>
+        <div class="setup-field-grid">
+          <div class="setup-field">
+            <label for="cfgVisualBackdropStyle">Backdrop Style</label>
+            <select id="cfgVisualBackdropStyle" autocomplete="off">
+              <option value="fullscreen">Fullscreen</option>
+              <option value="ambient">Ambient</option>
+            </select>
+          </div>
+          <div class="setup-field">
+            <label for="cfgVisualBackdropDelayMs">Backdrop Delay (ms)</label>
+            <input id="cfgVisualBackdropDelayMs" type="number" min="1000" max="600000" step="1000" inputmode="numeric" autocomplete="off">
+          </div>
+        </div>
+
+        <div class="setup-section-title">Burn-In</div>
+        <div class="setup-field">
+          <label class="setup-check" for="cfgVisualBurnInMitigation">
+            <input id="cfgVisualBurnInMitigation" type="checkbox">
+            Burn-in mitigation
+          </label>
+        </div>
+        <div class="setup-field-grid">
+          <div class="setup-field">
+            <label for="cfgVisualNudgeIntervalMs">Nudge Interval (ms)</label>
+            <input id="cfgVisualNudgeIntervalMs" type="number" min="5000" max="600000" step="1000" inputmode="numeric" autocomplete="off">
+          </div>
+          <div class="setup-field">
+            <label for="cfgVisualNudgeAmplitudePx">Nudge Amplitude (px)</label>
+            <input id="cfgVisualNudgeAmplitudePx" type="number" min="1" max="16" step="1" inputmode="numeric" autocomplete="off">
+          </div>
+          <div class="setup-field">
+            <label for="cfgVisualNightModeEntity">Night Mode Entity</label>
+            <input id="cfgVisualNightModeEntity" type="text" placeholder="input_boolean.kiosk_night_mode" autocomplete="off">
+          </div>
+          <div class="setup-field">
+            <label for="cfgVisualNightModeOpacity">Night Opacity</label>
+            <input id="cfgVisualNightModeOpacity" type="number" min="0" max="0.95" step="0.05" inputmode="decimal" autocomplete="off">
+          </div>
+        </div>
+      </div>
 
       <div class="setup-row">
         <button class="setup-btn" id="setupTestBtn" type="button">Test Connection</button>
@@ -1732,16 +1930,41 @@
     // and the connection test. All values are persisted under pns.* keys
     // in localStorage — the same keys the config resolver reads above.
 
-    const SETUP_FIELDS = [
-      // [localStorage key (without pns. prefix), input element id]
-      ['haUrl',        'cfgHaUrl'],
-      ['haToken',      'cfgHaToken'],
-      ['backend',      'cfgBackend'],
-      ['plexUsername', 'cfgPlexUsername'],
-      ['player',       'cfgPlayer'],
-      ['plexUrl',      'cfgPlexUrl'],
-      ['plexToken',    'cfgPlexToken'],
+    const SETUP_VALUE_FIELDS = [
+      // localStorage key (without pns. prefix), input element id, default
+      ['haUrl', 'cfgHaUrl', ''],
+      ['haToken', 'cfgHaToken', ''],
+      ['backend', 'cfgBackend', BACKEND],
+      ['plexUsername', 'cfgPlexUsername', ''],
+      ['player', 'cfgPlayer', ''],
+      ['plexUrl', 'cfgPlexUrl', ''],
+      ['plexToken', 'cfgPlexToken', ''],
+      ['visualTheme', 'cfgVisualTheme', 'classic-gold'],
+      ['visualFrameStyle', 'cfgVisualFrameStyle', 'bulbs'],
+      ['visualAccentColor', 'cfgVisualAccentColor', ''],
+      ['visualInfoPanelMode', 'cfgVisualInfoPanelMode', 'on_tap'],
+      ['visualBackdropStyle', 'cfgVisualBackdropStyle', 'fullscreen'],
+      ['visualBackdropDelayMs', 'cfgVisualBackdropDelayMs', '10000'],
+      ['visualNudgeIntervalMs', 'cfgVisualNudgeIntervalMs', '60000'],
+      ['visualNudgeAmplitudePx', 'cfgVisualNudgeAmplitudePx', '4'],
+      ['visualNightModeEntity', 'cfgVisualNightModeEntity', ''],
+      ['visualNightModeOpacity', 'cfgVisualNightModeOpacity', '0.4'],
     ];
+    const SETUP_CHECKBOX_FIELDS = [
+      ['landscape', 'cfgLandscape', LANDSCAPE_MODE],
+      ['visualProgressBar', 'cfgVisualProgressBar', false],
+      ['visualRatingsBadges', 'cfgVisualRatingsBadges', false],
+      ['visualGenreChips', 'cfgVisualGenreChips', false],
+      ['visualUseBackdrops', 'cfgVisualUseBackdrops', false],
+      ['visualBurnInMitigation', 'cfgVisualBurnInMitigation', false],
+    ];
+    const SETUP_NUMBER_RULES = {
+      visualBackdropDelayMs: { min: 1000, max: 600000, fallback: 10000, float: false },
+      visualNudgeIntervalMs: { min: 5000, max: 600000, fallback: 60000, float: false },
+      visualNudgeAmplitudePx: { min: 1, max: 16, fallback: 4, float: false },
+      visualNightModeOpacity: { min: 0, max: 0.95, fallback: 0.4, float: true },
+    };
+    const ACCENT_PICKER_DEFAULT = '#c8a032';
 
     function setupVisible(show) {
       const el = document.getElementById('setupOverlay');
@@ -1751,21 +1974,23 @@
 
     function populateSetupForm() {
       try {
-        for (const [key, id] of SETUP_FIELDS) {
+        for (const [key, id, defaultValue] of SETUP_VALUE_FIELDS) {
           const input = document.getElementById(id);
-          if (input) input.value = window.localStorage.getItem('pns.' + key) || '';
+          if (input) input.value = window.localStorage.getItem('pns.' + key) || String(defaultValue ?? '');
         }
-        const backend = document.getElementById('cfgBackend');
-        if (backend && !backend.value) backend.value = BACKEND;
         const player = document.getElementById('cfgPlayer');
         if (player && !player.value) {
           player.value = window.localStorage.getItem('pns.plexPlayer') || '';
         }
-        const landscape = document.getElementById('cfgLandscape');
-        if (landscape) {
-          landscape.checked = window.localStorage.getItem('pns.landscape') === 'true';
+        for (const [key, id, defaultValue] of SETUP_CHECKBOX_FIELDS) {
+          const input = document.getElementById(id);
+          if (!input) continue;
+          const stored = window.localStorage.getItem('pns.' + key);
+          input.checked = stored == null ? !!defaultValue : /^(1|true|yes|on)$/i.test(stored);
         }
         syncSetupBackendFields();
+        syncSetupVisualFields();
+        syncAccentPickerFromText();
       } catch (_) { /* storage unavailable */ }
     }
 
@@ -1781,6 +2006,74 @@
           ? 'media_player.plex_plex_for_lg_tv'
           : `media_player.${backend}`;
       }
+    }
+
+    function switchSetupTab(name) {
+      const tabName = name === 'display' ? 'display' : 'connection';
+      for (const tab of document.querySelectorAll('[data-setup-tab]')) {
+        const active = tab.dataset.setupTab === tabName;
+        tab.classList.toggle('active', active);
+        tab.setAttribute('aria-selected', active ? 'true' : 'false');
+      }
+      for (const panel of document.querySelectorAll('[data-setup-panel]')) {
+        panel.classList.toggle('active', panel.dataset.setupPanel === tabName);
+      }
+    }
+
+    function setSetupDependents(ids, enabled) {
+      for (const id of ids) {
+        const input = document.getElementById(id);
+        const field = input?.closest('.setup-field');
+        if (input) input.disabled = !enabled;
+        if (field) field.classList.toggle('disabled', !enabled);
+      }
+    }
+
+    function syncSetupVisualFields() {
+      const useBackdrops = !!document.getElementById('cfgVisualUseBackdrops')?.checked;
+      setSetupDependents(['cfgVisualBackdropStyle', 'cfgVisualBackdropDelayMs'], useBackdrops);
+
+      const burnIn = !!document.getElementById('cfgVisualBurnInMitigation')?.checked;
+      setSetupDependents([
+        'cfgVisualNudgeIntervalMs',
+        'cfgVisualNudgeAmplitudePx',
+        'cfgVisualNightModeEntity',
+        'cfgVisualNightModeOpacity',
+      ], burnIn);
+    }
+
+    function syncAccentPickerFromText() {
+      const text = document.getElementById('cfgVisualAccentColor');
+      const picker = document.getElementById('cfgVisualAccentColorPicker');
+      if (!text || !picker) return;
+      const value = text.value.trim().toLowerCase();
+      picker.value = HEX_RE.test(value) ? value : ACCENT_PICKER_DEFAULT;
+    }
+
+    function syncAccentTextFromPicker() {
+      const text = document.getElementById('cfgVisualAccentColor');
+      const picker = document.getElementById('cfgVisualAccentColorPicker');
+      if (!text || !picker) return;
+      text.value = picker.value.toLowerCase();
+    }
+
+    function normalizeSetupNumber(key, id) {
+      const rule = SETUP_NUMBER_RULES[key];
+      if (!rule) return document.getElementById(id)?.value.trim() || '';
+      const input = document.getElementById(id);
+      if (!input) return '';
+      const raw = input.value.trim();
+      if (!raw) {
+        input.value = String(rule.fallback);
+        return String(rule.fallback);
+      }
+      const n = rule.float ? parseFloat(raw) : parseInt(raw, 10);
+      if (!Number.isFinite(n)) {
+        throw new Error(`${input.labels?.[0]?.textContent || key} must be a number.`);
+      }
+      const clamped = Math.max(rule.min, Math.min(rule.max, n));
+      input.value = String(rule.float ? Number(clamped.toFixed(2)) : Math.round(clamped));
+      return input.value;
     }
 
     function setupStatus(msg, kind) {
@@ -1830,17 +2123,29 @@
     function setupSave() {
       const haTok = document.getElementById('cfgHaToken').value.trim();
       if (!haTok) { setupStatus('HA token is required.', 'err'); return; }
+      const accentInput = document.getElementById('cfgVisualAccentColor');
+      const accentColor = (accentInput?.value || '').trim().toLowerCase();
+      if (accentColor && !HEX_RE.test(accentColor)) {
+        switchSetupTab('display');
+        setupStatus('Accent color must be #RRGGBB, or blank for theme default.', 'err');
+        accentInput?.focus();
+        return;
+      }
       try {
-        for (const [key, id] of SETUP_FIELDS) {
-          const v = document.getElementById(id).value.trim();
+        for (const [key, id] of SETUP_VALUE_FIELDS) {
+          let v = document.getElementById(id)?.value.trim() || '';
+          if (key === 'visualAccentColor') v = accentColor;
+          if (SETUP_NUMBER_RULES[key]) v = normalizeSetupNumber(key, id);
           if (v) window.localStorage.setItem('pns.' + key, v);
           else window.localStorage.removeItem('pns.' + key);
         }
+        for (const [key, id] of SETUP_CHECKBOX_FIELDS) {
+          window.localStorage.setItem('pns.' + key,
+            document.getElementById(id)?.checked ? 'true' : 'false');
+        }
         window.localStorage.removeItem('pns.plexPlayer');
-        window.localStorage.setItem('pns.landscape',
-          document.getElementById('cfgLandscape').checked ? 'true' : 'false');
       } catch (e) {
-        setupStatus('Could not write to localStorage: ' + e.message, 'err');
+        setupStatus('Could not save settings: ' + e.message, 'err');
         return;
       }
       setupStatus('Saved. Reloading\u2026', 'ok');
@@ -1852,9 +2157,9 @@
     function setupClear() {
       if (!confirm('Clear all saved Now Showing settings on this device?')) return;
       try {
-        for (const [key] of SETUP_FIELDS) window.localStorage.removeItem('pns.' + key);
+        for (const [key] of SETUP_VALUE_FIELDS) window.localStorage.removeItem('pns.' + key);
+        for (const [key] of SETUP_CHECKBOX_FIELDS) window.localStorage.removeItem('pns.' + key);
         window.localStorage.removeItem('pns.plexPlayer');
-        window.localStorage.removeItem('pns.landscape');
       } catch (_) {}
       populateSetupForm();
       setupStatus('Cleared.', 'ok');
@@ -1867,12 +2172,24 @@
       const clear = document.getElementById('setupClearBtn');
       const gear  = document.getElementById('setupGear');
       const backend = document.getElementById('cfgBackend');
+      const accent = document.getElementById('cfgVisualAccentColor');
+      const accentPicker = document.getElementById('cfgVisualAccentColorPicker');
       if (form)  form.addEventListener('submit', (e) => { e.preventDefault(); setupSave(); });
       if (test)  test.addEventListener('click', setupTest);
       if (save)  save.addEventListener('click', setupSave);
       if (clear) clear.addEventListener('click', setupClear);
       if (backend) backend.addEventListener('change', syncSetupBackendFields);
+      for (const tab of document.querySelectorAll('[data-setup-tab]')) {
+        tab.addEventListener('click', () => switchSetupTab(tab.dataset.setupTab));
+      }
+      for (const id of ['cfgVisualUseBackdrops', 'cfgVisualBurnInMitigation']) {
+        const input = document.getElementById(id);
+        if (input) input.addEventListener('change', syncSetupVisualFields);
+      }
+      if (accent) accent.addEventListener('input', syncAccentPickerFromText);
+      if (accentPicker) accentPicker.addEventListener('input', syncAccentTextFromPicker);
       if (gear)  gear.addEventListener('click', () => {
+        switchSetupTab('connection');
         populateSetupForm();
         setupVisible(true);
       });
@@ -1888,6 +2205,7 @@
       // one, auto-open setup. Also honour explicit `#setup` in the hash.
       const forceSetup = /(^|&)setup(=|&|$)/.test(window.location.hash.replace(/^#/, ''));
       if (forceSetup || !HA_TOKEN) {
+        switchSetupTab('connection');
         populateSetupForm();
         setupVisible(true);
       }

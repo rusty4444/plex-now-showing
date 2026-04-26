@@ -83,6 +83,10 @@ The project follows [Semantic Versioning](https://semver.org/).
   `plex`, `jellyfin`, `emby`, or `kodi`; new generic `player` / `PLAYER`
   option can pin any exact `media_player` entity. Existing Plex defaults and
   `plex_player` / `PLEX_PLAYER` remain backward-compatible.
+- Frontend-only setup now has a Display tab with controls for every visual
+  option: theme, accent colour, frame style, progress bar, ratings badges,
+  genre chips, info panel mode, backdrops, burn-in mitigation, pixel nudge,
+  and night dimming.
 
 ### Fixed
 - Dev add-on installs now use a matching pre-release image tag
