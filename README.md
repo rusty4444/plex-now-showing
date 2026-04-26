@@ -6,11 +6,17 @@
   </a>
 </p>
 
+> This README describes the `dev` branch / V2 work. The `main` branch is the
+> stable V1 Plex-only, single-file release.
 
+A full-screen cinema marquee display for Home Assistant that shows what is
+currently playing on Plex, Jellyfin, Emby, or Kodi. It is designed for
+wall-mounted tablets running Fully Kiosk Browser, but it also works in any
+modern browser.
 
-A full-screen cinema marquee display for Home Assistant that shows what's currently playing on Plex, Jellyfin, Emby, or Kodi. Designed for wall-mounted tablets using Fully Kiosk Browser.
-
-Features animated chase bulb lights, a red curtain banner, poster art with title overlays, and automatic switching between your dashboard and the Now Showing page.
+V2 keeps the original marquee feel while adding a secure server/add-on path,
+Docker support, multi-backend playback detection, tablet switching, visual
+presets, optional metadata panels, and kiosk-friendly burn-in controls.
 
 ![Platform](https://img.shields.io/badge/Platform-Home_Assistant-blue)
 
@@ -24,192 +30,385 @@ Features animated chase bulb lights, a red curtain banner, poster art with title
   <img src="screenshots/landscape-mode.jpg" alt="Landscape Mode with Blurred Background" width="620">
 </p>
 
+## Install Paths
+
+| Path | Best for | Secret handling | Start here |
+|------|----------|-----------------|------------|
+| Home Assistant add-on | HA OS / Supervised | Uses Supervisor token server-side; no HA long-lived token in the browser | Add the repo in the Add-on Store and open the add-on Web UI |
+| Docker Compose | HA Container / plain Docker | Uses `HA_URL` + `HA_TOKEN` from `.env`; tokens stay server-side | `docker/.env.example` + `docker/docker-compose.example.yml` |
+| Frontend-only / manual | HACS-style or copy-to-`www` installs | Uses local device storage, hash config, or `now_showing.config.js` | Copy `www/now_showing.html` into Home Assistant `www` |
+
+All three paths use the same kiosk UI. The add-on and Docker paths add the
+Node server that proxies Home Assistant and Plex metadata so API tokens are
+not exposed to the tablet browser.
+
+## What Is New On `dev` Vs `main`
+
+| Area | V2 / `dev` adds |
+|------|-----------------|
+| Safer config | Hard-coded tokens were removed from `now_showing.html`. Runtime config now comes from the add-on/server, `localStorage`, URL hash, or `now_showing.config.js`. |
+| First-run setup | Frontend-only installs open a `#setup` form when no HA token is found. The gear icon reopens setup later. |
+| Home Assistant add-on | `addons/plex-now-showing` wraps the server as a Supervisor add-on with Ingress, a config form, logs, multi-arch GHCR images, and optional direct port `8099`. |
+| Docker Compose | `docker/docker-compose.example.yml` and `.env.example` run the same image for HA Container users. |
+| Unified server | `server/` serves the kiosk and exposes `/api/state`, `/api/config`, `/api/media-info/:ratingKey`, `/api/artwork`, `/api/night-mode`, and `/healthz`. |
+| Multi-backend support | `backend` selects `plex`, `jellyfin`, `emby`, or `kodi`; `player` can pin any exact `media_player` entity. Plex-specific `plex_player` is still accepted for compatibility. |
+| Fully Kiosk switching | Use either the bundled HA Blueprint or the add-on/server's built-in Fully Kiosk REST switcher. |
+| Visual toggles | Progress bar, ratings badges, genre chips, info-panel display modes, pause backdrops, burn-in mitigation, night dimming, frame styles, theme presets, and accent color overrides. |
+| CI / release plumbing | Multi-arch add-on builds, config linting, Docker image publishing, server tests, add-on docs, and examples. |
+
 ## Features
 
-- Cinema-style marquee with animated chase bulb lights around the border
-- Red curtain banner with "NOW SHOWING" text
-- Full-bleed poster art from the currently playing media
-- Title, episode info (for TV), and playback state overlays
-- **Tap for info** — tap the poster to see synopsis, content rating, duration, and media file details (resolution, codec, audio, bitrate, file size)
-- **Landscape mode** — optional flag to fit the entire poster on widescreen displays
-- Selects a Plex, Jellyfin, Emby, or Kodi backend and can pin to a specific player
-- Plex installs can still filter to a specific Plex user
-- Idle state when nothing is playing
-- Optional automation to switch a Fully Kiosk Browser tablet between your dashboard and the Now Showing page
+- Cinema marquee display with animated bulb frame, title overlays, idle state,
+  and portrait or landscape layouts.
+- Playback support for Plex, Jellyfin, Emby, and Kodi Home Assistant
+  `media_player` entities.
+- Optional exact player pinning via `player`.
+- Plex username filtering so shared Plex servers can show only your sessions.
+- Tap-for-info panel with synopsis, player, rating, duration, progress, and
+  Plex media-file details when `plex_url` + `plex_token` are configured.
+- Optional progress bar driven by Home Assistant `media_position`.
+- Optional IMDb / Rotten Tomatoes / audience badges and genre chips from Plex
+  metadata.
+- Optional info-panel modes: `on_tap`, `on_pause`, or `always`.
+- Optional backdrop art on pause, either fullscreen landscape fade or ambient
+  blurred fanart.
+- Optional OLED-friendly burn-in mitigation with pixel nudge and night-mode
+  dimming.
+- Theme presets: `classic-gold`, `art-deco-silver`, `neon-80s`, and
+  `minimalist-dark`.
+- Strict `#RRGGBB` accent color override that reskins the active theme.
+- Frame style picker: animated `bulbs`, quiet `gold-line`, or `none`.
+- Optional Fully Kiosk Browser auto-switching between your dashboard and the
+  Now Showing page.
 
----
+## Requirements
 
-## What You Need
+- Home Assistant with at least one supported media integration configured:
+  Plex, Jellyfin, Emby, or Kodi.
+- One or more active `media_player` entities from that integration.
+- Fully Kiosk Browser if you want automatic wall-tablet switching.
+- Plex URL + Plex token only if you want Plex-only enhanced metadata such as
+  codec/HDR details, ratings, genre chips, or Plex backdrop art.
 
-- **Home Assistant** with the Plex, Jellyfin, Emby, or Kodi integration configured
-- A **Plex, Jellyfin, Emby, or Kodi** server/player on your local network
-- **Fully Kiosk Browser** (optional) — for automatic switching between your dashboard and the Now Showing page
+## Setup A: Home Assistant Add-on
 
-## Files
+Use this path for HA OS or HA Supervised. It is the recommended V2 install
+because Home Assistant Supervisor supplies the API token automatically.
 
-| File | Description |
-|------|-------------|
-| `www/now_showing.html` | The full-screen marquee page |
-| `automations/plex_now_showing_display.yaml` | Automation to auto-switch a tablet when playback starts/stops |
+1. Open Home Assistant.
+2. Go to **Settings -> Add-ons -> Add-on Store -> ... -> Repositories**.
+3. Add this repository URL:
 
----
+   ```text
+   https://github.com/rusty4444/plex-now-showing
+   ```
 
-## Setup
+   While testing the `dev` branch before it is promoted to `main`, use the
+   branch-suffixed repository URL:
 
-**Step 1 — Copy the file**
+   ```text
+   https://github.com/rusty4444/plex-now-showing#dev
+   ```
 
-Place `www/now_showing.html` into your Home Assistant `www` directory:
+   Home Assistant supports the `#branch` suffix for stable/canary add-on
+   repositories:
+   https://developers.home-assistant.io/docs/add-ons/presentation/#offering-stable-and-canary-version
 
+4. Install **Plex Now Showing**.
+5. Configure the add-on:
+   - `backend`: `plex`, `jellyfin`, `emby`, or `kodi`
+   - `player`: optional exact entity ID, for example `media_player.kodi`
+   - `plex_url` and `plex_token`: optional, Plex enhanced metadata only
+   - visual options such as `visual_theme`, `visual_frame_style`, and
+     `visual_progress_bar`
+6. Start the add-on.
+7. Click **Open Web UI** for Ingress, or open:
+
+   ```text
+   http://<ha-ip>:8099/now_showing.html
+   ```
+
+The direct `8099/tcp` port is useful for Fully Kiosk tablets. Leave the port
+empty in the add-on Network settings if you only want Ingress access.
+
+Full add-on option docs live in
+[`addons/plex-now-showing/DOCS.md`](addons/plex-now-showing/DOCS.md).
+
+## Setup B: Docker Compose
+
+Use this path for Home Assistant Container or any plain Docker host.
+
+```bash
+cd docker
+cp .env.example .env
+# edit .env and fill HA_URL + HA_TOKEN
+docker compose -f docker-compose.example.yml up -d
 ```
-<config>/www/now_showing.html
+
+Open:
+
+```text
+http://<docker-host>:8099/now_showing.html
 ```
 
-You can do this via the **File Editor** add-on, **Samba**, **SSH**, or the **VS Code** add-on.
+For the current `dev` branch image, set this in `docker/.env`:
 
-**Step 2 — Configure your credentials**
+```env
+TAG=dev
+```
 
-Tokens are never hard-coded in `now_showing.html` anymore. Instead, the page reads them at runtime. Pick whichever option suits you:
+Minimum required `.env` values:
 
-**Option A — runtime config file (recommended for a single tablet)**
+```env
+HA_URL=http://homeassistant.local:8123
+HA_TOKEN=YOUR_LONG_LIVED_ACCESS_TOKEN
+BACKEND=plex
+```
 
-1. Copy `www/now_showing.config.example.js` to `www/now_showing.config.js`
-2. Edit the new file with your values. `now_showing.config.js` is git-ignored so tokens stay local.
+Common optional values:
+
+```env
+PLAYER=
+PLEX_URL=http://192.168.1.10:32400
+PLEX_TOKEN=
+PLEX_USERNAME=
+LANDSCAPE=false
+VISUAL_THEME=classic-gold
+VISUAL_FRAME_STYLE=bulbs
+VISUAL_PROGRESS_BAR=false
+```
+
+Health and debug endpoints:
+
+```bash
+curl http://localhost:8099/healthz
+curl http://localhost:8099/api
+curl http://localhost:8099/api/state
+```
+
+More Docker notes live in [`docker/README.md`](docker/README.md).
+
+## Setup C: Frontend-Only / Manual
+
+Use this path if you only want to copy the HTML into Home Assistant's `www`
+folder. This is closest to V1 and does not require the Node server, but the
+tablet browser must hold the HA token.
+
+1. Copy the kiosk file:
+
+   ```text
+   www/now_showing.html -> <config>/www/now_showing.html
+   ```
+
+2. Open:
+
+   ```text
+   http://<ha-ip>:8123/local/now_showing.html
+   ```
+
+3. If no token is configured, the page opens `#setup`. Fill:
+   - Home Assistant URL
+   - HA long-lived access token
+   - backend
+   - optional player
+   - optional Plex URL/token
+   - landscape mode
+
+4. Save and launch. Values are stored in that browser's `localStorage`.
+
+You can also use a local runtime config file:
+
+```bash
+cp www/now_showing.config.example.js www/now_showing.config.js
+```
+
+Then edit `now_showing.config.js` before copying it to Home Assistant:
 
 ```javascript
 window.NOW_SHOWING_CONFIG = {
-  haUrl:        'http://YOUR_HA_IP:8123',
-  haToken:      'YOUR_LONG_LIVED_ACCESS_TOKEN',
-  backend:      'plex', // plex | jellyfin | emby | kodi
-  player:       '',     // optional, e.g. 'media_player.kodi'
-  plexUsername: 'your_plex_username',
-  plexUrl:      '',    // optional, enables detailed media-file info
-  plexToken:    '',    // optional
-  landscape:    false, // true for widescreen displays
-  poll:         5000,
+  haUrl: 'http://homeassistant.local:8123',
+  haToken: 'YOUR_LONG_LIVED_ACCESS_TOKEN',
+  backend: 'plex', // plex | jellyfin | emby | kodi
+  player: '',
+  plexUsername: '',
+  plexUrl: '',
+  plexToken: '',
+  landscape: false,
+  poll: 5000,
 };
 ```
 
-**Option B — URL hash fragment (recommended for multi-tablet setups)**
+For multi-tablet setups, non-secret and secret values can also be supplied in
+the URL hash:
 
-Open the page with the tokens after the `#`, so they stay out of referrer headers and server logs:
-
+```text
+http://<ha-ip>:8123/local/now_showing.html#haToken=...&backend=jellyfin&player=media_player.jellyfin_living_room
 ```
-http://YOUR_HA_IP:8123/local/now_showing.html#haToken=...&backend=jellyfin&player=media_player.jellyfin_living_room
-```
 
-**Option C — localStorage (set once per device)**
-
-Open DevTools on the tablet and run:
+The frontend setup form currently covers connection/backend basics. For
+frontend-only installs, visual toggles are set via `localStorage` or URL hash,
+for example:
 
 ```javascript
-localStorage.setItem('pns.haToken', 'YOUR_LONG_LIVED_ACCESS_TOKEN');
-localStorage.setItem('pns.backend', 'plex');
-localStorage.setItem('pns.player', '');
-localStorage.setItem('pns.plexUsername', 'your_plex_username');
+localStorage.setItem('pns.visualTheme', 'neon-80s');
+localStorage.setItem('pns.visualFrameStyle', 'gold-line');
+localStorage.setItem('pns.visualProgressBar', 'true');
+localStorage.setItem('pns.visualAccentColor', '#ff5500');
 ```
 
-The in-page setup form can save these values for each tablet.
+Equivalent URL hash example:
 
-`backend` defaults to `plex`. `player` is optional. When set to a specific `media_player` entity ID, the page will only show media from that player. When left empty, it scans active players for the selected backend. You can find your player entity IDs in **Developer Tools -> States** by searching for `media_player.plex_`, `media_player.jellyfin`, `media_player.emby`, or `media_player.kodi`.
+```text
+#visualTheme=minimalist-dark&visualFrameStyle=none&visualProgressBar=true&visualAccentColor=%23ff5500
+```
 
-`plexUrl` and `plexToken` are optional. When configured, the info overlay will show detailed media file information (resolution, codec, bitrate, audio format, file size). Without them, the info overlay still works but only shows what Home Assistant provides (title, synopsis, duration, content rating).
+## Core Configuration
 
-To create a long-lived access token:
-1. Go to your HA profile (click your name in the sidebar)
-2. Scroll to "Long-Lived Access Tokens"
-3. Click "Create Token", give it a name, and copy the token
+| Purpose | Add-on option | Docker env | Frontend key | Values |
+|---------|---------------|------------|--------------|--------|
+| Media backend | `backend` | `BACKEND` | `backend` | `plex`, `jellyfin`, `emby`, `kodi` |
+| Exact player pin | `player` | `PLAYER` | `player` | Any `media_player.*` entity ID |
+| Plex username filter | `plex_username` | `PLEX_USERNAME` | `plexUsername` | Plex username |
+| Legacy Plex player pin | `plex_player` | `PLEX_PLAYER` | `plexPlayer` | Prefer `player` for new installs |
+| Plex server URL | `plex_url` | `PLEX_URL` | `plexUrl` | Optional; enables Plex metadata |
+| Plex token | `plex_token` | `PLEX_TOKEN` | `plexToken` | Required with `plex_url` |
+| Landscape mode | `landscape` | `LANDSCAPE` | `landscape` | `true` / `false` |
+| Poll interval | `poll_interval` | `POLL` | `poll` | Milliseconds, default `5000` |
+| State cache | `state_ttl_ms` | `STATE_TTL_MS` | Server only | Default `3000` |
+| Media-info cache | `media_info_ttl_ms` | `MEDIA_INFO_TTL_MS` | Server only | Default `600000` |
+| API shared secret | `proxy_secret` | `PROXY_SECRET` | Server only | Optional `X-Proxy-Secret` hardening |
+| Origin allowlist | `allowed_origins` | `ALLOWED_ORIGINS` | Server only | Comma-separated origins |
 
-**Step 3 — Open it**
+## Visual Configuration
 
-Navigate to `http://YOUR_HA_IP:8123/local/now_showing.html` in a browser to test it. If Plex is playing something, you should see the poster appear.
+All visual features are opt-in except the default `classic-gold` theme and
+`bulbs` frame, so existing V1-looking installs stay familiar until you enable
+something.
 
-**Step 4 (Optional) — Set up the automation**
+| Feature | Add-on option | Docker env | Frontend key | Values |
+|---------|---------------|------------|--------------|--------|
+| Progress bar | `visual_progress_bar` | `VISUAL_PROGRESS_BAR` | `visualProgressBar` | `true` / `false` |
+| Ratings badges | `visual_ratings_badges` | `VISUAL_RATINGS_BADGES` | `visualRatingsBadges` | Plex metadata required |
+| Genre chips | `visual_genre_chips` | `VISUAL_GENRE_CHIPS` | `visualGenreChips` | Plex metadata required |
+| Info panel mode | `visual_info_panel_mode` | `VISUAL_INFO_PANEL_MODE` | `visualInfoPanelMode` | `on_tap`, `on_pause`, `always` |
+| Frame style | `visual_frame_style` | `VISUAL_FRAME_STYLE` | `visualFrameStyle` | `bulbs`, `gold-line`, `none` |
+| Backdrops | `visual_use_backdrops` | `VISUAL_USE_BACKDROPS` | `visualUseBackdrops` | Plex metadata required |
+| Backdrop style | `visual_backdrop_style` | `VISUAL_BACKDROP_STYLE` | `visualBackdropStyle` | `fullscreen`, `ambient` |
+| Backdrop delay | `visual_backdrop_delay_ms` | `VISUAL_BACKDROP_DELAY_MS` | `visualBackdropDelayMs` | `1000` to `600000` ms |
+| Burn-in mitigation | `visual_burn_in_mitigation` | `VISUAL_BURN_IN_MITIGATION` | `visualBurnInMitigation` | `true` / `false` |
+| Pixel nudge interval | `visual_nudge_interval_ms` | `VISUAL_NUDGE_INTERVAL_MS` | `visualNudgeIntervalMs` | `5000` to `600000` ms |
+| Pixel nudge amplitude | `visual_nudge_amplitude_px` | `VISUAL_NUDGE_AMPLITUDE_PX` | `visualNudgeAmplitudePx` | `1` to `16` px |
+| Night-mode entity | `visual_night_mode_entity` | `VISUAL_NIGHT_MODE_ENTITY` | `visualNightModeEntity` | HA on/off entity ID |
+| Night opacity | `visual_night_mode_opacity` | `VISUAL_NIGHT_MODE_OPACITY` | `visualNightModeOpacity` | `0` to `0.95` |
+| Theme preset | `visual_theme` | `VISUAL_THEME` | `visualTheme` | `classic-gold`, `art-deco-silver`, `neon-80s`, `minimalist-dark` |
+| Accent color | `visual_accent_color` | `VISUAL_ACCENT_COLOR` | `visualAccentColor` | Strict `#RRGGBB`, empty for theme default |
 
-If you want a Fully Kiosk Browser tablet to automatically switch to the Now Showing page when playback starts:
+## Backend Behavior
 
-1. Copy the contents of `automations/plex_now_showing_display.yaml` into your `automations.yaml` file, or recreate it through the HA UI
-2. Update the following values in the automation:
+When `player` is blank, Now Showing scans active Home Assistant media players
+for the selected backend:
 
-| What to change | Where in the file | How to find yours |
-|---|---|---|
-| **Plex session sensor** | `entity_id: sensor.tnas` (appears 3 times — trigger + 2 conditions) | Go to **Developer Tools → States**, search for your Plex server name. Look for a `sensor.*` entity that shows the number of active sessions (e.g., `sensor.plex_myserver`, `sensor.tnas`). Its state will be a number like `0` or `1`. |
-| **Fully Kiosk device ID** | `device_id: YOUR_FULLY_KIOSK_DEVICE_ID` (appears 2 times) | Go to **Settings → Devices**, find your Fully Kiosk tablet, and copy the device ID from the URL (the long string after `/device/`). |
-| **Now Showing URL** | `url:` in the first action | Change to `http://YOUR_HA_IP:8123/local/now_showing.html` |
-| **Dashboard URL** | `url:` in the second action | Change to the URL of the dashboard you want to return to after playback stops (e.g., `http://YOUR_HA_IP:8123/lovelace/0`). |
+| Backend | Matching entities |
+|---------|-------------------|
+| Plex | `media_player.plex_*` |
+| Jellyfin | `media_player.jellyfin_*` or `media_player.jellyfin` |
+| Emby | `media_player.emby_*` or `media_player.emby` |
+| Kodi | `media_player.kodi_*` or `media_player.kodi` |
 
----
+If `player` is set, that exact entity is used regardless of backend prefix.
+For Plex, `plex_username` still filters auto-detected sessions to your user.
 
-## How It Works
+## Fully Kiosk Switching
 
-- Polls Home Assistant's API every 5 seconds for active `media_player` entities matching the selected backend
-- Filters Plex sessions to only your user's playback when `plexUsername` is set
-- Displays the current media's poster art as a full-bleed background
-- Shows title, episode info (for TV), and playback state
-- When nothing is playing, shows an idle "Waiting for playback" state
-- The automation triggers when the Plex session count sensor changes — it waits 5 seconds then loads the page, or waits 10 seconds after playback stops to return to your dashboard
+You can automate tablet navigation in either of two ways:
 
----
+1. **Home Assistant Blueprint**:
+   `blueprints/automation/rusty4444/plex_now_showing_display.yaml`
+2. **Built-in add-on/server switcher**:
+   enable `switcher_enabled` / `SWITCHER_ENABLED` and configure one or more
+   Fully Kiosk targets.
 
-## Tap for Info
+Do not run both for the same tablet, or each playback transition will fire
+twice.
 
-Tap anywhere on the poster while media is playing to show an info panel. It slides up from the bottom and shows:
+Add-on options:
 
-- Title and episode info
-- Media type (Movie / TV Series), content rating, and duration
-- **Synopsis** (pulled from the Plex integration's `media_summary` attribute)
-- **Media file details** (requires `PLEX_URL` and `PLEX_TOKEN` to be configured):
-  - Resolution (e.g., 1920×1080)
-  - Video codec, profile, and bit depth (e.g., HEVC Main 10bit)
-  - HDR / Dolby Vision (if applicable)
-  - Audio format (e.g., English EAC3 5.1)
-  - Bitrate (e.g., 4.2 Mbps)
-  - Container and file size (e.g., MKV, 2.3 GB)
-- Player name
+| Option | Purpose |
+|--------|---------|
+| `switcher_enabled` | Turns on the built-in switcher |
+| `switcher_interval_ms` | Poll interval for play/stop edges |
+| `fully_kiosks` | List of tablet `host`, `password`, `playing_url`, and optional `stopped_url` |
 
-The panel auto-dismisses after 8 seconds, or tap again to close it.
+Docker env:
 
----
+```env
+SWITCHER_ENABLED=true
+SWITCHER_INTERVAL_MS=5000
+FULLY_KIOSKS=http://tablet.lan:2323|fully_password|http://ha.lan:8099/now_showing.html|http://ha.lan:8123/lovelace/0
+```
 
-## Customization
+## Tap For Info
 
-| Setting | Where | Default |
-|---------|-------|---------|
-| Poll interval | `poll` in config | 5000ms (5 seconds) |
-| Backend | `backend` in config | `plex` |
-| Specific player only | `player` in config | Empty (auto-detect for backend) |
-| Plex username filter | `plexUsername` in config | Your Plex username |
-| Landscape mode | `landscape` in config | `false` (poster fills screen, may crop) |
-| Plex server URL | `plexUrl` in config | Empty (media file info disabled) |
-| Plex token | `plexToken` in config | Empty |
-| Marquee text size | `.marquee-text h1` font-size in CSS | `clamp(3.5rem, 10vw, 8rem)` |
-| Bulb size | `.bulb` width/height in CSS | 28px |
-| Bulb spacing | `spacing` in `createOuterBulbs()` | 42px |
-| Chase animation speed | `setInterval(animateChase, ...)` | 500ms |
+Tap the poster while media is active to show the info panel. Depending on the
+backend and configured metadata, it can show:
 
-### Landscape Mode
+- title, series, season/episode, and playback state
+- synopsis, content rating, duration, and player name
+- playback progress
+- Plex media-file details such as resolution, codec, audio, bitrate, and file
+  size
+- optional ratings badges and genre chips
 
-If you're using a landscape/widescreen display instead of a portrait tablet, set `LANDSCAPE_MODE = true`. This fits the entire poster on screen with letterboxing (black bars) instead of cropping to fill.
+`visual_info_panel_mode` can keep the panel hidden until tap, pinned while
+paused, or always visible while media is active.
 
----
+## Important Files
+
+| Path | Purpose |
+|------|---------|
+| `www/now_showing.html` | The kiosk UI |
+| `www/now_showing.config.example.js` | Frontend-only runtime config example |
+| `server/` | Unified Node server for add-on and Docker installs |
+| `addons/plex-now-showing/` | Home Assistant add-on package |
+| `addons/plex-now-showing/DOCS.md` | Full add-on option documentation |
+| `docker/` | Docker Compose install path |
+| `blueprints/automation/rusty4444/plex_now_showing_display.yaml` | HA Blueprint for tablet switching |
+| `repository.yaml` | Home Assistant add-on repository manifest |
+| `.github/workflows/build-addon.yml` | Multi-arch add-on image build and publish workflow |
 
 ## Troubleshooting
 
-- **Blank poster**: Check that your HA token is valid and the Plex `entity_picture` URLs are accessible from the device
-- **Only seeing other users' playback**: Set `plexUsername` in your config to match your Plex username
-- **Automation not triggering**: Verify your Plex session count sensor exists and changes value when playback starts/stops
-
----
+- **The add-on opens but shows no media**: confirm the selected `backend`
+  matches your HA integration and that a matching `media_player` is in
+  `playing` or `paused`.
+- **Docker returns 502 from `/api/state`**: check `HA_URL` and `HA_TOKEN`, then
+  run `curl http://localhost:8099/healthz`.
+- **Frontend-only page opens setup every time**: localStorage may be blocked or
+  cleared by the tablet browser. Use `now_showing.config.js` or a URL hash.
+- **Plex ratings, genres, codec info, or backdrops are missing**: set both
+  `plex_url` and `plex_token`. These are Plex-only enhanced metadata features.
+- **Only another Plex user's playback appears**: set `plex_username`, or set
+  `player` to the exact player entity you want.
+- **Visual options do not change in frontend-only mode**: add-on/Docker expose
+  visual controls through server config. Frontend-only installs currently use
+  `localStorage` or URL hash for visual toggles.
+- **Fully Kiosk switches twice**: disable either the Blueprint or the built-in
+  switcher for that tablet.
 
 ## Related
 
-Looking for a dashboard card showing recently added media? Check out [recently-added-media-card](https://github.com/rusty4444/recently-added-media-card) — a unified Lovelace card that supports Plex, Kodi, Jellyfin and Emby.
+Looking for a dashboard card showing recently added media? Check out
+[recently-added-media-card](https://github.com/rusty4444/recently-added-media-card),
+a unified Lovelace card that supports Plex, Kodi, Jellyfin, and Emby.
 
-Want to show upcoming movies and TV episodes alongside your recently added media? Check out [coming-soon-card](https://github.com/rusty4444/coming-soon-card) — a companion card powered by Radarr, Sonarr and Trakt.
+Want to show upcoming movies and TV episodes alongside your recently added
+media? Check out
+[coming-soon-card](https://github.com/rusty4444/coming-soon-card), a companion
+card powered by Radarr, Sonarr, and Trakt.
 
-Using Kodi, Jellyfin, or Emby? Set `backend` to `kodi`, `jellyfin`, or `emby`.
-
----
+The older standalone Kodi, Jellyfin, and Emby Now Showing repos are being
+folded into this V2 multi-backend codebase via the `backend` setting.
 
 ## Credits
 
-Built by Sam Russell — AI used in development.
+Built by Sam Russell. AI used in development.
