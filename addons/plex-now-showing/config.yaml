@@ -1,0 +1,129 @@
+---
+# Home Assistant add-on manifest for Plex Now Showing (V2).
+#
+# Wraps the unified Node 20 server (../server/) so HA OS / Supervised users
+# install this with one click from the add-on store. No user-created long-
+# lived access token is needed: Supervisor injects SUPERVISOR_TOKEN and the
+# HA API is reachable at http://supervisor/core.
+#
+# Docs on each field: https://developers.home-assistant.io/docs/add-ons/configuration
+
+name: Plex Now Showing
+version: "2.0.0"
+slug: plex_now_showing
+description: Cinema-style now-playing kiosk for Plex, Jellyfin, Emby, and Kodi.
+url: https://github.com/rusty4444/plex-now-showing
+arch:
+  - amd64
+  - aarch64
+  - armv7
+  - armhf
+  - i386
+startup: services
+boot: auto
+init: false
+hassio_api: true
+homeassistant_api: true
+auth_api: false
+ingress: true
+ingress_port: 8099
+ingress_entry: /now_showing.html
+panel_icon: mdi:theater
+panel_title: Now Showing
+ports:
+  # Direct access for Fully Kiosk / other tablets that can't use ingress.
+  # Leaving it empty in options.json disables the host port; users only need
+  # this exposed if they browse from outside the HA frontend.
+  8099/tcp: 8099
+ports_description:
+  8099/tcp: Direct HTTP access for external kiosks (leave empty to disable)
+map:
+  - ssl
+options:
+  backend: plex
+  player: ""
+  plex_url: ""
+  plex_token: ""
+  plex_username: ""
+  plex_player: ""
+  landscape: false
+  theme: classic-gold
+  poll_interval: 5000
+  state_ttl_ms: 3000
+  media_info_ttl_ms: 600000
+  proxy_secret: ""
+  allowed_origins: []
+  # Fully Kiosk auto-switcher (#48) — disabled by default. Enable this OR the
+  # HA Blueprint (#47), not both.
+  switcher_enabled: false
+  switcher_interval_ms: 5000
+  fully_kiosks: []
+  # Visual toggles (V2 visual sprint). All default OFF so existing installs
+  # keep the original look until the user opts in.
+  visual_progress_bar: false
+  visual_ratings_badges: false
+  visual_genre_chips: false
+  visual_info_panel_mode: on_tap
+  visual_frame_style: bulbs
+  visual_marquee_font: bebas-neue
+  # Backdrop art on pause (#21). Master switch is off; backdrop_style picks
+  # fullscreen (landscape-only crossfade, default) vs ambient (blurred
+  # fanart behind the poster on every orientation). Delay is the pause
+  # threshold for the fullscreen swap — >10 s by spec.
+  visual_use_backdrops: false
+  visual_backdrop_style: fullscreen
+  visual_backdrop_delay_ms: 10000
+  # Burn-in mitigation (#28) — OLED-friendly pixel nudge + optional
+  # night-mode dim. All default off; safe on LCD too but pointless.
+  visual_burn_in_mitigation: false
+  visual_nudge_interval_ms: 60000
+  visual_nudge_amplitude_px: 4
+  visual_night_mode_entity: ""
+  visual_night_mode_opacity: 0.4
+  # Theme presets (#23) + accent colour picker (#66). Both are presentation-
+  # only and safe to leave at defaults; classic-gold mirrors the original
+  # bulb look. Accent colour is a strict #RRGGBB override (empty = theme
+  # default ramp).
+  visual_theme: classic-gold
+  visual_accent_color: ""
+  log_level: info
+schema:
+  backend: "list(plex|jellyfin|emby|kodi)"
+  player: "str?"
+  plex_url: "str?"
+  plex_token: "password?"
+  plex_username: "str?"
+  plex_player: "str?"
+  landscape: "bool"
+  theme: "list(classic-gold|midnight|neon|minimal|custom)?"
+  poll_interval: "int(1000,60000)"
+  state_ttl_ms: "int(500,30000)"
+  media_info_ttl_ms: "int(10000,3600000)"
+  proxy_secret: "password?"
+  allowed_origins:
+    - "url?"
+  switcher_enabled: "bool"
+  switcher_interval_ms: "int(1000,60000)"
+  fully_kiosks:
+    - host: "url"
+      password: "password"
+      playing_url: "url"
+      stopped_url: "url?"
+  visual_progress_bar: "bool"
+  visual_ratings_badges: "bool"
+  visual_genre_chips: "bool"
+  visual_info_panel_mode: "list(on_tap|on_pause|always)"
+  visual_frame_style: "list(bulbs|gold-line|none)"
+  visual_marquee_font: "list(bebas-neue|anton|oswald|monoton|playfair-display)"
+  visual_use_backdrops: "bool"
+  visual_backdrop_style: "list(fullscreen|ambient)"
+  visual_backdrop_delay_ms: "int(1000,600000)"
+  visual_burn_in_mitigation: "bool"
+  visual_nudge_interval_ms: "int(5000,600000)"
+  visual_nudge_amplitude_px: "int(1,16)"
+  visual_night_mode_entity: "str?"
+  visual_night_mode_opacity: "float(0,0.95)"
+  visual_theme: "list(classic-gold|art-deco-silver|neon-80s|minimalist-dark)"
+  visual_accent_color: "str?"
+  log_level: "list(trace|debug|info|notice|warning|error|fatal)?"
+image: ghcr.io/rusty4444/plex-now-showing-{arch}

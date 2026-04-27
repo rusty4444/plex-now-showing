@@ -1,0 +1,52 @@
+[
+  {
+    "entity_id": "sensor.tnas",
+    "state": "1",
+    "attributes": { "friendly_name": "Plex Sessions" }
+  },
+  {
+    "entity_id": "media_player.plex_plex_for_lg_tv",
+    "state": "playing",
+    "attributes": {
+      "friendly_name": "Plex for LG TV",
+      "media_title": "Pilot",
+      "media_series_title": "Severance",
+      "media_content_type": "episode",
+      "media_season": 1,
+      "media_episode": 1,
+      "media_content_rating": "TV-MA",
+      "media_duration": 3120,
+      "media_position": 842,
+      "media_position_updated_at": "2026-04-24T12:00:00.000000+00:00",
+      "media_summary": "Mark leads a team of office workers whose memories have been surgically divided.",
+      "media_content_id": "12345",
+      "entity_picture": "/api/media_player_proxy/media_player.plex_plex_for_lg_tv",
+      "username": "rusty"
+    }
+  },
+  {
+    "entity_id": "media_player.plex_plex_for_ios_iphone",
+    "state": "idle",
+    "attributes": {
+      "friendly_name": "Plex for iOS",
+      "username": "someone_else"
+    }
+  },
+  {
+    "entity_id": "media_player.plex_plex_for_android_tv",
+    "state": "playing",
+    "attributes": {
+      "friendly_name": "Bedroom Shield",
+      "media_title": "Dune: Part Two",
+      "media_series_title": "",
+      "media_content_type": "movie",
+      "media_content_rating": "PG-13",
+      "media_duration": 9900,
+      "media_position": 1234,
+      "media_position_updated_at": "2026-04-24T11:30:00.000000+00:00",
+      "media_content_id": "plex://movie/5e161e4c8f3f5a00401b5af1",
+      "entity_picture": "/api/media_player_proxy/media_player.plex_plex_for_android_tv",
+      "username": "rusty"
+    }
+  }
+]

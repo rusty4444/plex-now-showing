@@ -1,0 +1,78 @@
+{
+  "MediaContainer": {
+    "size": 1,
+    "Metadata": [
+      {
+        "ratingKey": "12345",
+        "title": "Pilot",
+        "Media": [
+          {
+            "videoResolution": "4k",
+            "videoCodec": "hevc",
+            "videoProfile": "main 10",
+            "audioCodec": "eac3",
+            "audioChannels": 6,
+            "bitrate": 24000,
+            "container": "mkv",
+            "width": 3840,
+            "height": 2160,
+            "Part": [
+              {
+                "size": 12500000000,
+                "Stream": [
+                  {
+                    "streamType": 1,
+                    "bitDepth": 10,
+                    "colorTrc": "smpte2084",
+                    "DOVIPresent": false
+                  },
+                  {
+                    "streamType": 2,
+                    "displayTitle": "English (EAC3 5.1)"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "rating": 8.4,
+        "audienceRating": 9.1,
+        "art": "/library/metadata/12345/art/1700000000",
+        "Rating": [
+          {
+            "image": "imdb://image.rating",
+            "value": 8.4,
+            "type": "audience"
+          },
+          {
+            "image": "rottentomatoes://image.rating.ripe",
+            "value": 9.3,
+            "type": "critic"
+          },
+          {
+            "image": "rottentomatoes://image.rating.upright",
+            "value": 9.1,
+            "type": "audience"
+          }
+        ],
+        "Genre": [
+          {
+            "id": 1,
+            "filter": "genre=1",
+            "tag": "Action"
+          },
+          {
+            "id": 2,
+            "filter": "genre=2",
+            "tag": "Adventure"
+          },
+          {
+            "id": 3,
+            "filter": "genre=3",
+            "tag": "Science Fiction"
+          }
+        ]
+      }
+    ]
+  }
+}

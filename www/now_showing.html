@@ -6,15 +6,33 @@
   <title>Now Showing</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Bebas+Neue&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@400;500;600&family=Monoton&family=Oswald:wght@600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
+    /* ===== THEME PRESETS (#23) =====
+     *
+     * Each theme is one block of CSS custom-property overrides applied via
+     * <body data-theme="…">. The fine-grained per-axis controls (#viz-13
+     * through #viz-19) layer on top by setting their own properties, so
+     * picking a preset and then customising one axis works as expected.
+     *
+     * Presets only redefine the variables that differ from classic-gold so
+     * the diff between themes stays readable at a glance.
+     *
+     * Adding a new preset: pick a 4-stop accent ramp (light/mid/dark/glow),
+     * a body bg + marquee bg, and decide whether the bulb gradient still
+     * fits or needs a custom --bulb-on/off pair. Then add an entry to the
+     * VISUAL_THEMES enum in server/src/config.js + the readVisualTheme
+     * resolver below. */
     :root {
-      --gold-light: #e8c84a;
-      --gold-mid: #c9a73b;
-      --gold-dark: #8b6f2a;
-      --gold-glow: #ffd75e;
+      /* classic-gold (default) values — also duplicated in the data-theme
+       * block below so an explicit data-theme="classic-gold" works the
+       * same as the bare :root fallback. */
+      --accent-light: #e8c84a;
+      --accent-mid: #c9a73b;
+      --accent-dark: #8b6f2a;
+      --accent-glow: #ffd75e;
       --bulb-on: #ffe69c;
       --bulb-off: #665522;
       --frame-border: #a0842e;
@@ -24,6 +42,125 @@
       --text-dim: #998c6e;
       --red-curtain: #5c1010;
       --marquee-height: 14vh;
+      --marquee-font-family: 'Bebas Neue', sans-serif;
+      --marquee-font-weight: 400;
+      --marquee-letter-spacing: 0.35em;
+    }
+
+    body[data-theme="classic-gold"] {
+      /* explicit no-op — same values as :root, present so theme switching
+       * back to classic-gold from another preset reliably resets every var. */
+      --accent-light: #e8c84a;
+      --accent-mid: #c9a73b;
+      --accent-dark: #8b6f2a;
+      --accent-glow: #ffd75e;
+      --bulb-on: #ffe69c;
+      --bulb-off: #665522;
+      --frame-border: #a0842e;
+      --bg-dark: #0a0a0a;
+      --bg-marquee: #111111;
+      --text-light: #f5f0e0;
+      --text-dim: #998c6e;
+      --red-curtain: #5c1010;
+    }
+
+    body[data-theme="art-deco-silver"] {
+      /* Cool platinum ramp + slightly cooler curtain, evokes a 1930s
+       * picture-palace lobby. Bulbs stay warm-white because cool bulbs read
+       * as fluorescent / clinical. */
+      --accent-light: #e6e8ee;
+      --accent-mid: #b9bcc6;
+      --accent-dark: #6f7480;
+      --accent-glow: #f7f9ff;
+      --bulb-on: #fff4d6;
+      --bulb-off: #4a4d55;
+      --frame-border: #8c909a;
+      --bg-dark: #0c0e12;
+      --bg-marquee: #14171c;
+      --text-light: #ecedf2;
+      --text-dim: #8d909a;
+      --red-curtain: #2b3340; /* navy curtain instead of crimson */
+    }
+
+    body[data-theme="neon-80s"] {
+      /* Synthwave: hot pink → cyan accent, deep purple bg. Bulbs become
+       * magenta because you can't have a neon theme without neon bulbs. */
+      --accent-light: #ff5cf0;
+      --accent-mid: #c026d3;
+      --accent-dark: #6b21a8;
+      --accent-glow: #00e5ff;
+      --bulb-on: #ff77ff;
+      --bulb-off: #2a0a3a;
+      --frame-border: #8b1d8b;
+      --bg-dark: #0a0420;
+      --bg-marquee: #15082e;
+      --text-light: #fff0ff;
+      --text-dim: #a878c8;
+      --red-curtain: #1a0838;
+    }
+
+    body[data-theme="minimalist-dark"] {
+      /* No-frills monochrome — pairs well with frame-style: none + corner
+       * radius (#19). Subtle off-white accent, charcoal everywhere else. */
+      --accent-light: #e5e7eb;
+      --accent-mid: #9ca3af;
+      --accent-dark: #4b5563;
+      --accent-glow: #f9fafb;
+      --bulb-on: #d1d5db;
+      --bulb-off: #1f2937;
+      --frame-border: #374151;
+      --bg-dark: #050505;
+      --bg-marquee: #0a0a0a;
+      --text-light: #f3f4f6;
+      --text-dim: #6b7280;
+      --red-curtain: #18181b;
+    }
+
+    /* Marquee font picker (#62/#63). The default matches v1 exactly; the
+     * alternate fonts only touch the NOW SHOWING banner and preserve the rest
+     * of the typography stack. */
+    body[data-marquee-font="bebas-neue"] {
+      --marquee-font-family: 'Bebas Neue', sans-serif;
+      --marquee-font-weight: 400;
+      --marquee-letter-spacing: 0.35em;
+    }
+
+    body[data-marquee-font="anton"] {
+      --marquee-font-family: 'Anton', sans-serif;
+      --marquee-font-weight: 400;
+      --marquee-letter-spacing: 0.22em;
+    }
+
+    body[data-marquee-font="oswald"] {
+      --marquee-font-family: 'Oswald', sans-serif;
+      --marquee-font-weight: 700;
+      --marquee-letter-spacing: 0.24em;
+    }
+
+    body[data-marquee-font="monoton"] {
+      --marquee-font-family: 'Monoton', cursive;
+      --marquee-font-weight: 400;
+      --marquee-letter-spacing: 0.12em;
+    }
+
+    body[data-marquee-font="playfair-display"] {
+      --marquee-font-family: 'Playfair Display', serif;
+      --marquee-font-weight: 900;
+      --marquee-letter-spacing: 0.14em;
+    }
+
+    /* The accent-colour picker (#66) writes a single hex into
+     * --accent-override on <body>. We then derive a 4-stop ramp from it
+     * via colour-mix() so the picker works without needing the user to
+     * pick four hexes themselves. Browsers without color-mix support
+     * (Chrome <111, Safari <16.2) just see the theme defaults — acceptable
+     * because the kiosk is locked to a known browser. */
+    body[style*="--accent-override"] {
+      --accent-light: var(--accent-override);
+      --accent-mid:   color-mix(in srgb, var(--accent-override) 80%, #000 20%);
+      --accent-dark:  color-mix(in srgb, var(--accent-override) 50%, #000 50%);
+      --accent-glow:  color-mix(in srgb, var(--accent-override) 70%, #fff 30%);
+      --frame-border: color-mix(in srgb, var(--accent-override) 70%, #000 30%);
     }
 
     html, body {
@@ -54,6 +191,55 @@
       flex-direction: column;
     }
 
+    /* ===== FRAME STYLE PICKER (#65) =====
+     * bulbs (default) keeps the original animated bulb string. gold-line
+     * hides bulbs and draws a quiet double border from the active accent.
+     * none removes the decorative frame entirely for OLED/minimalist kiosks. */
+    .frame-wrapper::before,
+    .frame-wrapper::after {
+      content: '';
+      display: none;
+      position: absolute;
+      pointer-events: none;
+      z-index: 12;
+    }
+
+    body[data-frame-style="gold-line"] .bulbs-outer,
+    body[data-frame-style="none"] .bulbs-outer {
+      display: none;
+    }
+
+    body[data-frame-style="gold-line"] .frame-wrapper {
+      padding: 8px;
+    }
+
+    body[data-frame-style="gold-line"] .frame-wrapper::before {
+      display: block;
+      inset: 4px;
+      border: 1px solid color-mix(in srgb, var(--accent-light) 80%, transparent);
+      box-shadow: 0 0 14px color-mix(in srgb, var(--accent-glow) 18%, transparent);
+    }
+
+    body[data-frame-style="gold-line"] .frame-wrapper::after {
+      display: block;
+      inset: 10px;
+      border: 1px solid color-mix(in srgb, var(--frame-border) 78%, transparent);
+    }
+
+    body[data-frame-style="none"] .frame-wrapper {
+      padding: 0;
+    }
+
+    body[data-frame-style="none"] .marquee,
+    body[data-frame-style="none"] .poster-section {
+      border: 0;
+    }
+
+    body[data-frame-style="none"] .marquee::after,
+    body[data-frame-style="none"] .poster-section::after {
+      display: none;
+    }
+
     /* ===== OUTER BULBS (around entire screen) ===== */
     .bulbs-outer {
       position: fixed;
@@ -70,11 +256,20 @@
       width: 28px;
       height: 28px;
       border-radius: 50%;
-      background: radial-gradient(circle at 40% 35%, #fff8dc, var(--bulb-on) 40%, #d4a820 100%);
+      /* Three-stop bulb gradient: hot core (--bulb-on lightened) → main
+       * bulb colour → dark rim (--accent-mid). Now reads from the accent
+       * ramp so non-gold themes get a coherent bulb tint instead of always
+       * fading to gold. */
+      background: radial-gradient(circle at 40% 35%,
+        color-mix(in srgb, var(--bulb-on) 70%, #fff 30%),
+        var(--bulb-on) 40%,
+        var(--accent-mid) 100%);
+      /* All three glow layers read from --accent-glow so theme presets
+       * recolour the entire bulb halo, not just the bulb body. */
       box-shadow:
-        0 0 16px 6px rgba(255, 215, 94, 0.7),
-        0 0 32px 12px rgba(255, 215, 94, 0.3),
-        0 0 4px 2px rgba(255, 230, 156, 0.9);
+        0 0 16px 6px color-mix(in srgb, var(--accent-glow) 70%, transparent),
+        0 0 32px 12px color-mix(in srgb, var(--accent-glow) 30%, transparent),
+        0 0 4px 2px color-mix(in srgb, var(--bulb-on) 90%, transparent);
       transition: all 0.35s ease;
     }
 
@@ -90,7 +285,7 @@
       height: var(--marquee-height);
       flex-shrink: 0;
       border: 4px solid;
-      border-image: linear-gradient(135deg, var(--gold-light), var(--gold-dark), var(--gold-light), var(--gold-dark)) 1;
+      border-image: linear-gradient(135deg, var(--accent-light), var(--accent-dark), var(--accent-light), var(--accent-dark)) 1;
       overflow: hidden;
       z-index: 2;
     }
@@ -122,9 +317,9 @@
       position: absolute;
       inset: 0;
       background:
-        radial-gradient(ellipse at 20% 0%, rgba(180,40,40,0.3) 0%, transparent 50%),
-        radial-gradient(ellipse at 50% 0%, rgba(180,40,40,0.4) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 0%, rgba(180,40,40,0.3) 0%, transparent 50%);
+        radial-gradient(ellipse at 20% 0%, color-mix(in srgb, var(--red-curtain) 58%, transparent) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--red-curtain) 72%, transparent) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 0%, color-mix(in srgb, var(--red-curtain) 58%, transparent) 0%, transparent 50%);
     }
 
     /* Gold inner trim on marquee */
@@ -132,7 +327,7 @@
       content: '';
       position: absolute;
       inset: 3px;
-      border: 2px solid rgba(200, 160, 50, 0.35);
+      border: 2px solid color-mix(in srgb, var(--accent-mid) 35%, transparent);
       pointer-events: none;
       z-index: 2;
     }
@@ -150,13 +345,14 @@
     }
 
     .marquee-text h1 {
-      font-family: 'Bebas Neue', sans-serif;
+      font-family: var(--marquee-font-family);
+      font-weight: var(--marquee-font-weight);
       font-size: clamp(3.5rem, 10vw, 8rem);
-      letter-spacing: 0.35em;
+      letter-spacing: var(--marquee-letter-spacing);
       color: var(--text-light);
       text-shadow:
-        0 0 20px rgba(255, 215, 94, 0.4),
-        0 0 40px rgba(255, 215, 94, 0.2),
+        0 0 20px color-mix(in srgb, var(--accent-glow) 40%, transparent),
+        0 0 40px color-mix(in srgb, var(--accent-glow) 20%, transparent),
         0 2px 4px rgba(0, 0, 0, 0.6);
     }
 
@@ -168,9 +364,103 @@
       min-height: 0;
       border: 4px solid;
       border-top: none;
-      border-image: linear-gradient(135deg, var(--gold-light), var(--gold-dark), var(--gold-light), var(--gold-dark)) 1;
+      border-image: linear-gradient(135deg, var(--accent-light), var(--accent-dark), var(--accent-light), var(--accent-dark)) 1;
       overflow: hidden;
       background: var(--bg-marquee);
+    }
+
+    /* ===== BURN-IN MITIGATION (#28) =====
+       Two independent sub-features, both gated by body.visual-burn-in:
+         1. Pixel nudge — translate the whole body by ±N px on a slow loop so
+            no pixel sees the same content for more than ~60 s.
+         2. Night mode overlay — semi-transparent black layer that dims the
+            screen during overnight hours, driven by either an HA entity or
+            the OS-level prefers-color-scheme: dark media query. */
+
+    /* Pixel nudge: the JS sets --pns-nudge-x / -y on :root every interval,
+       and the long ease here turns each step into an invisible drift rather
+       than a visible jump. We use translate3d to keep it on the GPU. */
+    body.visual-burn-in {
+      transform: translate3d(var(--pns-nudge-x, 0px), var(--pns-nudge-y, 0px), 0);
+      transition: transform 400ms ease;
+      will-change: transform;
+    }
+
+    /* Night-mode dim overlay. position: fixed inset:0, lives above the
+       theatre chrome but under the info-overlay so a tap to inspect the
+       movie still works clearly. The opacity is driven by --pns-night-opacity
+       which the JS sets from the resolved config (default 0.4). */
+    .night-mode-overlay {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 18; /* above bulbs (10) and backdrop (15), below info-overlay (20) */
+      transition: opacity 1.5s ease;
+    }
+    body.night-mode .night-mode-overlay {
+      opacity: var(--pns-night-opacity, 0.4);
+    }
+
+    /* ===== PLAYBACK PROGRESS BAR (#17) ===== */
+    /* Hidden by default. Shown only when body.visual-progress-bar is set by
+       the runtime-config loader. Matches the classic-gold theme: a gold
+       gradient with a soft glow, pinned near the bottom of the poster so it
+       reads like cinema film-strip trim without clashing with the bulb frame. */
+    .progress-bar {
+      position: absolute;
+      left: 6%;
+      right: 6%;
+      bottom: 2.8vh; /* lifted above the outer bulb string so it doesn't fuse with it */
+      height: 8px;
+      background: rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(0, 0, 0, 0.85);
+      border-radius: 4px;
+      overflow: hidden;
+      z-index: 6;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      pointer-events: none;
+      display: none;
+      box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--accent-mid) 35%, transparent),
+        0 2px 6px rgba(0, 0, 0, 0.6);
+    }
+    body.visual-progress-bar .progress-bar { display: block; }
+    .progress-bar.visible { opacity: 1; }
+
+    .progress-bar-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 0%;
+      background: linear-gradient(90deg,
+        var(--accent-dark) 0%,
+        var(--accent-mid) 40%,
+        var(--accent-light) 70%,
+        var(--accent-glow) 100%);
+      box-shadow:
+        0 0 10px color-mix(in srgb, var(--accent-glow) 55%, transparent),
+        0 0 22px color-mix(in srgb, var(--accent-glow) 30%, transparent);
+      will-change: width;
+    }
+    /* Soft leading edge so the bar feels like a spotlight sweep */
+    .progress-bar-fill::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: -5px;
+      bottom: 0;
+      width: 10px;
+      background: radial-gradient(ellipse at left center,
+        color-mix(in srgb, var(--bulb-on) 95%, transparent) 0%, transparent 70%);
+    }
+    /* Dimmed fill while paused */
+    .progress-bar.paused .progress-bar-fill {
+      filter: brightness(0.55) saturate(0.7);
+      box-shadow: none;
     }
 
     /* Inner gold trim on poster section */
@@ -181,7 +471,7 @@
       left: 3px;
       right: 3px;
       bottom: 3px;
-      border: 2px solid rgba(200, 160, 50, 0.25);
+      border: 2px solid color-mix(in srgb, var(--accent-mid) 25%, transparent);
       border-top: none;
       pointer-events: none;
       z-index: 5;
@@ -236,6 +526,88 @@
       opacity: 1;
     }
 
+    /* ===== BACKDROP ART ON PAUSE (#21) =====
+       Two layers, both opt-in via body classes. They never steal pointer
+       events so info-overlay taps still reach the poster underneath.
+
+       1. .backdrop-image — fullscreen crossfade layer. Only revealed when
+          `body.backdrop-fullscreen-visible` is added by the pause timer.
+          Landscape-only via matchMedia in JS: on portrait devices the body
+          class is never added, so this layer stays hidden even when the
+          toggle is on.
+
+       2. .backdrop-ambient — blurred, heavily darkened fanart behind
+          everything, replacing the yellow bulb-lit background. Gated by
+          `body.backdrop-ambient-mode`; once lit it stays for the entire
+          session (doesn't swap on pause, doesn't care about orientation
+          because the blur makes aspect ratio moot). */
+    .backdrop-image {
+      position: fixed;
+      inset: 0;
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+      opacity: 0;
+      /* 1.2 s is the feel the spec asks for: long enough to read as a
+         deliberate scene change, short enough that someone pausing briefly
+         doesn't get a jarring flash halfway through. */
+      transition: opacity 1.2s ease;
+      pointer-events: none;
+      /* Must sit above .bulbs-outer (z:10) and .marquee (z:2) so the pause
+         takeover is a true cinema-style full-bleed, not fanart peeking
+         through gaps in the theatre chrome. Still below .info-overlay (z:20)
+         so tap-to-show info can still appear over it. */
+      z-index: 15;
+    }
+
+    body.backdrop-fullscreen-visible .backdrop-image {
+      opacity: 1;
+    }
+
+    /* When the fullscreen pause-art is visible, fade the theatre chrome out
+       so the fanart gets the whole screen. We fade rather than hide so the
+       transition in/out matches the backdrop's own 1.2 s crossfade. */
+    .frame-wrapper,
+    .bulbs-outer {
+      transition: opacity 1.2s ease;
+    }
+    body.backdrop-fullscreen-visible .frame-wrapper,
+    body.backdrop-fullscreen-visible .bulbs-outer {
+      opacity: 0;
+    }
+
+    .backdrop-ambient {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+      /* Heavy blur + darken so the image reads as atmosphere, not content. */
+      filter: blur(60px) brightness(0.25) saturate(1.1);
+      /* The blur samples transparent pixels at the edges, which can leave
+         a dim halo. Scale up so the blurred crop covers the whole viewport. */
+      transform: scale(1.2);
+      opacity: 0;
+      transition: opacity 1.5s ease;
+      pointer-events: none;
+      z-index: 0; /* below .ambient-glow’s bulb wash */
+    }
+
+    body.backdrop-ambient-mode .backdrop-ambient {
+      display: block;
+    }
+
+    body.backdrop-ambient-mode .backdrop-ambient.loaded {
+      opacity: 1;
+    }
+
+    /* In ambient mode the yellow bulb wash fights the fanart, so dial it
+       back. Keeps the warmth, lets the art breathe. */
+    body.backdrop-ambient-mode .ambient-glow.active {
+      opacity: 0.35;
+    }
+
     /* Gradient overlay at bottom of poster */
     .poster-overlay {
       position: absolute;
@@ -255,6 +627,13 @@
       left: 20px;
       right: 20px;
       z-index: 2;
+      transition: bottom 0.4s ease;
+    }
+    /* Lift the title above the playback progress bar when the toggle is on
+       so the bar doesn't clip the bottom of the movie name. The bar itself
+       sits at 2.8vh with 8px height + glow — give it ~18px of breathing room. */
+    body.visual-progress-bar .poster-title {
+      bottom: calc(2.8vh + 8px + 18px);
     }
 
     .poster-title h2 {
@@ -283,8 +662,12 @@
       right: 20px;
       text-align: right;
       opacity: 0;
-      transition: opacity 0.6s ease;
+      transition: opacity 0.6s ease, bottom 0.4s ease;
       z-index: 6;
+    }
+    /* Keep the player-name/media-type block clear of the progress bar too. */
+    body.visual-progress-bar .media-info {
+      bottom: calc(2.8vh + 8px + 18px);
     }
 
     .media-info.visible { opacity: 1; }
@@ -293,7 +676,7 @@
       font-family: 'Bebas Neue', sans-serif;
       font-size: clamp(0.85rem, 2vw, 1.1rem);
       letter-spacing: 0.15em;
-      color: var(--gold-light);
+      color: var(--accent-light);
       text-transform: uppercase;
       text-shadow: 0 1px 4px rgba(0,0,0,0.8);
     }
@@ -345,7 +728,7 @@
       font-family: 'Bebas Neue', sans-serif;
       font-size: clamp(1.2rem, 3vw, 1.8rem);
       letter-spacing: 0.2em;
-      color: var(--gold-dark);
+      color: var(--accent-dark);
       opacity: 0.6;
     }
 
@@ -399,6 +782,23 @@
       transform: translateY(0);
     }
 
+    /* ===== Pinned info-panel styling =====
+       When the panel is pinned open by the active mode — rather than a user
+       tap — we drop the full-screen dim so the poster artwork stays vibrant,
+       and paint a bottom-up gradient behind just the panel so text remains
+       legible against the poster. Tap-driven reveals (on_tap, and the
+       tap-to-peek path in on_pause) keep today's 85 % black overlay. */
+    body.info-pinned .info-overlay {
+      background: transparent;
+    }
+    body.info-pinned .info-overlay .info-panel {
+      background: linear-gradient(to top,
+        rgba(0, 0, 0, 0.92) 0%,
+        rgba(0, 0, 0, 0.78) 55%,
+        rgba(0, 0, 0, 0.00) 100%);
+      padding-top: 120px;
+    }
+
     .info-panel .info-title {
       font-family: 'Playfair Display', serif;
       font-weight: 900;
@@ -427,11 +827,105 @@
       font-family: 'Bebas Neue', sans-serif;
       font-size: clamp(0.8rem, 2vw, 1rem);
       letter-spacing: 0.1em;
-      color: var(--gold-light);
-      background: rgba(200, 160, 50, 0.12);
+      color: var(--accent-light);
+      background: color-mix(in srgb, var(--accent-mid) 12%, transparent);
       padding: 4px 12px;
       border-radius: 4px;
       text-transform: uppercase;
+    }
+
+    /* ===== GENRE CHIPS (#20) =====
+       Shown inline in the same .info-meta row as the meta tags (Movie / PG-13 /
+       runtime / Paused). Hidden by default; body.visual-genre-chips toggles them
+       on. Chips use a cooler slate-blue tint so they read as a distinct
+       taxonomic axis from the gold meta tags without clashing with the classic
+       gold theme. Rounded pill shape distinguishes them at a glance. */
+    .info-panel .info-genre {
+      display: none;
+      font-family: 'Inter', sans-serif;
+      font-size: clamp(0.7rem, 1.7vw, 0.85rem);
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      color: rgba(220, 230, 245, 0.92);
+      background: rgba(80, 110, 150, 0.25);
+      border: 1px solid rgba(140, 170, 200, 0.25);
+      padding: 3px 11px;
+      border-radius: 999px;
+      text-transform: none;
+      white-space: nowrap;
+    }
+    body.visual-genre-chips .info-panel .info-genre {
+      display: inline-block;
+    }
+
+    /* ===== RATINGS BADGES (#18) =====
+       Shown between subtitle and meta row inside .info-panel. Hidden by default;
+       body.visual-ratings-badges toggles them on. Each provider renders as a
+       small chip with an inline SVG mark + the score. Colours map to the
+       provider's brand (yellow for IMDb, tomato-red for RT critic, popcorn-gold
+       for RT audience). Dimensions are tuned to line up visually with
+       .info-tag so the two rows read as a single badge stack. */
+    .info-panel .info-ratings {
+      display: none;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    body.visual-ratings-badges .info-panel .info-ratings.has-ratings {
+      display: flex;
+    }
+    .rating-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px 4px 8px;
+      border-radius: 6px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: clamp(0.8rem, 1.9vw, 1rem);
+      line-height: 1;
+      background: rgba(0, 0, 0, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--text-light);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    }
+    .rating-badge .rating-mark {
+      display: inline-flex;
+      width: 20px;
+      height: 20px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 3px;
+      font-family: 'Bebas Neue', sans-serif;
+      letter-spacing: 0.02em;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+    .rating-badge .rating-mark svg { width: 16px; height: 16px; display: block; }
+    .rating-badge .rating-value { font-variant-numeric: tabular-nums; }
+    .rating-badge .rating-suffix {
+      font-size: 0.72em;
+      color: var(--text-dim);
+      margin-left: 2px;
+    }
+    /* Provider variants */
+    .rating-badge.imdb .rating-mark {
+      background: #f5c518;                   /* IMDb yellow */
+      color: #000;
+    }
+    .rating-badge.rt-critic .rating-mark {
+      background: #fa320a;                   /* Tomato red */
+      color: #fff;
+    }
+    .rating-badge.rt-critic.rotten .rating-mark { background: #6b7f2e; }
+    .rating-badge.rt-audience .rating-mark {
+      background: #faca15;                   /* Popcorn gold */
+      color: #3d2a0a;
+    }
+    .rating-badge.rt-audience.spilled .rating-mark { background: #5a7139; color: #fff; }
+    .rating-badge.tmdb .rating-mark {
+      background: linear-gradient(90deg, #01d277, #0d253f);
+      color: #fff;
     }
 
     .info-panel .info-summary {
@@ -481,10 +975,527 @@
       text-align: center;
     }
 
+    /* "always" mode suppresses the tap-to-dismiss handler, so hide the hint
+       that advertises it. on_pause keeps tap working while playing so the
+       hint is still accurate there. */
+    body.info-mode-always .info-panel .info-hint { display: none; }
+
+    /* ===== SETUP PAGE (#setup) ===== */
+    .setup-overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 20%, #1a1a1a 0%, #050505 100%);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      overflow-y: auto;
+      padding: 40px 20px;
+    }
+
+    .setup-overlay.visible { display: flex; }
+
+    .setup-card {
+      width: 100%;
+      max-width: 680px;
+      background: rgba(20, 20, 20, 0.92);
+      border: 1px solid color-mix(in srgb, var(--accent-mid) 25%, transparent);
+      border-radius: 12px;
+      padding: 28px 28px 24px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 30px color-mix(in srgb, var(--accent-mid) 8%, transparent);
+      font-family: 'Inter', sans-serif;
+    }
+
+    .setup-card h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.2rem;
+      letter-spacing: 0.2em;
+      color: var(--accent-light);
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    .setup-card .setup-sub {
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      margin-bottom: 20px;
+    }
+
+    .setup-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+    .setup-tab {
+      padding: 9px 12px;
+      border-radius: 6px;
+      border: 1px solid color-mix(in srgb, var(--accent-mid) 24%, transparent);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-dim);
+      font-family: 'Bebas Neue', sans-serif;
+      letter-spacing: 0.14em;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .setup-tab.active {
+      border-color: var(--accent-light);
+      color: var(--accent-light);
+      background: color-mix(in srgb, var(--accent-mid) 12%, transparent);
+    }
+    .setup-tab-panel { display: none; }
+    .setup-tab-panel.active { display: block; }
+
+    .setup-section-title {
+      margin: 18px 0 10px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--text-light);
+      font-family: 'Bebas Neue', sans-serif;
+      letter-spacing: 0.13em;
+      font-size: 1rem;
+    }
+    .setup-section-title:first-child {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: 0;
+    }
+    .setup-field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    @media (max-width: 620px) {
+      .setup-field-grid { grid-template-columns: 1fr; }
+      .setup-card { padding: 24px 20px 22px; }
+    }
+
+    .setup-field { margin-bottom: 14px; }
+    .setup-field.disabled { opacity: 0.52; }
+    .setup-field label {
+      display: block;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent-light);
+      margin-bottom: 4px;
+    }
+    .setup-field .hint {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      margin-top: 3px;
+      opacity: 0.7;
+    }
+    .setup-field input,
+    .setup-field select,
+    .setup-field textarea {
+      width: 100%;
+      background: #0a0a0a;
+      border: 1px solid color-mix(in srgb, var(--accent-mid) 25%, transparent);
+      border-radius: 6px;
+      padding: 10px 12px;
+      color: var(--text-light);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+    }
+    .setup-field input:focus,
+    .setup-field select:focus,
+    .setup-field textarea:focus {
+      outline: none;
+      border-color: var(--accent-light);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-mid) 15%, transparent);
+    }
+    .setup-field input::placeholder { color: #555; }
+    .setup-field input[type="checkbox"] {
+      width: auto;
+      padding: 0;
+      margin: 0 9px 0 0;
+      accent-color: var(--accent-light);
+    }
+    .setup-field input[type="color"] {
+      width: 48px;
+      min-width: 48px;
+      height: 41px;
+      padding: 4px;
+      cursor: pointer;
+    }
+    .setup-check {
+      display: flex;
+      align-items: center;
+      min-height: 41px;
+      padding: 10px 12px;
+      border: 1px solid color-mix(in srgb, var(--accent-mid) 25%, transparent);
+      border-radius: 6px;
+      background: #0a0a0a;
+      color: var(--text-light);
+      font-size: 0.86rem;
+      letter-spacing: 0;
+      text-transform: none;
+      cursor: pointer;
+    }
+    .setup-color-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+    }
+    .setup-copy {
+      min-height: 130px;
+      resize: vertical;
+      white-space: pre;
+      line-height: 1.45;
+    }
+
+    .setup-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-top: 18px;
+    }
+    .setup-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      padding: 11px 14px;
+      border-radius: 6px;
+      border: 1px solid color-mix(in srgb, var(--accent-mid) 35%, transparent);
+      background: transparent;
+      color: var(--text-light);
+      font-family: 'Bebas Neue', sans-serif;
+      letter-spacing: 0.15em;
+      font-size: 0.95rem;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .setup-btn:hover { border-color: var(--accent-light); color: var(--accent-light); }
+    .setup-btn.primary {
+      background: linear-gradient(180deg, var(--accent-light), var(--accent-dark));
+      color: #1a1205;
+      border-color: var(--accent-light);
+      font-weight: 600;
+    }
+    .setup-btn.primary:hover { filter: brightness(1.1); }
+    .setup-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .setup-status {
+      min-height: 1.2em;
+      margin-top: 10px;
+      font-size: 0.8rem;
+      text-align: center;
+      color: var(--text-dim);
+    }
+    .setup-status.ok  { color: #8ce28c; }
+    .setup-status.err { color: #ff8a8a; }
+
+    .setup-advanced summary {
+      cursor: pointer;
+      color: var(--text-dim);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 8px 0;
+      margin-top: 6px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .setup-advanced[open] summary { color: var(--accent-light); }
+
+    /* Gear icon on the live display to reopen setup */
+    .setup-gear {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      width: 28px;
+      height: 28px;
+      z-index: 30;
+      opacity: 0.18;
+      cursor: pointer;
+      transition: opacity 0.2s ease;
+      color: var(--accent-light);
+    }
+    .setup-gear:hover { opacity: 0.85; }
+    .setup-gear svg { width: 100%; height: 100%; }
+
   </style>
 </head>
 <body>
+  <!-- #21 Backdrop ambient layer. Behind everything; JS only paints the
+       image when useBackdrops+ambient are on. Kept as its own element so the
+       `loaded` class can drive its fade-in after the jpg decode. -->
+  <div class="backdrop-ambient" id="backdropAmbient"></div>
   <div class="ambient-glow" id="ambientGlow"></div>
+  <!-- #21 Backdrop fullscreen layer. Crossfades in after >backdropDelayMs
+       of pause (landscape only). Sits above poster-area, below info-overlay
+       so tap-to-peek still lands on the info panel. -->
+  <div class="backdrop-image" id="backdropImage"></div>
+
+  <!-- #28 BURN-IN: night-mode dim overlay. Only visible when body.night-mode
+       is set; the JS toggles that based on either an HA entity poll or the
+       prefers-color-scheme media query. -->
+  <div class="night-mode-overlay" id="nightModeOverlay"></div>
+
+  <!-- SETUP GEAR (reopen setup from the live display) -->
+  <div class="setup-gear" id="setupGear" title="Open setup" style="display:none;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+  </div>
+
+  <!-- SETUP OVERLAY (#setup) -->
+  <div class="setup-overlay" id="setupOverlay">
+    <form class="setup-card" id="setupForm" autocomplete="off" onsubmit="return false;">
+      <h1>Now Showing &mdash; Setup</h1>
+      <div class="setup-sub">Values are saved to this device's localStorage. Nothing is sent anywhere else.</div>
+
+      <div class="setup-tabs" role="tablist" aria-label="Setup sections">
+        <button class="setup-tab active" id="setupTabConnection" type="button" role="tab" aria-selected="true" aria-controls="setupPanelConnection" data-setup-tab="connection">Connection</button>
+        <button class="setup-tab" id="setupTabDisplay" type="button" role="tab" aria-selected="false" aria-controls="setupPanelDisplay" data-setup-tab="display">Display</button>
+        <button class="setup-tab" id="setupTabAutomation" type="button" role="tab" aria-selected="false" aria-controls="setupPanelAutomation" data-setup-tab="automation">Automation</button>
+      </div>
+
+      <div class="setup-tab-panel active" id="setupPanelConnection" role="tabpanel" aria-labelledby="setupTabConnection" data-setup-panel="connection">
+        <div class="setup-field">
+          <label for="cfgHaUrl">Home Assistant URL</label>
+          <input id="cfgHaUrl" type="url" placeholder="http://homeassistant.local:8123" autocomplete="off">
+          <div class="hint">Leave blank to use this page's origin.</div>
+        </div>
+
+        <div class="setup-field">
+          <label for="cfgHaToken">HA Long-Lived Access Token</label>
+          <input id="cfgHaToken" type="password" placeholder="eyJhbGciOi..." autocomplete="off" spellcheck="false">
+          <div class="hint">Create one at HA profile &rarr; Long-Lived Access Tokens.</div>
+        </div>
+
+        <div class="setup-field">
+          <label for="cfgBackend">Backend</label>
+          <select id="cfgBackend" autocomplete="off">
+            <option value="plex">Plex</option>
+            <option value="jellyfin">Jellyfin</option>
+            <option value="emby">Emby</option>
+            <option value="kodi">Kodi</option>
+          </select>
+        </div>
+
+        <div class="setup-field">
+          <label for="cfgPlexUsername">Plex Username</label>
+          <input id="cfgPlexUsername" type="text" placeholder="your_plex_username" autocomplete="off">
+          <div class="hint">Filters playback to only your sessions.</div>
+        </div>
+
+        <details class="setup-advanced">
+          <summary>Optional &mdash; player &amp; Plex API</summary>
+
+          <div class="setup-field" style="margin-top:10px;">
+            <label for="cfgPlayer">Specific Player (entity id)</label>
+            <input id="cfgPlayer" type="text" placeholder="media_player.plex_plex_for_lg_tv" autocomplete="off">
+            <div class="hint">Optional. Lock the display to one player.</div>
+          </div>
+
+          <div class="setup-field">
+            <label for="cfgPlexUrl">Plex Server URL</label>
+            <input id="cfgPlexUrl" type="url" placeholder="http://192.168.1.10:32400" autocomplete="off">
+            <div class="hint">Enables media-file details (resolution, codec, bitrate).</div>
+          </div>
+
+          <div class="setup-field">
+            <label for="cfgPlexToken">Plex Token</label>
+            <input id="cfgPlexToken" type="password" placeholder="xxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
+            <div class="hint">Required if Plex URL is set.</div>
+          </div>
+
+          <div class="setup-field">
+            <label class="setup-check" for="cfgLandscape">
+              <input id="cfgLandscape" type="checkbox">
+              Landscape mode (fit whole poster)
+            </label>
+          </div>
+        </details>
+      </div>
+
+      <div class="setup-tab-panel" id="setupPanelDisplay" role="tabpanel" aria-labelledby="setupTabDisplay" data-setup-panel="display">
+        <div class="setup-section-title">Theme</div>
+        <div class="setup-field-grid">
+          <div class="setup-field">
+            <label for="cfgVisualTheme">Theme Preset</label>
+            <select id="cfgVisualTheme" autocomplete="off">
+              <option value="classic-gold">Classic Gold</option>
+              <option value="art-deco-silver">Art Deco Silver</option>
+              <option value="neon-80s">Neon 80s</option>
+              <option value="minimalist-dark">Minimalist Dark</option>
+            </select>
+          </div>
+          <div class="setup-field">
+            <label for="cfgVisualFrameStyle">Frame Style</label>
+            <select id="cfgVisualFrameStyle" autocomplete="off">
+              <option value="bulbs">Bulbs</option>
+              <option value="gold-line">Gold Line</option>
+              <option value="none">None</option>
+            </select>
+          </div>
+          <div class="setup-field">
+            <label for="cfgVisualMarqueeFont">Marquee Font</label>
+            <select id="cfgVisualMarqueeFont" autocomplete="off">
+              <option value="bebas-neue">Bebas Neue</option>
+              <option value="anton">Anton</option>
+              <option value="oswald">Oswald</option>
+              <option value="monoton">Monoton</option>
+              <option value="playfair-display">Playfair Display</option>
+            </select>
+          </div>
+        </div>
+        <div class="setup-field">
+          <label for="cfgVisualAccentColor">Accent Color Override</label>
+          <div class="setup-color-row">
+            <input id="cfgVisualAccentColor" type="text" maxlength="7" placeholder="#ff5500" autocomplete="off" spellcheck="false">
+            <input id="cfgVisualAccentColorPicker" type="color" value="#c8a032" aria-label="Pick accent color">
+          </div>
+          <div class="hint">Leave blank for the theme default. Strict #RRGGBB only.</div>
+        </div>
+
+        <div class="setup-section-title">Info Panel</div>
+        <div class="setup-field-grid">
+          <div class="setup-field">
+            <label class="setup-check" for="cfgVisualProgressBar">
+              <input id="cfgVisualProgressBar" type="checkbox">
+              Progress bar
+            </label>
+          </div>
+          <div class="setup-field">
+            <label class="setup-check" for="cfgVisualRatingsBadges">
+              <input id="cfgVisualRatingsBadges" type="checkbox">
+              Ratings badges
+            </label>
+          </div>
+          <div class="setup-field">
+            <label class="setup-check" for="cfgVisualGenreChips">
+              <input id="cfgVisualGenreChips" type="checkbox">
+              Genre chips
+            </label>
+          </div>
+          <div class="setup-field">
+            <label for="cfgVisualInfoPanelMode">Info Panel Mode</label>
+            <select id="cfgVisualInfoPanelMode" autocomplete="off">
+              <option value="on_tap">On Tap</option>
+              <option value="on_pause">On Pause</option>
+              <option value="always">Always</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="setup-section-title">Backdrops</div>
+        <div class="setup-field">
+          <label class="setup-check" for="cfgVisualUseBackdrops">
+            <input id="cfgVisualUseBackdrops" type="checkbox">
+            Use backdrop art
+          </label>
+        </div>
+        <div class="setup-field-grid">
+          <div class="setup-field">
+            <label for="cfgVisualBackdropStyle">Backdrop Style</label>
+            <select id="cfgVisualBackdropStyle" autocomplete="off">
+              <option value="fullscreen">Fullscreen</option>
+              <option value="ambient">Ambient</option>
+            </select>
+          </div>
+          <div class="setup-field">
+            <label for="cfgVisualBackdropDelayMs">Backdrop Delay (ms)</label>
+            <input id="cfgVisualBackdropDelayMs" type="number" min="1000" max="600000" step="1000" inputmode="numeric" autocomplete="off">
+          </div>
+        </div>
+
+        <div class="setup-section-title">Burn-In</div>
+        <div class="setup-field">
+          <label class="setup-check" for="cfgVisualBurnInMitigation">
+            <input id="cfgVisualBurnInMitigation" type="checkbox">
+            Burn-in mitigation
+          </label>
+        </div>
+        <div class="setup-field-grid">
+          <div class="setup-field">
+            <label for="cfgVisualNudgeIntervalMs">Nudge Interval (ms)</label>
+            <input id="cfgVisualNudgeIntervalMs" type="number" min="5000" max="600000" step="1000" inputmode="numeric" autocomplete="off">
+          </div>
+          <div class="setup-field">
+            <label for="cfgVisualNudgeAmplitudePx">Nudge Amplitude (px)</label>
+            <input id="cfgVisualNudgeAmplitudePx" type="number" min="1" max="16" step="1" inputmode="numeric" autocomplete="off">
+          </div>
+          <div class="setup-field">
+            <label for="cfgVisualNightModeEntity">Night Mode Entity</label>
+            <input id="cfgVisualNightModeEntity" type="text" placeholder="input_boolean.kiosk_night_mode" autocomplete="off">
+          </div>
+          <div class="setup-field">
+            <label for="cfgVisualNightModeOpacity">Night Opacity</label>
+            <input id="cfgVisualNightModeOpacity" type="number" min="0" max="0.95" step="0.05" inputmode="decimal" autocomplete="off">
+          </div>
+        </div>
+      </div>
+
+      <div class="setup-tab-panel" id="setupPanelAutomation" role="tabpanel" aria-labelledby="setupTabAutomation" data-setup-panel="automation">
+        <div class="setup-section-title">Blueprint</div>
+        <div class="setup-row" style="margin-top:0;">
+          <a class="setup-btn" id="setupBlueprintImportBtn" href="#" target="_blank" rel="noopener">Import Blueprint</a>
+          <a class="setup-btn" id="setupBlueprintDownloadBtn" href="#" download="plex_now_showing_display.yaml">Download YAML</a>
+        </div>
+        <div class="setup-field">
+          <label for="cfgBlueprintUrl">Blueprint URL</label>
+          <input id="cfgBlueprintUrl" type="url" readonly autocomplete="off">
+          <div class="hint">Use this with Home Assistant's blueprint import screen.</div>
+        </div>
+
+        <div class="setup-section-title">Fully Kiosk</div>
+        <div class="setup-field">
+          <label class="setup-check" for="cfgSwitcherEnabled">
+            <input id="cfgSwitcherEnabled" type="checkbox">
+            Built-in Fully Kiosk switcher
+          </label>
+          <div class="hint">Enable this in add-on options or Docker env. Use this or the Blueprint, not both.</div>
+        </div>
+        <div class="setup-field-grid">
+          <div class="setup-field">
+            <label for="cfgSwitcherIntervalMs">Switcher Interval (ms)</label>
+            <input id="cfgSwitcherIntervalMs" type="number" min="1000" max="60000" step="1000" inputmode="numeric" autocomplete="off">
+          </div>
+          <div class="setup-field">
+            <label for="cfgFullyKioskHost">Fully Host</label>
+            <input id="cfgFullyKioskHost" type="url" placeholder="http://tablet.lan:2323" autocomplete="off">
+          </div>
+          <div class="setup-field">
+            <label for="cfgFullyKioskPassword">Fully Password</label>
+            <input id="cfgFullyKioskPassword" type="password" placeholder="remote_admin_password" autocomplete="off" spellcheck="false">
+          </div>
+          <div class="setup-field">
+            <label for="cfgFullyKioskPlayingUrl">Playing URL</label>
+            <input id="cfgFullyKioskPlayingUrl" type="url" placeholder="http://ha.lan:8099/now_showing.html" autocomplete="off">
+          </div>
+          <div class="setup-field">
+            <label for="cfgFullyKioskStoppedUrl">Stopped URL</label>
+            <input id="cfgFullyKioskStoppedUrl" type="url" placeholder="http://ha.lan:8123/lovelace/0" autocomplete="off">
+          </div>
+        </div>
+        <div class="setup-field">
+          <label for="cfgSwitcherConfigPreview">Config Snippet</label>
+          <textarea id="cfgSwitcherConfigPreview" class="setup-copy" readonly spellcheck="false"></textarea>
+          <div class="hint">Copy into add-on options or Docker .env, then restart the server/add-on.</div>
+        </div>
+        <div class="setup-row" style="margin-top:8px;">
+          <button class="setup-btn" id="setupCopyBlueprintBtn" type="button">Copy Blueprint URL</button>
+          <button class="setup-btn" id="setupCopySwitcherBtn" type="button">Copy Switcher Config</button>
+        </div>
+      </div>
+
+      <div class="setup-row">
+        <button class="setup-btn" id="setupTestBtn" type="button">Test Connection</button>
+        <button class="setup-btn primary" id="setupSaveBtn" type="submit">Save &amp; Launch</button>
+      </div>
+      <div class="setup-status" id="setupStatus">&nbsp;</div>
+      <div class="setup-row" style="margin-top:8px;">
+        <button class="setup-btn" id="setupClearBtn" type="button" style="font-size:0.8rem;opacity:0.7;">Clear saved settings</button>
+      </div>
+    </form>
+  </div>
 
   <!-- OUTER BULBS (around entire screen edge) -->
   <div class="bulbs-outer" id="bulbsOuter"></div>
@@ -521,11 +1532,17 @@
         <div class="player-name" id="playerName"></div>
       </div>
 
+      <!-- PLAYBACK PROGRESS BAR (#17) — opt-in via VISUAL_PROGRESS_BAR env -->
+      <div class="progress-bar" id="progressBar" aria-hidden="true">
+        <div class="progress-bar-fill" id="progressBarFill"></div>
+      </div>
+
       <!-- INFO OVERLAY (tap to show) -->
       <div class="info-overlay" id="infoOverlay">
         <div class="info-panel">
           <div class="info-title" id="infoTitle"></div>
           <div class="info-subtitle" id="infoSubtitle"></div>
+          <div class="info-ratings" id="infoRatings" aria-label="Ratings"></div>
           <div class="info-meta" id="infoMeta"></div>
           <div class="info-summary" id="infoSummary"></div>
           <div class="info-techbox" id="infoTech"></div>
@@ -552,17 +1569,855 @@
     </div>
   </div>
 
+  <!--
+    Optional runtime config. Copy www/now_showing.config.example.js to
+    www/now_showing.config.js and edit it. The file is git-ignored so your
+    tokens never end up in source control. See DEV_README.md.
+  -->
+  <script src="now_showing.config.js" onerror="void 0"></script>
+
   <script>
-    // ===== CONFIGURATION =====
-    const params = new URLSearchParams(window.location.search);
-    const HA_URL = params.get('ha_url') || window.location.origin;
-    const HA_TOKEN = params.get('token') || 'YOUR_LONG_LIVED_ACCESS_TOKEN';
-    const POLL_INTERVAL = 5000;
-    const PLEX_USERNAME = 'YOUR_PLEX_USERNAME';
-    const PLEX_PLAYER = '';  // Optional: set to a specific entity_id (e.g., 'media_player.plex_plex_for_lg_tv') to only show media from that player. Leave empty to show any player for your user.
-    const LANDSCAPE_MODE = false;  // Set to true to fit the entire poster on screen (adds letterboxing). Default: false (poster fills the screen, may crop edges).
-    const PLEX_URL = '';  // Optional: Plex server URL for fetching media file info (resolution, codec, bitrate). Leave empty to skip.
-    const PLEX_TOKEN = '';  // Optional: Plex token (needed if PLEX_URL is set).
+    // ===== CONFIGURATION RESOLVER =====
+    //
+    // Tokens must NEVER be hard-coded in this file. They're resolved at
+    // runtime in this priority order:
+    //
+    //   1. URL hash fragment   e.g. #token=abc&plex_token=xyz  (not sent to referrers)
+    //   2. localStorage        keys: pns.haToken / pns.plexToken / pns.*
+    //   3. window.NOW_SHOWING_CONFIG   (from now_showing.config.js)
+    //   4. URL query string    e.g. ?token=abc   (logs a warning — leaks via referrer)
+    //
+    // Non-sensitive values (plexUsername, plexPlayer, landscape, etc.) follow
+    // the same precedence but skip the leakage warning.
+    //
+    // If no HA token can be resolved, the page redirects to #setup (handled
+    // in a follow-up PR — see issue #2).
+
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    const queryParams = new URLSearchParams(window.location.search);
+    const runtimeConfig = (window.NOW_SHOWING_CONFIG && typeof window.NOW_SHOWING_CONFIG === 'object')
+      ? window.NOW_SHOWING_CONFIG
+      : {};
+
+    function readConfig(key, { sensitive = false, defaultValue = '', aliases = [] } = {}) {
+      const keys = [key, ...aliases];
+      // 1. hash fragment
+      for (const k of keys) {
+        const v = hashParams.get(k);
+        if (v != null && v !== '') return v;
+      }
+      // 2. localStorage (prefixed with pns.)
+      try {
+        for (const k of keys) {
+          const v = window.localStorage.getItem('pns.' + k);
+          if (v != null && v !== '') return v;
+        }
+      } catch (_) { /* storage may be disabled */ }
+      // 3. runtime config object
+      for (const k of keys) {
+        if (runtimeConfig[k] != null && runtimeConfig[k] !== '') return runtimeConfig[k];
+      }
+      // 4. query string (warn for sensitive values)
+      for (const k of keys) {
+        const v = queryParams.get(k);
+        if (v != null && v !== '') {
+          if (sensitive) {
+            console.warn('[plex-now-showing] Reading', k, 'from URL query string — this can leak via HTTP referrers. Prefer the hash fragment or localStorage.');
+          }
+          return v;
+        }
+      }
+      return defaultValue;
+    }
+
+    function readBool(key, defaultValue = false) {
+      const v = readConfig(key);
+      if (v === '' || v == null) return defaultValue;
+      if (typeof v === 'boolean') return v;
+      return /^(1|true|yes|on)$/i.test(String(v));
+    }
+
+    function readInt(key, defaultValue) {
+      const v = readConfig(key);
+      const n = parseInt(v, 10);
+      return Number.isFinite(n) ? n : defaultValue;
+    }
+
+    const BACKENDS = ['plex', 'jellyfin', 'emby', 'kodi'];
+    const BACKEND_RULES = {
+      plex: { entityPrefix: 'media_player.plex_', exactEntities: [] },
+      jellyfin: { entityPrefix: 'media_player.jellyfin_', exactEntities: ['media_player.jellyfin'] },
+      emby: { entityPrefix: 'media_player.emby_', exactEntities: ['media_player.emby'] },
+      kodi: { entityPrefix: 'media_player.kodi_', exactEntities: ['media_player.kodi'] },
+    };
+    function readBackend(value) {
+      const v = String(value || '').trim().toLowerCase();
+      return BACKENDS.includes(v) ? v : 'plex';
+    }
+
+    const HA_URL        = readConfig('haUrl',        { aliases: ['ha_url'], defaultValue: window.location.origin });
+    const HA_TOKEN      = readConfig('haToken',      { aliases: ['token', 'ha_token'], sensitive: true });
+    const BACKEND       = readBackend(readConfig('backend', { aliases: ['server', 'serverType', 'server_type', 'mediaServer', 'media_server'], defaultValue: 'plex' }));
+    const PLAYER        = readConfig('player',       { aliases: ['mediaPlayer', 'media_player', 'entity', 'entityId', 'entity_id', 'jellyfinEntity', 'jellyfin_entity', 'embyEntity', 'emby_entity', 'kodiEntity', 'kodi_entity'] });
+    const PLEX_USERNAME = readConfig('plexUsername', { aliases: ['username', 'plex_username'] });
+    const PLEX_PLAYER   = readConfig('plexPlayer',   { aliases: ['player', 'plex_player'], defaultValue: PLAYER });
+    const PLEX_URL      = readConfig('plexUrl',      { aliases: ['plex_url'] });
+    const PLEX_TOKEN    = readConfig('plexToken',    { aliases: ['plex_token'], sensitive: true });
+    const LANDSCAPE_MODE = readBool('landscape', runtimeConfig.landscape === true);
+    const POLL_INTERVAL  = readInt('poll', 5000);
+    let ACTIVE_BACKEND = BACKEND;
+
+    // ===== SERVER MODE DETECTION =====
+    //
+    // When the HTML is served by the unified add-on / Docker server (#addon-1)
+    // we use /api/state and /api/media-info/:ratingKey — tokens stay server-side.
+    //
+    // When served from HA's /local/ (HACS-only install), those endpoints 404
+    // and we fall back to the original direct-to-HA path. Detection is a
+    // one-shot probe against /api on the current origin.
+    let SERVER_MODE = false;
+    const serverModeReady = (async () => {
+      try {
+        const resp = await fetch(`${window.location.origin}/api`, { cache: 'no-store' });
+        if (!resp.ok) return false;
+        const body = await resp.json();
+        SERVER_MODE = body && body.name === 'plex-now-showing-server';
+        if (SERVER_MODE) ACTIVE_BACKEND = readBackend(body.backend || ACTIVE_BACKEND);
+        if (SERVER_MODE) console.info('[plex-now-showing] Running against unified server — using /api/state proxy.');
+        return SERVER_MODE;
+      } catch (_) {
+        return false;
+      }
+    })();
+
+    // ===== VISUAL TOGGLES (V2 visual sprint) =====
+    //
+    // Every visual feature is opt-in. Defaults preserve the original v1 look.
+    //
+    // Resolution order (same as other settings):
+    //   1. /api/config          — unified-server mode; driven by env vars /
+    //                             add-on options (e.g. VISUAL_PROGRESS_BAR).
+    //   2. readBool('visualProgressBar', …)
+    //                           — HACS-only users can flip it per-tablet via
+    //                             localStorage ('pns.visualProgressBar') or
+    //                             the URL hash (#visualProgressBar=true).
+    //
+    // Server config wins so operators can ship a consistent look across the
+    // fleet without touching every tablet.
+    const INFO_PANEL_MODES = ['on_tap', 'on_pause', 'always'];
+    const BACKDROP_STYLES = ['fullscreen', 'ambient'];
+    const FRAME_STYLES = ['bulbs', 'gold-line', 'none'];
+    const MARQUEE_FONTS = ['bebas-neue', 'anton', 'oswald', 'monoton', 'playfair-display'];
+    // #23 — theme presets. Must mirror the enum in server/src/config.js.
+    // Adding one here without updating the server will leak through (the
+    // setup page reads localStorage), but the add-on schema will reject it.
+    const VISUAL_THEMES = ['classic-gold', 'art-deco-silver', 'neon-80s', 'minimalist-dark'];
+    // VISUAL holds the resolved values for every visual toggle. Defaults
+    // mirror the server-side defaults so a hard-refresh before /api/config
+    // resolves still renders sanely.
+    const VISUAL = {
+      progressBar: false,
+      ratingsBadges: false,
+      genreChips: false,
+      infoPanelMode: 'on_tap',
+      frameStyle: 'bulbs',
+      // #21 backdrop art on pause.
+      useBackdrops: false,
+      backdropStyle: 'fullscreen', // 'fullscreen' | 'ambient'
+      backdropDelayMs: 10000,
+      // #28 burn-in mitigation
+      burnInMitigation: false,
+      nudgeIntervalMs: 60000,
+      nudgeAmplitudePx: 4,
+      nightModeEntity: '',
+      nightModeOpacity: 0.4,
+      // #23 theme preset + #66 accent colour. Empty accentColor means "use
+      // the active theme's default".
+      theme: 'classic-gold',
+      accentColor: '',
+      marqueeFont: 'bebas-neue',
+    };
+
+    // #28 helper — clamp a float read through the runtime config resolver.
+    // Mirrors
+    // readIntClamped() defined further below but for floats (night mode
+    // opacity).
+    function readFloatClamped(key, defaultValue, min, max) {
+      const raw = readConfig(key);
+      if (raw == null || raw === '') return defaultValue;
+      const n = parseFloat(String(raw));
+      if (!Number.isFinite(n)) return defaultValue;
+      return Math.max(min, Math.min(max, n));
+    }
+
+    function readInfoPanelMode(defaultValue) {
+      const value = String(readConfig('visualInfoPanelMode')).trim().toLowerCase();
+      if (value && INFO_PANEL_MODES.includes(value)) return value;
+      return defaultValue;
+    }
+
+    function readBackdropStyle(defaultValue) {
+      const value = String(readConfig('visualBackdropStyle')).trim().toLowerCase();
+      if (value && BACKDROP_STYLES.includes(value)) return value;
+      return defaultValue;
+    }
+
+    function readFrameStyle(defaultValue) {
+      const value = String(readConfig('visualFrameStyle')).trim().toLowerCase();
+      if (value && FRAME_STYLES.includes(value)) return value;
+      return defaultValue;
+    }
+
+    function readMarqueeFont(defaultValue) {
+      const value = String(readConfig('visualMarqueeFont')).trim().toLowerCase();
+      if (value && MARQUEE_FONTS.includes(value)) return value;
+      return defaultValue;
+    }
+
+    // #23 theme preset resolver. Unknown names fall back instead of throwing
+    // so a stale tablet picking a renamed theme still renders.
+    function readVisualTheme(defaultValue) {
+      const value = String(readConfig('visualTheme')).trim().toLowerCase();
+      if (value && VISUAL_THEMES.includes(value)) return value;
+      return defaultValue;
+    }
+
+    // #66 accent colour resolver. Same strict #RRGGBB validation as the
+    // server's parseHexColor() so the contract is identical on both sides;
+    // bad input falls through to the theme default.
+    const HEX_RE = /^#[0-9a-f]{6}$/;
+    function readAccentColor(defaultValue) {
+      const value = String(readConfig('visualAccentColor')).trim().toLowerCase();
+      if (value && HEX_RE.test(value)) return value;
+      return defaultValue;
+    }
+
+    function readIntClamped(key, defaultValue, min, max) {
+      const raw = readConfig(key);
+      if (raw == null || raw === '') return defaultValue;
+      const n = parseInt(String(raw), 10);
+      if (!Number.isFinite(n)) return defaultValue;
+      return Math.max(min, Math.min(max, n));
+    }
+
+    async function loadVisualConfig() {
+      // Local overrides apply first so the tablet still looks right even if
+      // the server is briefly unreachable.
+      VISUAL.progressBar = readBool('visualProgressBar', false);
+      VISUAL.ratingsBadges = readBool('visualRatingsBadges', false);
+      VISUAL.genreChips = readBool('visualGenreChips', false);
+      VISUAL.infoPanelMode = readInfoPanelMode('on_tap');
+      VISUAL.frameStyle = readFrameStyle('bulbs');
+      VISUAL.marqueeFont = readMarqueeFont('bebas-neue');
+      VISUAL.useBackdrops = readBool('visualUseBackdrops', false);
+      VISUAL.backdropStyle = readBackdropStyle('fullscreen');
+      VISUAL.backdropDelayMs = readIntClamped('visualBackdropDelayMs', 10000, 1000, 600000);
+      // #28 burn-in mitigation — same precedence as the others.
+      VISUAL.burnInMitigation = readBool('visualBurnInMitigation', false);
+      VISUAL.nudgeIntervalMs  = readIntClamped('visualNudgeIntervalMs', 60000, 5000, 600000);
+      VISUAL.nudgeAmplitudePx = readIntClamped('visualNudgeAmplitudePx', 4, 1, 16);
+      VISUAL.nightModeEntity = readConfig('visualNightModeEntity');
+      VISUAL.nightModeOpacity = readFloatClamped('visualNightModeOpacity', 0.4, 0, 0.95);
+      // #23/#66 theme + accent. Local resolution first; server overrides
+      // below if /api/config responds with non-empty values.
+      VISUAL.theme = readVisualTheme('classic-gold');
+      VISUAL.accentColor = readAccentColor('');
+
+      await serverModeReady;
+      if (!SERVER_MODE) return;
+      try {
+        const resp = await fetch('/api/config', { cache: 'no-store' });
+        if (!resp.ok) return;
+        const body = await resp.json();
+        if (body && body.backend) ACTIVE_BACKEND = readBackend(body.backend);
+        const v = body && body.visual;
+        if (v && typeof v.progressBar === 'boolean') VISUAL.progressBar = v.progressBar;
+        if (v && typeof v.ratingsBadges === 'boolean') VISUAL.ratingsBadges = v.ratingsBadges;
+        if (v && typeof v.genreChips === 'boolean') VISUAL.genreChips = v.genreChips;
+        if (v && typeof v.infoPanelMode === 'string' && INFO_PANEL_MODES.includes(v.infoPanelMode)) {
+          VISUAL.infoPanelMode = v.infoPanelMode;
+        }
+        if (v && typeof v.frameStyle === 'string' && FRAME_STYLES.includes(v.frameStyle)) {
+          VISUAL.frameStyle = v.frameStyle;
+        }
+        if (v && typeof v.marqueeFont === 'string' && MARQUEE_FONTS.includes(v.marqueeFont)) {
+          VISUAL.marqueeFont = v.marqueeFont;
+        }
+        if (v && typeof v.useBackdrops === 'boolean') VISUAL.useBackdrops = v.useBackdrops;
+        if (v && typeof v.backdropStyle === 'string' && BACKDROP_STYLES.includes(v.backdropStyle)) {
+          VISUAL.backdropStyle = v.backdropStyle;
+        }
+        if (v && Number.isFinite(v.backdropDelayMs)) {
+          VISUAL.backdropDelayMs = Math.max(1000, Math.min(600000, v.backdropDelayMs));
+        }
+        if (v && typeof v.burnInMitigation === 'boolean') VISUAL.burnInMitigation = v.burnInMitigation;
+        if (v && Number.isFinite(v.nudgeIntervalMs))     VISUAL.nudgeIntervalMs   = v.nudgeIntervalMs;
+        if (v && Number.isFinite(v.nudgeAmplitudePx))    VISUAL.nudgeAmplitudePx  = v.nudgeAmplitudePx;
+        if (v && typeof v.nightModeEntity === 'string')  VISUAL.nightModeEntity   = v.nightModeEntity;
+        if (v && Number.isFinite(v.nightModeOpacity))    VISUAL.nightModeOpacity  = v.nightModeOpacity;
+        if (v && typeof v.theme === 'string' && VISUAL_THEMES.includes(v.theme)) {
+          VISUAL.theme = v.theme;
+        }
+        // Server validates accentColor as #RRGGBB or empty; trust it but
+        // double-check on the client to defend against a stale or modified
+        // response.
+        if (v && typeof v.accentColor === 'string') {
+          const c = v.accentColor.trim().toLowerCase();
+          VISUAL.accentColor = (c === '' || HEX_RE.test(c)) ? c : '';
+        }
+      } catch (err) {
+        console.warn('[plex-now-showing] /api/config fetch failed — using local defaults.', err);
+      }
+    }
+
+    // ===== BURN-IN MITIGATION (#28) =====
+    //
+    // Two timers, both driven by the master `body.visual-burn-in` toggle:
+    //
+    //   1. Pixel nudge — every nudgeIntervalMs (60 s default) move the body
+    //      transform through a 5-step cycle: (0,0), (+a,0), (0,+a), (-a,0),
+    //      (0,-a). The CSS transition smooths each step into a 400 ms ease.
+    //   2. Night mode — every 60 s either poll /api/night-mode (when an HA
+    //      entity is configured) or read the prefers-color-scheme media
+    //      query. Toggle body.night-mode accordingly.
+    //
+    // Both timers are .stop()-able so a tablet that turns the master off
+    // (via setup form, hash, or server reload) doesn't leak intervals.
+    const burnInCtx = (() => {
+      const NUDGE_OFFSETS = [
+        [0, 0], [1, 0], [0, 1], [-1, 0], [0, -1],
+      ];
+      let nudgeTimer = null;
+      let nightTimer = null;
+      let nightMql = null;
+      let nightMqlHandler = null;
+      let nudgeStep = 0;
+
+      function applyNudge() {
+        const [sx, sy] = NUDGE_OFFSETS[nudgeStep % NUDGE_OFFSETS.length];
+        const a = VISUAL.nudgeAmplitudePx;
+        document.documentElement.style.setProperty('--pns-nudge-x', `${sx * a}px`);
+        document.documentElement.style.setProperty('--pns-nudge-y', `${sy * a}px`);
+        nudgeStep += 1;
+      }
+
+      async function evaluateNightMode() {
+        // Priority: server-resolved HA entity → prefers-color-scheme.
+        // The server reports `configured: false` when no entity is set, in
+        // which case we let the media query decide.
+        let on = false;
+        if (VISUAL.nightModeEntity && SERVER_MODE) {
+          try {
+            const r = await fetch('/api/night-mode', { cache: 'no-store' });
+            if (r.ok) {
+              const j = await r.json();
+              if (j && j.configured) {
+                on = !!j.on;
+              } else if (nightMql) {
+                on = nightMql.matches;
+              }
+            }
+          } catch (_) {
+            // Fall through to the media query so a brief HA blip doesn't
+            // strand the screen in the wrong mode.
+            if (nightMql) on = nightMql.matches;
+          }
+        } else if (nightMql) {
+          on = nightMql.matches;
+        }
+        document.body.classList.toggle('night-mode', on);
+      }
+
+      function start() {
+        stop(); // idempotent
+        // Reset the nudge to (0,0) at start so flipping the toggle doesn't
+        // leave the page mid-step.
+        nudgeStep = 0;
+        applyNudge();
+        nudgeTimer = setInterval(applyNudge, VISUAL.nudgeIntervalMs);
+
+        // Wire the prefers-color-scheme listener so an OS night-mode flip
+        // re-evaluates immediately, not just on the 60 s tick.
+        nightMql = window.matchMedia('(prefers-color-scheme: dark)');
+        nightMqlHandler = () => evaluateNightMode();
+        if (nightMql.addEventListener) nightMql.addEventListener('change', nightMqlHandler);
+        else if (nightMql.addListener)  nightMql.addListener(nightMqlHandler);
+
+        evaluateNightMode();
+        // 60 s is plenty — the entity rarely changes. We deliberately don't
+        // tie this to /api/state's faster cadence to avoid burning HA calls.
+        nightTimer = setInterval(evaluateNightMode, 60000);
+      }
+
+      function stop() {
+        if (nudgeTimer)  { clearInterval(nudgeTimer);  nudgeTimer  = null; }
+        if (nightTimer)  { clearInterval(nightTimer);  nightTimer  = null; }
+        if (nightMql && nightMqlHandler) {
+          if (nightMql.removeEventListener) nightMql.removeEventListener('change', nightMqlHandler);
+          else if (nightMql.removeListener) nightMql.removeListener(nightMqlHandler);
+        }
+        nightMql = null;
+        nightMqlHandler = null;
+        // Reset the transform vars so the page doesn't sit stuck mid-nudge
+        // when the user disables the feature.
+        document.documentElement.style.setProperty('--pns-nudge-x', '0px');
+        document.documentElement.style.setProperty('--pns-nudge-y', '0px');
+        document.body.classList.remove('night-mode');
+      }
+
+      return { start, stop };
+    })();
+
+    function applyVisualToggles() {
+      document.body.classList.toggle('visual-progress-bar', VISUAL.progressBar);
+      document.body.classList.toggle('visual-ratings-badges', VISUAL.ratingsBadges);
+      document.body.classList.toggle('visual-genre-chips', VISUAL.genreChips);
+      // Exactly one info-mode-* class is set so CSS / JS can branch without
+      // juggling multiple booleans.
+      document.body.classList.toggle('info-mode-on-tap', VISUAL.infoPanelMode === 'on_tap');
+      document.body.classList.toggle('info-mode-on-pause', VISUAL.infoPanelMode === 'on_pause');
+      document.body.classList.toggle('info-mode-always', VISUAL.infoPanelMode === 'always');
+      // #65 frame style. The data attribute drives CSS, while syncFrameStyle()
+      // owns the bulb DOM and chase timer so non-bulb modes do no extra work.
+      document.body.dataset.frameStyle = VISUAL.frameStyle;
+      document.body.dataset.marqueeFont = VISUAL.marqueeFont;
+      syncFrameStyle();
+      // #21 backdrop art. Two body classes:
+      //   backdrop-ambient-mode  — flag for CSS to reveal the blurred layer
+      //   backdrop-fullscreen-visible — set dynamically by the pause timer,
+      //                                 so applyVisualToggles() only *clears*
+      //                                 it here (don't leak stale state when
+      //                                 toggles change at runtime).
+      const ambientOn = VISUAL.useBackdrops && VISUAL.backdropStyle === 'ambient';
+      document.body.classList.toggle('backdrop-ambient-mode', ambientOn);
+      if (!VISUAL.useBackdrops || VISUAL.backdropStyle !== 'fullscreen') {
+        document.body.classList.remove('backdrop-fullscreen-visible');
+      }
+
+      // #28 burn-in: master switch. The pixel-nudge transform is gated on
+      // body.visual-burn-in; the night-mode controller is started further
+      // down only when burn-in is on.
+      document.body.classList.toggle('visual-burn-in', VISUAL.burnInMitigation);
+      // Set the night-mode opacity custom property regardless — if night
+      // mode never activates the property is harmless.
+      document.documentElement.style.setProperty('--pns-night-opacity', String(VISUAL.nightModeOpacity));
+      if (VISUAL.burnInMitigation) {
+        burnInCtx.start();
+      } else {
+        burnInCtx.stop();
+      }
+
+      // #23 theme preset — a single data-theme attribute on body. The CSS
+      // selectors in the :root/data-theme blocks at the top of the file do
+      // the rest. Re-applied on every call so swapping theme at runtime
+      // (setup form save, hash change) takes effect without reload.
+      document.body.dataset.theme = VISUAL.theme;
+
+      // #66 accent colour override — written as an inline custom property
+      // so the body[style*="--accent-override"] selector can derive a full
+      // 4-stop ramp via color-mix(). Empty string clears it so the active
+      // theme regains control of the accent.
+      if (VISUAL.accentColor) {
+        document.body.style.setProperty('--accent-override', VISUAL.accentColor);
+      } else {
+        document.body.style.removeProperty('--accent-override');
+      }
+    }
+
+    // ===== SETUP PAGE CONTROLLER (#setup) =====
+    //
+    // Handles the first-run setup form, the gear icon on the live display,
+    // and the connection test. All values are persisted under pns.* keys
+    // in localStorage — the same keys the config resolver reads above.
+
+    const SETUP_VALUE_FIELDS = [
+      // localStorage key (without pns. prefix), input element id, default
+      ['haUrl', 'cfgHaUrl', ''],
+      ['haToken', 'cfgHaToken', ''],
+      ['backend', 'cfgBackend', BACKEND],
+      ['plexUsername', 'cfgPlexUsername', ''],
+      ['player', 'cfgPlayer', ''],
+      ['plexUrl', 'cfgPlexUrl', ''],
+      ['plexToken', 'cfgPlexToken', ''],
+      ['visualTheme', 'cfgVisualTheme', 'classic-gold'],
+      ['visualFrameStyle', 'cfgVisualFrameStyle', 'bulbs'],
+      ['visualMarqueeFont', 'cfgVisualMarqueeFont', 'bebas-neue'],
+      ['visualAccentColor', 'cfgVisualAccentColor', ''],
+      ['visualInfoPanelMode', 'cfgVisualInfoPanelMode', 'on_tap'],
+      ['visualBackdropStyle', 'cfgVisualBackdropStyle', 'fullscreen'],
+      ['visualBackdropDelayMs', 'cfgVisualBackdropDelayMs', '10000'],
+      ['visualNudgeIntervalMs', 'cfgVisualNudgeIntervalMs', '60000'],
+      ['visualNudgeAmplitudePx', 'cfgVisualNudgeAmplitudePx', '4'],
+      ['visualNightModeEntity', 'cfgVisualNightModeEntity', ''],
+      ['visualNightModeOpacity', 'cfgVisualNightModeOpacity', '0.4'],
+      ['switcherIntervalMs', 'cfgSwitcherIntervalMs', '5000'],
+      ['fullyKioskHost', 'cfgFullyKioskHost', ''],
+      ['fullyKioskPassword', 'cfgFullyKioskPassword', ''],
+      ['fullyKioskPlayingUrl', 'cfgFullyKioskPlayingUrl', ''],
+      ['fullyKioskStoppedUrl', 'cfgFullyKioskStoppedUrl', ''],
+    ];
+    const SETUP_CHECKBOX_FIELDS = [
+      ['landscape', 'cfgLandscape', LANDSCAPE_MODE],
+      ['visualProgressBar', 'cfgVisualProgressBar', false],
+      ['visualRatingsBadges', 'cfgVisualRatingsBadges', false],
+      ['visualGenreChips', 'cfgVisualGenreChips', false],
+      ['visualUseBackdrops', 'cfgVisualUseBackdrops', false],
+      ['visualBurnInMitigation', 'cfgVisualBurnInMitigation', false],
+      ['switcherEnabled', 'cfgSwitcherEnabled', false],
+    ];
+    const SETUP_NUMBER_RULES = {
+      visualBackdropDelayMs: { min: 1000, max: 600000, fallback: 10000, float: false },
+      visualNudgeIntervalMs: { min: 5000, max: 600000, fallback: 60000, float: false },
+      visualNudgeAmplitudePx: { min: 1, max: 16, fallback: 4, float: false },
+      visualNightModeOpacity: { min: 0, max: 0.95, fallback: 0.4, float: true },
+      switcherIntervalMs: { min: 1000, max: 60000, fallback: 5000, float: false },
+    };
+    const ACCENT_PICKER_DEFAULT = '#c8a032';
+    const BLUEPRINT_URL = 'https://raw.githubusercontent.com/rusty4444/plex-now-showing/dev/blueprints/automation/rusty4444/plex_now_showing_display.yaml';
+    const BLUEPRINT_IMPORT_URL = 'https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=' + encodeURIComponent(BLUEPRINT_URL);
+
+    function setupVisible(show) {
+      const el = document.getElementById('setupOverlay');
+      if (!el) return;
+      el.classList.toggle('visible', !!show);
+    }
+
+    function populateSetupForm() {
+      try {
+        for (const [key, id, defaultValue] of SETUP_VALUE_FIELDS) {
+          const input = document.getElementById(id);
+          if (input) input.value = window.localStorage.getItem('pns.' + key) || String(defaultValue ?? '');
+        }
+        const player = document.getElementById('cfgPlayer');
+        if (player && !player.value) {
+          player.value = window.localStorage.getItem('pns.plexPlayer') || '';
+        }
+        for (const [key, id, defaultValue] of SETUP_CHECKBOX_FIELDS) {
+          const input = document.getElementById(id);
+          if (!input) continue;
+          const stored = window.localStorage.getItem('pns.' + key);
+          input.checked = stored == null ? !!defaultValue : /^(1|true|yes|on)$/i.test(stored);
+        }
+        syncSetupBackendFields();
+        syncSetupVisualFields();
+        syncSetupAutomationFields();
+        syncAccentPickerFromText();
+        initSetupAutomationLinks();
+      } catch (_) { /* storage unavailable */ }
+    }
+
+    function syncSetupBackendFields() {
+      const backend = readBackend(document.getElementById('cfgBackend')?.value || BACKEND);
+      for (const id of ['cfgPlexUsername', 'cfgPlexUrl', 'cfgPlexToken']) {
+        const field = document.getElementById(id)?.closest('.setup-field');
+        if (field) field.style.display = backend === 'plex' ? '' : 'none';
+      }
+      const player = document.getElementById('cfgPlayer');
+      if (player) {
+        player.placeholder = backend === 'plex'
+          ? 'media_player.plex_plex_for_lg_tv'
+          : `media_player.${backend}`;
+      }
+    }
+
+    function switchSetupTab(name) {
+      const tabName = ['display', 'automation'].includes(name) ? name : 'connection';
+      for (const tab of document.querySelectorAll('[data-setup-tab]')) {
+        const active = tab.dataset.setupTab === tabName;
+        tab.classList.toggle('active', active);
+        tab.setAttribute('aria-selected', active ? 'true' : 'false');
+      }
+      for (const panel of document.querySelectorAll('[data-setup-panel]')) {
+        panel.classList.toggle('active', panel.dataset.setupPanel === tabName);
+      }
+    }
+
+    function setupQuote(value) {
+      return `"${String(value || '').replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+    }
+
+    function buildSwitcherConfigText() {
+      const enabled = !!document.getElementById('cfgSwitcherEnabled')?.checked;
+      const interval = document.getElementById('cfgSwitcherIntervalMs')?.value.trim() || '5000';
+      const host = document.getElementById('cfgFullyKioskHost')?.value.trim() || 'http://tablet.lan:2323';
+      const password = document.getElementById('cfgFullyKioskPassword')?.value.trim() || 'fully_password';
+      const playingUrl = document.getElementById('cfgFullyKioskPlayingUrl')?.value.trim() || `${window.location.origin}/now_showing.html`;
+      const stoppedUrl = document.getElementById('cfgFullyKioskStoppedUrl')?.value.trim();
+      const stoppedYaml = stoppedUrl ? `    stopped_url: ${setupQuote(stoppedUrl)}\n` : '';
+      const fullyKiosks = [host, password, playingUrl, stoppedUrl].filter(Boolean).join('|');
+      return [
+        '# Add-on options',
+        `switcher_enabled: ${enabled ? 'true' : 'false'}`,
+        `switcher_interval_ms: ${interval}`,
+        'fully_kiosks:',
+        `  - host: ${setupQuote(host)}`,
+        `    password: ${setupQuote(password)}`,
+        `    playing_url: ${setupQuote(playingUrl)}`,
+        `${stoppedYaml}`.trimEnd(),
+        '',
+        '# Docker .env',
+        `SWITCHER_ENABLED=${enabled ? 'true' : 'false'}`,
+        `SWITCHER_INTERVAL_MS=${interval}`,
+        `FULLY_KIOSKS=${fullyKiosks}`,
+      ].filter(line => line !== '').join('\n');
+    }
+
+    function updateSwitcherConfigPreview() {
+      const preview = document.getElementById('cfgSwitcherConfigPreview');
+      if (preview) preview.value = buildSwitcherConfigText();
+    }
+
+    function syncSetupAutomationFields() {
+      const enabled = !!document.getElementById('cfgSwitcherEnabled')?.checked;
+      setSetupDependents([
+        'cfgSwitcherIntervalMs',
+        'cfgFullyKioskHost',
+        'cfgFullyKioskPassword',
+        'cfgFullyKioskPlayingUrl',
+        'cfgFullyKioskStoppedUrl',
+        'cfgSwitcherConfigPreview',
+      ], enabled);
+      updateSwitcherConfigPreview();
+    }
+
+    function initSetupAutomationLinks() {
+      const importBtn = document.getElementById('setupBlueprintImportBtn');
+      const downloadBtn = document.getElementById('setupBlueprintDownloadBtn');
+      const urlInput = document.getElementById('cfgBlueprintUrl');
+      if (importBtn) importBtn.href = BLUEPRINT_IMPORT_URL;
+      if (downloadBtn) downloadBtn.href = BLUEPRINT_URL;
+      if (urlInput) urlInput.value = BLUEPRINT_URL;
+    }
+
+    async function copySetupText(text, label) {
+      try {
+        await navigator.clipboard.writeText(text);
+        setupStatus(`${label} copied.`, 'ok');
+      } catch (_) {
+        setupStatus(`Could not copy ${label.toLowerCase()}. Select the field and copy manually.`, 'err');
+      }
+    }
+
+    function setSetupDependents(ids, enabled) {
+      for (const id of ids) {
+        const input = document.getElementById(id);
+        const field = input?.closest('.setup-field');
+        if (input) input.disabled = !enabled;
+        if (field) field.classList.toggle('disabled', !enabled);
+      }
+    }
+
+    function syncSetupVisualFields() {
+      const useBackdrops = !!document.getElementById('cfgVisualUseBackdrops')?.checked;
+      setSetupDependents(['cfgVisualBackdropStyle', 'cfgVisualBackdropDelayMs'], useBackdrops);
+
+      const burnIn = !!document.getElementById('cfgVisualBurnInMitigation')?.checked;
+      setSetupDependents([
+        'cfgVisualNudgeIntervalMs',
+        'cfgVisualNudgeAmplitudePx',
+        'cfgVisualNightModeEntity',
+        'cfgVisualNightModeOpacity',
+      ], burnIn);
+    }
+
+    function syncAccentPickerFromText() {
+      const text = document.getElementById('cfgVisualAccentColor');
+      const picker = document.getElementById('cfgVisualAccentColorPicker');
+      if (!text || !picker) return;
+      const value = text.value.trim().toLowerCase();
+      picker.value = HEX_RE.test(value) ? value : ACCENT_PICKER_DEFAULT;
+    }
+
+    function syncAccentTextFromPicker() {
+      const text = document.getElementById('cfgVisualAccentColor');
+      const picker = document.getElementById('cfgVisualAccentColorPicker');
+      if (!text || !picker) return;
+      text.value = picker.value.toLowerCase();
+    }
+
+    function normalizeSetupNumber(key, id) {
+      const rule = SETUP_NUMBER_RULES[key];
+      if (!rule) return document.getElementById(id)?.value.trim() || '';
+      const input = document.getElementById(id);
+      if (!input) return '';
+      const raw = input.value.trim();
+      if (!raw) {
+        input.value = String(rule.fallback);
+        return String(rule.fallback);
+      }
+      const n = rule.float ? parseFloat(raw) : parseInt(raw, 10);
+      if (!Number.isFinite(n)) {
+        throw new Error(`${input.labels?.[0]?.textContent || key} must be a number.`);
+      }
+      const clamped = Math.max(rule.min, Math.min(rule.max, n));
+      input.value = String(rule.float ? Number(clamped.toFixed(2)) : Math.round(clamped));
+      return input.value;
+    }
+
+    function setupStatus(msg, kind) {
+      const s = document.getElementById('setupStatus');
+      if (!s) return;
+      s.textContent = msg || '\u00a0';
+      s.classList.remove('ok', 'err');
+      if (kind) s.classList.add(kind);
+    }
+
+    async function setupTest() {
+      const haUrl = document.getElementById('cfgHaUrl').value.trim() || window.location.origin;
+      const haTok = document.getElementById('cfgHaToken').value.trim();
+      const backend = readBackend(document.getElementById('cfgBackend').value);
+      const plexUrl = document.getElementById('cfgPlexUrl').value.trim();
+      const plexTok = document.getElementById('cfgPlexToken').value.trim();
+
+      if (!haTok) { setupStatus('Enter an HA token first.', 'err'); return; }
+      setupStatus('Testing Home Assistant\u2026');
+      try {
+        const r = await fetch(haUrl.replace(/\/$/, '') + '/api/', {
+          headers: { 'Authorization': 'Bearer ' + haTok, 'Content-Type': 'application/json' }
+        });
+        if (!r.ok) { setupStatus('HA returned ' + r.status + '. Check URL and token.', 'err'); return; }
+      } catch (e) {
+        setupStatus('Could not reach HA: ' + e.message, 'err');
+        return;
+      }
+
+      if (backend === 'plex' && plexUrl && plexTok) {
+        setupStatus('HA ok. Testing Plex\u2026');
+        try {
+          const r = await fetch(plexUrl.replace(/\/$/, '') + '/identity?X-Plex-Token=' + encodeURIComponent(plexTok), {
+            headers: { 'Accept': 'application/json' }
+          });
+          if (!r.ok) { setupStatus('Plex returned ' + r.status + '. Check URL and token.', 'err'); return; }
+        } catch (e) {
+          setupStatus('HA ok, but Plex unreachable: ' + e.message, 'err');
+          return;
+        }
+        setupStatus('Home Assistant and Plex both responded.', 'ok');
+      } else {
+        setupStatus('Home Assistant responded.', 'ok');
+      }
+    }
+
+    function setupSave() {
+      const haTok = document.getElementById('cfgHaToken').value.trim();
+      if (!haTok) { setupStatus('HA token is required.', 'err'); return; }
+      const accentInput = document.getElementById('cfgVisualAccentColor');
+      const accentColor = (accentInput?.value || '').trim().toLowerCase();
+      if (accentColor && !HEX_RE.test(accentColor)) {
+        switchSetupTab('display');
+        setupStatus('Accent color must be #RRGGBB, or blank for theme default.', 'err');
+        accentInput?.focus();
+        return;
+      }
+      try {
+        for (const [key, id] of SETUP_VALUE_FIELDS) {
+          let v = document.getElementById(id)?.value.trim() || '';
+          if (key === 'visualAccentColor') v = accentColor;
+          if (SETUP_NUMBER_RULES[key]) v = normalizeSetupNumber(key, id);
+          if (v) window.localStorage.setItem('pns.' + key, v);
+          else window.localStorage.removeItem('pns.' + key);
+        }
+        for (const [key, id] of SETUP_CHECKBOX_FIELDS) {
+          window.localStorage.setItem('pns.' + key,
+            document.getElementById(id)?.checked ? 'true' : 'false');
+        }
+        window.localStorage.removeItem('pns.plexPlayer');
+      } catch (e) {
+        setupStatus('Could not save settings: ' + e.message, 'err');
+        return;
+      }
+      setupStatus('Saved. Reloading\u2026', 'ok');
+      // Drop any token in the hash/query so it's not kept in history, then reload.
+      const clean = window.location.pathname;
+      setTimeout(() => { window.location.replace(clean); }, 350);
+    }
+
+    function setupClear() {
+      if (!confirm('Clear all saved Now Showing settings on this device?')) return;
+      try {
+        for (const [key] of SETUP_VALUE_FIELDS) window.localStorage.removeItem('pns.' + key);
+        for (const [key] of SETUP_CHECKBOX_FIELDS) window.localStorage.removeItem('pns.' + key);
+        window.localStorage.removeItem('pns.plexPlayer');
+      } catch (_) {}
+      populateSetupForm();
+      setupStatus('Cleared.', 'ok');
+    }
+
+    function initSetup() {
+      const form  = document.getElementById('setupForm');
+      const test  = document.getElementById('setupTestBtn');
+      const save  = document.getElementById('setupSaveBtn');
+      const clear = document.getElementById('setupClearBtn');
+      const gear  = document.getElementById('setupGear');
+      const backend = document.getElementById('cfgBackend');
+      const accent = document.getElementById('cfgVisualAccentColor');
+      const accentPicker = document.getElementById('cfgVisualAccentColorPicker');
+      const copyBlueprint = document.getElementById('setupCopyBlueprintBtn');
+      const copySwitcher = document.getElementById('setupCopySwitcherBtn');
+      if (form)  form.addEventListener('submit', (e) => { e.preventDefault(); setupSave(); });
+      if (test)  test.addEventListener('click', setupTest);
+      if (save)  save.addEventListener('click', setupSave);
+      if (clear) clear.addEventListener('click', setupClear);
+      if (backend) backend.addEventListener('change', syncSetupBackendFields);
+      for (const tab of document.querySelectorAll('[data-setup-tab]')) {
+        tab.addEventListener('click', () => switchSetupTab(tab.dataset.setupTab));
+      }
+      for (const id of ['cfgVisualUseBackdrops', 'cfgVisualBurnInMitigation']) {
+        const input = document.getElementById(id);
+        if (input) input.addEventListener('change', syncSetupVisualFields);
+      }
+      for (const id of [
+        'cfgSwitcherEnabled',
+        'cfgSwitcherIntervalMs',
+        'cfgFullyKioskHost',
+        'cfgFullyKioskPassword',
+        'cfgFullyKioskPlayingUrl',
+        'cfgFullyKioskStoppedUrl',
+      ]) {
+        const input = document.getElementById(id);
+        if (!input) continue;
+        input.addEventListener('input', syncSetupAutomationFields);
+        input.addEventListener('change', syncSetupAutomationFields);
+      }
+      if (accent) accent.addEventListener('input', syncAccentPickerFromText);
+      if (accentPicker) accentPicker.addEventListener('input', syncAccentTextFromPicker);
+      if (copyBlueprint) copyBlueprint.addEventListener('click', () => copySetupText(BLUEPRINT_URL, 'Blueprint URL'));
+      if (copySwitcher) copySwitcher.addEventListener('click', () => copySetupText(buildSwitcherConfigText(), 'Switcher config'));
+      if (gear)  gear.addEventListener('click', () => {
+        switchSetupTab('connection');
+        populateSetupForm();
+        setupVisible(true);
+      });
+
+      // Show the gear icon on the live display whenever we have any saved
+      // config — it's the escape hatch to reopen setup.
+      const hasSavedConfig = (() => {
+        try { return !!window.localStorage.getItem('pns.haToken'); } catch (_) { return false; }
+      })();
+      if (gear && hasSavedConfig) gear.style.display = 'block';
+
+      // First-run: if we have no HA token at all and no config script supplied
+      // one, auto-open setup. Also honour explicit `#setup` in the hash.
+      const forceSetup = /(^|&)setup(=|&|$)/.test(window.location.hash.replace(/^#/, ''));
+      if (forceSetup || !HA_TOKEN) {
+        switchSetupTab('connection');
+        populateSetupForm();
+        setupVisible(true);
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initSetup);
+    } else {
+      initSetup();
+    }
+
+    if (!HA_TOKEN) {
+      console.warn('[plex-now-showing] No HA token configured — opening setup.');
+    }
+    if (HA_TOKEN && ACTIVE_BACKEND === 'plex' && !PLEX_USERNAME) {
+      console.warn('[plex-now-showing] No Plex username configured — user filtering disabled.');
+    }
 
     // ===== DOM REFS =====
     const posterArea = document.getElementById('posterArea');
@@ -576,6 +2431,8 @@
     const mediaType = document.getElementById('mediaType');
     const playerName = document.getElementById('playerName');
     const ambientGlow = document.getElementById('ambientGlow');
+    const backdropAmbient = document.getElementById('backdropAmbient');
+    const backdropImage = document.getElementById('backdropImage');
     const bulbsOuterContainer = document.getElementById('bulbsOuter');
     const marquee = document.getElementById('marquee');
 
@@ -589,6 +2446,7 @@
     const infoTitle = document.getElementById('infoTitle');
     const infoSubtitle = document.getElementById('infoSubtitle');
     const infoMeta = document.getElementById('infoMeta');
+    const infoRatings = document.getElementById('infoRatings');
     const infoSummary = document.getElementById('infoSummary');
     const infoTech = document.getElementById('infoTech');
     const infoPlayer = document.getElementById('infoPlayer');
@@ -599,20 +2457,87 @@
       document.getElementById('frameWrapper').classList.add('landscape-mode');
     }
 
-    // Tap to show/hide info
+    // Tap to show/hide info.
+    //
+    // In always mode the panel is pinned open by syncInfoPanelForMode(); a tap
+    // that tried to hide it would just be re-opened on the next poll, so we
+    // suppress it entirely. on_tap and on_pause behave the same way on tap —
+    // on_pause also keeps honouring the tap-to-peek behaviour consistent with
+    // users' muscle memory. A tap also *unpins* the panel so the full-screen
+    // dim returns for the peek (pinned modes use the lighter gradient skin).
     posterSection.addEventListener('click', (e) => {
       if (!isShowingMedia || !currentMediaData) return;
+      if (VISUAL.infoPanelMode === 'always') return;
       if (infoOverlay.classList.contains('visible')) {
         hideInfo();
       } else {
+        document.body.classList.remove('info-pinned');
         showInfo();
       }
     });
 
     // Fetch media file info from Plex API
+    // HACS-direct-path only: client-side mirror of server parseRatings().
+    // The unified-server path gets ratings pre-parsed by the backend.
+    function parseRatingsClient(item) {
+      const out = { imdb: null, rottenTomatoes: null, audience: null };
+      const ratings = Array.isArray(item?.Rating) ? item.Rating : [];
+      for (const r of ratings) {
+        if (!r || typeof r.image !== 'string') continue;
+        const val = Number(r.value);
+        if (!Number.isFinite(val) || val <= 0) continue;
+        const img = r.image.toLowerCase();
+        const type = (r.type || '').toLowerCase();
+        if (img.startsWith('imdb://')) {
+          if (!out.imdb) out.imdb = { value: val, scale: 10, source: 'imdb' };
+        } else if (img.startsWith('rottentomatoes://')) {
+          const fresh = img.includes('ripe') || img.includes('upright');
+          const rotten = img.includes('rotten') || img.includes('spilled');
+          const isAudience = type === 'audience' || img.includes('upright') || img.includes('spilled');
+          const slot = isAudience ? 'audience' : 'rottenTomatoes';
+          if (!out[slot]) out[slot] = {
+            value: val, scale: 10,
+            source: isAudience ? 'rt_audience' : 'rt_critic',
+            fresh: fresh || (!rotten && val >= 6),
+          };
+        } else if (img.startsWith('themoviedb://')) {
+          if (!out.audience) out.audience = { value: val, scale: 10, source: 'tmdb' };
+        }
+      }
+      if (!out.imdb) {
+        const l = Number(item?.rating);
+        if (Number.isFinite(l) && l > 0) out.imdb = { value: l, scale: 10, source: 'legacy_rating' };
+      }
+      if (!out.audience) {
+        const l = Number(item?.audienceRating);
+        if (Number.isFinite(l) && l > 0) out.audience = { value: l, scale: 10, source: 'legacy_audience_rating' };
+      }
+      return out;
+    }
+
     async function fetchPlexMediaInfo(ratingKey) {
-      if (!PLEX_URL || !PLEX_TOKEN || !ratingKey) return null;
+      if (!ratingKey) return null;
+      if (ACTIVE_BACKEND !== 'plex') return null;
       if (cachedMediaInfo[ratingKey]) return cachedMediaInfo[ratingKey];
+
+      // Unified-server path: the server already shaped the response, so just
+      // return it straight. No token needed client-side.
+      await serverModeReady;
+      if (SERVER_MODE) {
+        try {
+          const resp = await fetch(`/api/media-info/${encodeURIComponent(ratingKey)}`);
+          if (!resp.ok) return null;
+          const info = await resp.json();
+          cachedMediaInfo[ratingKey] = info;
+          return info;
+        } catch (err) {
+          console.warn('Server media-info fetch error:', err);
+          return null;
+        }
+      }
+
+      // HACS-only path: original direct-to-Plex behaviour.
+      if (!PLEX_URL || !PLEX_TOKEN) return null;
       try {
         const resp = await fetch(`${PLEX_URL}/library/metadata/${ratingKey}?X-Plex-Token=${PLEX_TOKEN}`, {
           headers: { 'Accept': 'application/json' }
@@ -638,7 +2563,14 @@
           container: (media.container || '').toUpperCase(),
           fileSize: part?.size || 0,
           width: media.width || 0,
-          height: media.height || 0
+          height: media.height || 0,
+          ratings: parseRatingsClient(item),
+          // #21 backdrop art. HACS-only users still fetch directly from Plex,
+          // which means the token is already in the URL — we can use item.art
+          // as a full URL (path + token). The unified-server path never hits
+          // this branch; it uses /api/plex-art?path=... which strips the
+          // token server-side.
+          art: typeof item?.art === 'string' ? item.art : '',
         };
         cachedMediaInfo[ratingKey] = info;
         return info;
@@ -646,6 +2578,96 @@
         console.warn('Plex media info fetch error:', err);
         return null;
       }
+    }
+
+    // ===== RATINGS BADGES (#18) =====
+    //
+    // Renders whatever providers the server returned into small themed chips.
+    // Called by showInfo() with the full ratings object or null (to clear).
+    // The body.visual-ratings-badges class gates visibility — when the toggle
+    // is off, innerHTML is still populated but CSS keeps the row hidden. This
+    // way flipping the toggle at runtime doesn't need a re-fetch.
+    const RT_FRESH_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C9 6 7 7 4 8c3 3 3 9 8 12 5-3 5-9 8-12-3-1-5-2-8-6z"/></svg>';
+    const RT_ROTTEN_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="9"/><path d="M8 9l1.5-1 1 1.5M14 10l1-1.5 1.5 1" stroke="#2a1a05" stroke-width="1.3" fill="none" stroke-linecap="round"/></svg>';
+    const AUD_UPRIGHT_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 9h14l-1 11H6zM7 9V7a5 5 0 0110 0v2"/></svg>';
+    const AUD_SPILLED_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 11h16l-3 10H7zM6 11l2-5 3 1 2-3 3 2 2 5"/></svg>';
+
+    function formatRatingValue(r) {
+      // Plex reports 0–10 across every provider we care about, so render that
+      // directly (one decimal). If something out-of-band arrives (>10), fall
+      // back to a percentage so it still reads as a meaningful score.
+      if (!r || !Number.isFinite(r.value)) return '';
+      const v = r.value;
+      if (v > 10) return `${Math.round(v)}%`;
+      return v.toFixed(1);
+    }
+
+    function renderRatingsBadges(ratings) {
+      if (!infoRatings) return;
+      infoRatings.classList.remove('has-ratings');
+      infoRatings.innerHTML = '';
+      if (!ratings) return;
+
+      const chips = [];
+
+      if (ratings.imdb) {
+        chips.push(
+          `<span class="rating-badge imdb" title="IMDb">`
+          + `<span class="rating-mark">IMDb</span>`
+          + `<span class="rating-value">${formatRatingValue(ratings.imdb)}</span>`
+          + `<span class="rating-suffix">/10</span>`
+          + `</span>`
+        );
+      }
+      if (ratings.rottenTomatoes) {
+        const fresh = ratings.rottenTomatoes.fresh;
+        chips.push(
+          `<span class="rating-badge rt-critic ${fresh ? 'fresh' : 'rotten'}" title="Rotten Tomatoes — Critics">`
+          + `<span class="rating-mark">${fresh ? RT_FRESH_SVG : RT_ROTTEN_SVG}</span>`
+          + `<span class="rating-value">${Math.round(ratings.rottenTomatoes.value * 10)}%</span>`
+          + `</span>`
+        );
+      }
+      if (ratings.audience) {
+        const isRt = ratings.audience.source === 'rt_audience' || ratings.audience.source === 'legacy_audience_rating';
+        const fresh = ratings.audience.fresh !== false;
+        chips.push(
+          `<span class="rating-badge ${isRt ? 'rt-audience' : 'tmdb'} ${fresh ? 'upright' : 'spilled'}" title="Audience score">`
+          + `<span class="rating-mark">${isRt ? (fresh ? AUD_UPRIGHT_SVG : AUD_SPILLED_SVG) : 'TMDB'}</span>`
+          + `<span class="rating-value">${formatRatingValue(ratings.audience)}</span>`
+          + `<span class="rating-suffix">/10</span>`
+          + `</span>`
+        );
+      }
+
+      if (chips.length === 0) return;
+      infoRatings.innerHTML = chips.join('');
+      infoRatings.classList.add('has-ratings');
+    }
+
+    // ===== GENRE CHIPS (#20) =====
+    //
+    // Appends <span class="info-genre">…</span> chips into the meta row.
+    // `renderGenreChips(null)` clears any stale chips from the previous
+    // media before /api/media-info returns for the new one. When the
+    // visual-genre-chips toggle is off the CSS keeps the chips hidden even
+    // though the DOM is populated — same pattern as ratings-badges.
+    function renderGenreChips(genres) {
+      if (!infoMeta) return;
+      // Remove any existing genre chips from the row. We keep the info-tag
+      // spans intact (type / rating / runtime / paused) and only strip
+      // .info-genre so re-renders don't double up.
+      infoMeta.querySelectorAll('.info-genre').forEach(el => el.remove());
+      if (!Array.isArray(genres) || genres.length === 0) return;
+      const frag = document.createDocumentFragment();
+      for (const g of genres) {
+        if (typeof g !== 'string' || !g.trim()) continue;
+        const span = document.createElement('span');
+        span.className = 'info-genre';
+        span.textContent = g;
+        frag.appendChild(span);
+      }
+      infoMeta.appendChild(frag);
     }
 
     async function showInfo() {
@@ -684,6 +2706,12 @@
       }
       if (d.state === 'paused') tags.push('Paused');
       infoMeta.innerHTML = tags.map(t => `<span class="info-tag">${t}</span>`).join('');
+      // Genre chips (#20) append to the same row so they flow naturally on a
+      // single line when there's room and wrap when there isn't. Populated
+      // only once /api/media-info returns; until then the row just shows
+      // type / rating / runtime / paused. CSS gate (visual-genre-chips) keeps
+      // the chips hidden when the toggle is off even if the array is set.
+      renderGenreChips(null);
 
       // Synopsis
       if (d.summary) {
@@ -693,11 +2721,16 @@
         infoSummary.style.display = 'none';
       }
 
-      // Media file info from Plex API
+      // Media file info from Plex API. In SERVER_MODE the server proxies the
+      // Plex request (so the browser doesn't need PLEX_URL); in HACS-only mode
+      // we fall through to the direct fetch which requires the URL + token.
       infoTech.innerHTML = '';
-      if (d.ratingKey && PLEX_URL) {
+      renderRatingsBadges(null); // reset
+      if (d.ratingKey && hasPlexMetadataAccess()) {
         const mi = await fetchPlexMediaInfo(d.ratingKey);
         if (mi) {
+          renderRatingsBadges(mi.ratings);
+          renderGenreChips(mi.genres);
           let techTags = [];
           if (mi.width && mi.height) techTags.push(`${mi.width}×${mi.height}`);
           if (mi.videoCodec) {
@@ -729,18 +2762,68 @@
 
       infoOverlay.classList.add('visible');
 
-      // Auto-hide after 8 seconds
+      // Auto-hide after 8 seconds — but only in on_tap mode. on_pause and
+      // always keep the panel up until the state changes (pause → play, or
+      // media ends).
       clearTimeout(infoTimeout);
-      infoTimeout = setTimeout(hideInfo, 8000);
+      if (VISUAL.infoPanelMode === 'on_tap') {
+        infoTimeout = setTimeout(hideInfo, 8000);
+      }
     }
 
     function hideInfo() {
       infoOverlay.classList.remove('visible');
+      document.body.classList.remove('info-pinned');
       clearTimeout(infoTimeout);
     }
 
+    // Called from showMedia() on every poll so the info panel reflects the
+    // current playback state for the active mode. Tap-driven visibility in
+    // on_tap and on_pause is preserved; showInfo() is only *forced* when the
+    // mode demands persistence. Returns true if the panel is now being forced
+    // open by the mode so the caller can skip conflicting hide() calls.
+    function syncInfoPanelForMode(data) {
+      if (!data) {
+        hideInfo();
+        return false;
+      }
+      if (VISUAL.infoPanelMode === 'always') {
+        // Panel is shown whenever media is active, paused or playing.
+        // Mark as mode-pinned so CSS drops the full-screen 85 % dim and
+        // uses a bottom-up gradient behind just the panel instead.
+        document.body.classList.add('info-pinned');
+        showInfo();
+        return true;
+      }
+      if (VISUAL.infoPanelMode === 'on_pause') {
+        if (data.state === 'paused') {
+          // Pinned-by-mode: no dim, just the gradient under the panel.
+          // A subsequent tap clears info-pinned so the user gets the full
+          // dim as a peek affordance.
+          document.body.classList.add('info-pinned');
+          showInfo();
+          return true;
+        }
+        // Play resumed — if the panel was pinned open by the previous pause
+        // cycle (no 8 s timer was set), retract it. If the user had opened it
+        // via tap, a timer is ticking and will hide it shortly; leaving it
+        // visible until the timer fires matches on_tap behaviour.
+        if (!infoTimeout) hideInfo();
+        return false;
+      }
+      // on_tap: fully user-driven, nothing to sync.
+      return false;
+    }
+
     // ===== OUTER BULB LIGHTS (around screen edge) =====
+    let chaseOffset = 0;
+    let chaseTimer = null;
+
     function createOuterBulbs() {
+      if (VISUAL.frameStyle !== 'bulbs') {
+        bulbsOuterContainer.innerHTML = '';
+        return;
+      }
       const w = window.innerWidth;
       const h = window.innerHeight;
       const spacing = 42;
@@ -796,9 +2879,27 @@
 
 
 
-    // Chase light animation — both outer and marquee bulbs
-    let chaseOffset = 0;
+    function syncFrameStyle() {
+      if (VISUAL.frameStyle !== 'bulbs') {
+        if (chaseTimer != null) {
+          clearInterval(chaseTimer);
+          chaseTimer = null;
+        }
+        chaseOffset = 0;
+        bulbsOuterContainer.innerHTML = '';
+        return;
+      }
+
+      createOuterBulbs();
+      if (chaseTimer == null) {
+        animateChase();
+        chaseTimer = setInterval(animateChase, 500);
+      }
+    }
+
+    // Chase light animation — outer bulbs only, and only while #65 is 'bulbs'.
     function animateChase() {
+      if (VISUAL.frameStyle !== 'bulbs') return;
       const outerBulbs = bulbsOuterContainer.querySelectorAll('.bulb');
       outerBulbs.forEach((el, i) => {
         const phase = (i + chaseOffset) % 3;
@@ -808,8 +2909,22 @@
       chaseOffset = (chaseOffset + 1) % 3;
     }
 
-    // ===== FETCH PLEX DATA FROM HA =====
-    async function fetchPlexData() {
+    // ===== FETCH NOW-SHOWING DATA FROM HA =====
+    async function fetchNowShowingData() {
+      // Unified-server path: /api/state is already normalised.
+      await serverModeReady;
+      if (SERVER_MODE) {
+        try {
+          const resp = await fetch('/api/state');
+          if (!resp.ok) return null;
+          return await resp.json();  // null when nothing is playing
+        } catch (err) {
+          console.warn('Server state fetch error:', err);
+          return null;
+        }
+      }
+
+      // HACS-only path: original direct-to-HA behaviour.
       try {
         const resp = await fetch(`${HA_URL}/api/states`, {
           headers: {
@@ -821,40 +2936,28 @@
         if (!resp.ok) return null;
         const states = await resp.json();
 
-        // If a specific player is configured, fetch just that entity
-        if (PLEX_PLAYER) {
-          const playerState = states.find(s => s.entity_id === PLEX_PLAYER);
-          if (!playerState || (playerState.state !== 'playing' && playerState.state !== 'paused')) return null;
-          const attrs = playerState.attributes || {};
-          return {
-            title: attrs.media_title || 'Unknown Title',
-            seriesTitle: attrs.media_series_title || '',
-            contentType: attrs.media_content_type || 'video',
-            artwork: attrs.entity_picture || '',
-            playerName: attrs.friendly_name || playerState.entity_id,
-            state: playerState.state,
-            season: attrs.media_season || '',
-            episode: attrs.media_episode || '',
-            contentRating: attrs.media_content_rating || '',
-            duration: attrs.media_duration || 0,
-            summary: attrs.media_summary || '',
-            ratingKey: attrs.media_content_id || ''
-          };
+        const backend = readBackend(ACTIVE_BACKEND);
+        const pinnedPlayer = backend === 'plex' ? (PLEX_PLAYER || PLAYER) : PLAYER;
+
+        if (pinnedPlayer) {
+          const playerState = states.find(s => s.entity_id === pinnedPlayer);
+          if (!playerState || !isPlayingState(playerState)) return null;
+          return buildMediaData(playerState);
         }
 
-        // Otherwise, find active Plex media_player entities for this user
-        const plexPlayers = states.filter(s =>
-          s.entity_id.startsWith('media_player.plex_') &&
-          (s.state === 'playing' || s.state === 'paused')
-        );
+        const rule = BACKEND_RULES[backend] || BACKEND_RULES.plex;
+        const active = states.filter(s => isBackendPlayer(s, rule) && isPlayingState(s));
+        if (active.length === 0) return null;
 
-        if (plexPlayers.length === 0) return null;
+        if (backend !== 'plex') return buildMediaData(active[0]);
 
-        // Filter to only this user's players
-        const myPlayers = plexPlayers.filter(p => {
+        const wantedPlexUser = String(PLEX_USERNAME || '').trim();
+        if (!wantedPlexUser) return buildMediaData(active[0]);
+
+        const myPlayers = active.filter(p => {
           const attrs = p.attributes || {};
           if (attrs.username) {
-            return attrs.username === PLEX_USERNAME;
+            return attrs.username === wantedPlexUser;
           }
           const id = p.entity_id.replace('media_player.plex_', '');
           const isGenericClient = id.startsWith('plex_for_') || id.startsWith('plex_web_');
@@ -863,28 +2966,229 @@
 
         if (myPlayers.length === 0) return null;
 
-        const player = myPlayers[0];
-        const attrs = player.attributes || {};
-
-        return {
-          title: attrs.media_title || 'Unknown Title',
-          seriesTitle: attrs.media_series_title || '',
-          contentType: attrs.media_content_type || 'video',
-          artwork: attrs.entity_picture || '',
-          playerName: attrs.friendly_name || player.entity_id,
-          state: player.state,
-          season: attrs.media_season || '',
-          episode: attrs.media_episode || '',
-          contentRating: attrs.media_content_rating || '',
-          duration: attrs.media_duration || 0,
-          summary: attrs.media_summary || '',
-          ratingKey: attrs.media_content_id || ''
-        };
+        return buildMediaData(myPlayers[0]);
       } catch (err) {
         console.warn('Fetch error:', err);
         return null;
       }
     }
+
+    function hasPlexMetadataAccess() {
+      return ACTIVE_BACKEND === 'plex' && (SERVER_MODE || (!!PLEX_URL && !!PLEX_TOKEN));
+    }
+
+    function isPlayingState(state) {
+      return state && (state.state === 'playing' || state.state === 'paused');
+    }
+
+    function isBackendPlayer(state, rule) {
+      if (!state || typeof state.entity_id !== 'string') return false;
+      return state.entity_id.startsWith(rule.entityPrefix)
+        || rule.exactEntities.includes(state.entity_id);
+    }
+
+    function buildMediaData(playerState) {
+      const attrs = playerState.attributes || {};
+      return {
+        title: attrs.media_title || 'Unknown Title',
+        seriesTitle: attrs.media_series_title || '',
+        contentType: attrs.media_content_type || 'video',
+        artwork: attrs.entity_picture || '',
+        playerName: attrs.friendly_name || playerState.entity_id,
+        state: playerState.state,
+        season: attrs.media_season || '',
+        episode: attrs.media_episode || '',
+        contentRating: attrs.media_content_rating || '',
+        duration: attrs.media_duration || 0,
+        position: Number.isFinite(attrs.media_position) ? attrs.media_position : 0,
+        positionUpdatedAt: attrs.media_position_updated_at || '',
+        summary: attrs.media_summary || '',
+        ratingKey: attrs.media_content_id || ''
+      };
+    }
+
+    // ===== PROGRESS BAR CONTROLLER (#17) =====
+    //
+    // Plays well with the 5 s poll: we store the latest {duration, position,
+    // positionUpdatedAt, state} from HA and interpolate "now" against the
+    // server clock in a requestAnimationFrame loop. When paused or idle the
+    // bar freezes at the last known position. When nothing is playing the bar
+    // is hidden with a fade.
+    const progressBar = document.getElementById('progressBar');
+    const progressBarFill = document.getElementById('progressBarFill');
+    let progressState = null; // { duration, basePosition, baseAt, playing }
+    let progressRafId = null;
+
+    function setProgressFromState(data) {
+      if (!VISUAL.progressBar) return;
+      const duration = Number(data && data.duration) || 0;
+      if (duration <= 0) { hideProgressBar(); return; }
+      const basePosition = Number(data.position) || 0;
+      // positionUpdatedAt is HA's ISO8601 string; fall back to "now" so a
+      // missing field still produces a monotonic bar.
+      const parsed = data.positionUpdatedAt ? Date.parse(data.positionUpdatedAt) : NaN;
+      const baseAt = Number.isFinite(parsed) ? parsed : Date.now();
+      progressState = { duration, basePosition, baseAt, playing: data.state === 'playing' };
+      progressBar.classList.toggle('paused', data.state !== 'playing');
+      progressBar.classList.add('visible');
+      if (progressRafId == null) tickProgressBar();
+    }
+
+    function tickProgressBar() {
+      progressRafId = null;
+      if (!progressState) return;
+      const { duration, basePosition, baseAt, playing } = progressState;
+      const elapsedSec = playing ? Math.max(0, (Date.now() - baseAt) / 1000) : 0;
+      const pos = Math.min(duration, basePosition + elapsedSec);
+      const pct = duration > 0 ? (pos / duration) * 100 : 0;
+      progressBarFill.style.width = pct.toFixed(3) + '%';
+      // Only keep the RAF loop alive while playing; when paused the width is
+      // already correct and we don't need to burn cycles.
+      if (playing) progressRafId = requestAnimationFrame(tickProgressBar);
+    }
+
+    function hideProgressBar() {
+      progressState = null;
+      if (progressRafId != null) { cancelAnimationFrame(progressRafId); progressRafId = null; }
+      progressBar.classList.remove('visible');
+      progressBar.classList.remove('paused');
+    }
+
+    // ===== BACKDROP ART ON PAUSE (#21) =====
+    //
+    // Two presentation modes, both opt-in. The master switch VISUAL.useBackdrops
+    // and VISUAL.backdropStyle pick which path runs; the others are no-ops.
+    //
+    //   fullscreen — landscape-only crossfade. After backdropDelayMs of
+    //                 sustained pause, swap the poster-area view to the
+    //                 fanart. Clears on play or state change.
+    //   ambient    — a blurred + dimmed copy of the fanart sits behind the
+    //                 poster frame at all times, regardless of pause state.
+    //                 Works in portrait because blur hides the crop.
+    //
+    // The frontend never sees the Plex token: it hits /api/plex-art?path=...
+    // which adds the token server-side. HACS-only users fall back to the
+    // full artUrl returned from the direct-to-Plex fetch (token is already
+    // baked into item.art via PLEX_URL).
+    const backdropCtx = {
+      ratingKey: null,      // last ratingKey we resolved art for
+      artUrl: null,         // resolved CDN/proxy URL, or null
+      pauseTimer: null,     // setTimeout handle for the fullscreen fade-in
+    };
+
+    function resolveBackdropUrl(art) {
+      if (!art || typeof art !== 'string') return null;
+      if (SERVER_MODE) {
+        // Only /library/ paths go through the proxy — anything else would
+        // be rejected server-side anyway.
+        if (!art.startsWith('/library/')) return null;
+        return `/api/plex-art?path=${encodeURIComponent(art)}`;
+      }
+      // HACS-only: item.art may already be an absolute URL with token baked
+      // in, or a /library/ path we can stitch to PLEX_URL + token.
+      if (art.startsWith('http')) return art;
+      if (art.startsWith('/library/') && PLEX_URL && PLEX_TOKEN) {
+        const sep = art.includes('?') ? '&' : '?';
+        return `${PLEX_URL}${art}${sep}X-Plex-Token=${PLEX_TOKEN}`;
+      }
+      return null;
+    }
+
+    function clearBackdropFullscreen() {
+      if (backdropCtx.pauseTimer) {
+        clearTimeout(backdropCtx.pauseTimer);
+        backdropCtx.pauseTimer = null;
+      }
+      document.body.classList.remove('backdrop-fullscreen-visible');
+    }
+
+    function scheduleBackdropFullscreen() {
+      clearBackdropFullscreen();
+      if (!VISUAL.useBackdrops || VISUAL.backdropStyle !== 'fullscreen') return;
+      if (!backdropCtx.artUrl) return;
+      // Landscape-only gate. On portrait we silently skip — the poster look
+      // on phones doesn't benefit from a fanart crossfade and usually crops
+      // badly. Ambient mode covers portrait instead.
+      try {
+        if (!window.matchMedia('(orientation: landscape)').matches) return;
+      } catch (_) { /* matchMedia unsupported — fall through */ }
+      const delay = Math.max(1000, VISUAL.backdropDelayMs || 10000);
+      backdropCtx.pauseTimer = setTimeout(() => {
+        // Double-check state at fire time — user may have resumed before the
+        // timer elapsed (showMedia would have called clearBackdropFullscreen
+        // already, but belt-and-braces so a stale timer can't flash the art).
+        if (!currentMediaData || currentMediaData.state !== 'paused') return;
+        if (!backdropCtx.artUrl) return;
+        backdropImage.style.backgroundImage = `url("${backdropCtx.artUrl}")`;
+        document.body.classList.add('backdrop-fullscreen-visible');
+      }, delay);
+    }
+
+    function applyBackdropAmbient() {
+      if (!VISUAL.useBackdrops || VISUAL.backdropStyle !== 'ambient') {
+        backdropAmbient.classList.remove('loaded');
+        return;
+      }
+      if (!backdropCtx.artUrl) {
+        // No fanart for this item — fade out gracefully.
+        backdropAmbient.classList.remove('loaded');
+        return;
+      }
+      // Preload the image before painting so the fade-in doesn't show a
+      // half-decoded frame.
+      const img = new Image();
+      img.onload = () => {
+        backdropAmbient.style.backgroundImage = `url("${backdropCtx.artUrl}")`;
+        backdropAmbient.classList.add('loaded');
+      };
+      img.onerror = () => {
+        // Art failed to load — keep the previous image up rather than
+        // flashing to black.
+        console.warn('[plex-now-showing] backdrop art failed to load');
+      };
+      img.src = backdropCtx.artUrl;
+    }
+
+    // Called after media-info resolves so we've got the Plex `art` path.
+    // Idempotent per ratingKey: repeat calls with the same key are no-ops.
+    function setBackdropArtFromMediaInfo(ratingKey, art) {
+      if (!VISUAL.useBackdrops) return;
+      if (ratingKey === backdropCtx.ratingKey && backdropCtx.artUrl) return;
+      backdropCtx.ratingKey = ratingKey;
+      backdropCtx.artUrl = resolveBackdropUrl(art);
+      applyBackdropAmbient();
+      // If we're currently paused the fullscreen timer may already be
+      // running with a stale URL — reschedule so the fresh art lands.
+      if (currentMediaData && currentMediaData.state === 'paused') {
+        scheduleBackdropFullscreen();
+      }
+    }
+
+    function resetBackdropForIdle() {
+      clearBackdropFullscreen();
+      backdropCtx.ratingKey = null;
+      backdropCtx.artUrl = null;
+      backdropImage.style.backgroundImage = '';
+      backdropAmbient.style.backgroundImage = '';
+      backdropAmbient.classList.remove('loaded');
+    }
+
+    // Keep the backdrop's landscape gate honest when the device rotates.
+    // A portrait→landscape flip while paused should reveal the fanart;
+    // landscape→portrait should hide it immediately.
+    try {
+      const mql = window.matchMedia('(orientation: landscape)');
+      const handler = () => {
+        if (!VISUAL.useBackdrops || VISUAL.backdropStyle !== 'fullscreen') return;
+        if (mql.matches && currentMediaData && currentMediaData.state === 'paused') {
+          scheduleBackdropFullscreen();
+        } else {
+          clearBackdropFullscreen();
+        }
+      };
+      if (typeof mql.addEventListener === 'function') mql.addEventListener('change', handler);
+      else if (typeof mql.addListener === 'function') mql.addListener(handler); // Safari
+    } catch (_) { /* matchMedia unsupported — skip */ }
 
     // ===== UPDATE DISPLAY =====
     function showMedia(data) {
@@ -893,11 +3197,34 @@
         : `${HA_URL}${data.artwork}`;
 
       const mediaKey = `${data.title}_${data.seriesTitle}_${artworkUrl}`;
+      const isSameMedia = mediaKey === currentMediaKey && isShowingMedia;
 
-      if (mediaKey === currentMediaKey && isShowingMedia) return;
+      // Always keep currentMediaData fresh so syncInfoPanelForMode() sees the
+      // latest state (play vs. paused) even when the media itself hasn't
+      // changed — otherwise on_pause couldn't react to a pause event on the
+      // same movie.
+      currentMediaData = data;
+
+      if (isSameMedia) {
+        // Same media, but playback state may have flipped (play ↔ pause).
+        // Let the active info-panel mode decide whether to show/hide, refresh
+        // the progress bar's paused class, then bail out of the full re-render.
+        syncInfoPanelForMode(data);
+        setProgressFromState(data);
+        // #21 fullscreen backdrop reacts to pause/play transitions only (the
+        // ambient layer doesn't change on state). The media key hasn't
+        // changed, so backdropCtx.artUrl is still valid — (re)schedule on
+        // pause, clear on play.
+        if (data.state === 'paused') {
+          scheduleBackdropFullscreen();
+        } else {
+          clearBackdropFullscreen();
+        }
+        return;
+      }
+
       currentMediaKey = mediaKey;
       isShowingMedia = true;
-      currentMediaData = data;
       hideInfo();
 
       // Update poster background image
@@ -950,8 +3277,37 @@
       idleContent.classList.remove('visible');
 
       // Ambient glow
-      ambientGlow.style.background = `radial-gradient(ellipse at 50% 40%, rgba(200, 160, 50, 0.08) 0%, transparent 70%)`;
+      ambientGlow.style.background = 'radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--accent-mid) 8%, transparent) 0%, transparent 70%)';
       ambientGlow.classList.add('active');
+
+      // Progress bar — updated every poll; no-ops when toggle is off.
+      setProgressFromState(data);
+
+      // Info-panel mode may need the panel to appear on first frame of new
+      // media (always), on pause state (on_pause), or not at all (on_tap).
+      syncInfoPanelForMode(data);
+
+      // #21 backdrop. New media — clear any stale fullscreen overlay, reset
+      // the context, and kick off a media-info fetch to resolve the `art`
+      // path. fetchPlexMediaInfo caches per ratingKey so this is cheap; we
+      // call it here (rather than only from showInfo) because ambient mode
+      // needs the art even when the info panel isn't shown.
+      clearBackdropFullscreen();
+      backdropCtx.ratingKey = null;
+      backdropCtx.artUrl = null;
+      backdropAmbient.classList.remove('loaded');
+      if (VISUAL.useBackdrops && data.ratingKey && hasPlexMetadataAccess()) {
+        const rk = data.ratingKey;
+        fetchPlexMediaInfo(rk).then(mi => {
+          // Guard against stale responses arriving after the user changed
+          // media. currentMediaData.ratingKey is the source of truth.
+          if (!currentMediaData || currentMediaData.ratingKey !== rk) return;
+          if (mi && mi.art) {
+            setBackdropArtFromMediaInfo(rk, mi.art);
+            if (data.state === 'paused') scheduleBackdropFullscreen();
+          }
+        }).catch(() => { /* swallow — backdrop is best-effort */ });
+      }
     }
 
     function showIdle() {
@@ -971,11 +3327,14 @@
       mediaInfo.classList.remove('visible');
       idleContent.classList.add('visible');
       ambientGlow.classList.remove('active');
+      hideProgressBar();
+      // #21 backdrop — nothing playing, so tear the art layers down.
+      resetBackdropForIdle();
     }
 
     // ===== POLLING LOOP =====
     async function poll() {
-      const data = await fetchPlexData();
+      const data = await fetchNowShowingData();
       if (data) {
         showMedia(data);
       } else {
@@ -984,9 +3343,11 @@
     }
 
     // ===== INIT =====
-    function init() {
-      createOuterBulbs();
-      setInterval(animateChase, 500);
+    async function init() {
+      // Runtime visual config must resolve before the first render so we don't
+      // flash the default UI and then repaint.
+      await loadVisualConfig();
+      applyVisualToggles();
       poll();
       setInterval(poll, POLL_INTERVAL);
     }
@@ -996,7 +3357,7 @@
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
-        createOuterBulbs();
+        if (VISUAL.frameStyle === 'bulbs') createOuterBulbs();
       }, 200);
     });
 

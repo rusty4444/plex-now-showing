@@ -1,0 +1,17 @@
+# Local config holding tokens — never commit
+www/now_showing.config.js
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Node (for upcoming Vite build in #pkg-1)
+node_modules/
+dist/
+server/node_modules/
+docker/.env

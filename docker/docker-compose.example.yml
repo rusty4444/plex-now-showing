@@ -1,0 +1,87 @@
+# =============================================================================
+# Plex Now Showing — Docker Compose example (install path B, HA Container).
+#
+# For folks running Home Assistant Container (plain Docker) rather than HA OS
+# or Supervised. Same image as the HA add-on, just without Supervisor; you
+# provide HA_URL + HA_TOKEN yourself.
+#
+# Quick start:
+#   cp .env.example .env
+#   $EDITOR .env                 # fill HA_URL / HA_TOKEN (and optionally PLEX_*)
+#   docker compose -f docker-compose.example.yml up -d
+#   open http://<this-host>:8099/now_showing.html
+#
+# The image comes from the same GHCR publish as the HA add-on (#45) so you're
+# never more than one `docker compose pull` behind.
+# =============================================================================
+
+services:
+  plex-now-showing:
+    image: ghcr.io/rusty4444/plex-now-showing-${ARCH:-amd64}:${TAG:-latest}
+    container_name: plex-now-showing
+    restart: unless-stopped
+
+    # If you want to colocate with HA Container on the same docker network
+    # and reach it as `http://homeassistant:8123`, uncomment and adjust:
+    # networks:
+    #   - homeassistant
+
+    ports:
+      - "${HOST_PORT:-8099}:8099"
+
+    environment:
+      # ---- Home Assistant (required) ----
+      HA_URL: "${HA_URL}"
+      HA_TOKEN: "${HA_TOKEN}"
+
+      # ---- Backend selection ----
+      BACKEND: "${BACKEND:-plex}"
+      PLAYER: "${PLAYER:-}"
+
+      # ---- Plex (optional; needed for codec/HDR info panel) ----
+      PLEX_URL: "${PLEX_URL:-}"
+      PLEX_TOKEN: "${PLEX_TOKEN:-}"
+      PLEX_USERNAME: "${PLEX_USERNAME:-}"
+      PLEX_PLAYER: "${PLEX_PLAYER:-}"
+
+      # ---- Display / behaviour ----
+      LANDSCAPE: "${LANDSCAPE:-false}"
+      THEME: "${THEME:-classic-gold}"
+      POLL: "${POLL:-5000}"
+      STATE_TTL_MS: "${STATE_TTL_MS:-3000}"
+      MEDIA_INFO_TTL_MS: "${MEDIA_INFO_TTL_MS:-600000}"
+
+      # ---- Visual toggles (v2 visual sprint) ----
+      VISUAL_PROGRESS_BAR: "${VISUAL_PROGRESS_BAR:-false}"
+      VISUAL_RATINGS_BADGES: "${VISUAL_RATINGS_BADGES:-false}"
+      VISUAL_GENRE_CHIPS: "${VISUAL_GENRE_CHIPS:-false}"
+      VISUAL_INFO_PANEL_MODE: "${VISUAL_INFO_PANEL_MODE:-on_tap}"
+      VISUAL_FRAME_STYLE: "${VISUAL_FRAME_STYLE:-bulbs}"
+      VISUAL_MARQUEE_FONT: "${VISUAL_MARQUEE_FONT:-bebas-neue}"
+      VISUAL_USE_BACKDROPS: "${VISUAL_USE_BACKDROPS:-false}"
+      VISUAL_BACKDROP_STYLE: "${VISUAL_BACKDROP_STYLE:-fullscreen}"
+      VISUAL_BACKDROP_DELAY_MS: "${VISUAL_BACKDROP_DELAY_MS:-10000}"
+      VISUAL_BURN_IN_MITIGATION: "${VISUAL_BURN_IN_MITIGATION:-false}"
+      VISUAL_NUDGE_INTERVAL_MS: "${VISUAL_NUDGE_INTERVAL_MS:-60000}"
+      VISUAL_NUDGE_AMPLITUDE_PX: "${VISUAL_NUDGE_AMPLITUDE_PX:-4}"
+      VISUAL_NIGHT_MODE_ENTITY: "${VISUAL_NIGHT_MODE_ENTITY:-}"
+      VISUAL_NIGHT_MODE_OPACITY: "${VISUAL_NIGHT_MODE_OPACITY:-0.4}"
+      VISUAL_THEME: "${VISUAL_THEME:-classic-gold}"
+      VISUAL_ACCENT_COLOR: "${VISUAL_ACCENT_COLOR:-}"
+
+      # ---- Optional hardening (recommended if exposed off-LAN) ----
+      PROXY_SECRET: "${PROXY_SECRET:-}"
+      ALLOWED_ORIGINS: "${ALLOWED_ORIGINS:-}"
+
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8099/healthz >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+
+# Uncomment alongside the `networks:` block on the service to join the HA
+# Container network.
+# networks:
+#   homeassistant:
+#     external: true

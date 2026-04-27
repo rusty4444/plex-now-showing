@@ -1,0 +1,179 @@
+---
+# Translations for the Options tab in the HA add-on UI.
+# Keys match fields in config.yaml's `options:` / `schema:` blocks.
+configuration:
+  backend:
+    name: Backend
+    description: >-
+      Media backend to watch in Home Assistant: Plex, Jellyfin, Emby, or Kodi.
+  player:
+    name: Player entity
+    description: >-
+      Optional media_player entity id to pin, e.g. media_player.kodi or
+      media_player.jellyfin_living_room. Leave empty to auto-detect active
+      players for the selected backend.
+  plex_url:
+    name: Plex URL
+    description: >-
+      Base URL of your Plex server, e.g. https://plex.example.com:32400. Needed
+      for the info panel (resolution, HDR, codecs, audio). Leave empty to skip.
+  plex_token:
+    name: Plex token
+    description: >-
+      Plex X-Plex-Token. Stored only in the add-on; never sent to the browser.
+  plex_username:
+    name: Plex username
+    description: >-
+      Filters which media_player.plex_* entities count as "yours" when no
+      specific player is pinned.
+  plex_player:
+    name: Legacy pinned Plex player
+    description: >-
+      Backward-compatible Plex-only player pin. Prefer the generic Player
+      entity option above for new installs.
+  landscape:
+    name: Landscape mode
+    description: Force the kiosk layout into landscape regardless of orientation.
+  theme:
+    name: Theme
+    description: Visual theme. "custom" lets your own CSS overrides take over.
+  poll_interval:
+    name: Poll interval (ms)
+    description: How often each kiosk asks the server for updated state.
+  state_ttl_ms:
+    name: State cache TTL (ms)
+    description: >-
+      Server-side cache window for /api/state. Smooths bursty polling when
+      multiple kiosks are connected.
+  media_info_ttl_ms:
+    name: Media-info cache TTL (ms)
+    description: Server-side cache window for /api/media-info/:ratingKey.
+  proxy_secret:
+    name: Proxy secret (optional)
+    description: >-
+      If set, requests to /api/* must include the header X-Proxy-Secret with
+      this value. Leave empty for Ingress-only use.
+  allowed_origins:
+    name: Allowed origins (optional)
+    description: >-
+      Allowlist for the Origin header on /api/*. One URL per line, e.g.
+      http://tablet.lan:8099. Leave empty for Ingress-only use.
+  switcher_enabled:
+    name: Fully Kiosk auto-switcher
+    description: >-
+      Turn on to make the add-on itself drive your Fully Kiosk tablets. Only
+      enable this if you’re NOT using the HA Blueprint — pick one to avoid
+      duplicate triggers.
+  switcher_interval_ms:
+    name: Switcher tick interval (ms)
+    description: How often the switcher polls HA for play/stop transitions.
+  fully_kiosks:
+    name: Fully Kiosk tablets
+    description: >-
+      One entry per tablet. “Host” is the Fully REST URL (e.g.
+      http://tablet.lan:2323). “Password” is the Remote Admin password set
+      in Fully. “Playing URL” is loaded when media starts. “Stopped URL” is
+      loaded when media stops — leave empty to return to Fully’s start URL.
+  visual_progress_bar:
+    name: Show playback progress bar
+    description: >-
+      Adds a slim gold progress bar along the bottom of the poster while
+      something is playing. Freezes while paused, disappears when idle.
+      Off by default; flip on to enable.
+  visual_ratings_badges:
+    name: Show ratings badges
+    description: >-
+      Adds IMDb, Rotten Tomatoes, and audience score badges to the info
+      panel (shown when you tap the kiosk). Requires plex_url + plex_token
+      so the server can read ratings from /library/metadata. Off by default.
+  visual_genre_chips:
+    name: Show genre chips
+    description: >-
+      Adds genre pills (Action, Sci-Fi, …) next to the content rating in
+      the info panel. Populated from Plex metadata; requires plex_url +
+      plex_token. Off by default.
+  visual_info_panel_mode:
+    name: Info panel visibility
+    description: >-
+      When to show the info panel (title, ratings, meta, tech tags).
+      "on_tap" (default) — hidden until the user taps the poster, auto-hides
+      after 8 s. "on_pause" — shows persistently whenever the player is
+      paused; tap-to-peek still works while playing. "always" — pinned open
+      the entire time media is active.
+  visual_frame_style:
+    name: Frame style
+    description: >-
+      Decorative screen-edge frame. "bulbs" (default) keeps the animated
+      marquee bulbs. "gold-line" replaces them with a thin double border
+      using the active accent colour. "none" removes the frame entirely.
+  visual_marquee_font:
+    name: Marquee font
+    description: >-
+      Font used for the NOW SHOWING banner. "bebas-neue" keeps the original
+      v1 look. Other choices are Anton, Oswald, Monoton, and Playfair Display.
+  visual_use_backdrops:
+    name: Show backdrop art on pause
+    description: >-
+      Master switch for the backdrop-art feature. Requires plex_url +
+      plex_token. Pair with Backdrop style below. Off by default.
+  visual_backdrop_style:
+    name: Backdrop style
+    description: >-
+      "fullscreen" (default) — on landscape devices, after a sustained
+      pause, crossfade to the movie/show fanart. Portrait devices are
+      silently skipped since the crop looks bad there. "ambient" — replaces
+      the yellow bulb-lit background with a blurred and darkened copy of
+      the fanart whenever media is active. Works on both orientations.
+  visual_backdrop_delay_ms:
+    name: Backdrop pause delay (ms)
+    description: >-
+      How long the player must stay paused before the fullscreen backdrop
+      fades in. Defaults to 10000 (10 s) per spec; skip-intros / quick
+      seeks shouldn't trigger the swap.
+  visual_burn_in_mitigation:
+    name: Burn-in mitigation
+    description: >-
+      Master switch for OLED burn-in protection. Off by default. When on,
+      the screen drifts by a few pixels every minute and an optional
+      overnight dim layer activates based on either an HA entity or the
+      OS prefers-color-scheme: dark setting.
+  visual_nudge_interval_ms:
+    name: Pixel nudge interval (ms)
+    description: >-
+      How often the page transform shifts by ± amplitude pixels. Default
+      60000 (one minute). Range 5000–600000.
+  visual_nudge_amplitude_px:
+    name: Pixel nudge amplitude (px)
+    description: >-
+      Maximum shift in either direction. 4 px is invisible mid-watch but
+      enough to rotate static pixels. Range 1–16.
+  visual_night_mode_entity:
+    name: Night-mode HA entity
+    description: >-
+      Optional Home Assistant entity (e.g. input_boolean.bedroom_kiosk_dim)
+      whose "on" state activates the night-mode dim overlay. Leave blank to
+      fall back to the OS prefers-color-scheme: dark media query.
+  visual_night_mode_opacity:
+    name: Night-mode dim opacity
+    description: >-
+      How dark the overnight overlay is. 0.4 reads as clearly dimmed but
+      the title is still legible from across the room. Range 0–0.95.
+  visual_theme:
+    name: Visual theme preset
+    description: >-
+      Top-level look-and-feel. "classic-gold" (default) keeps the warm
+      cinema-bulb vibe. "art-deco-silver" uses cooler chrome highlights.
+      "neon-80s" leans into hot pink + cyan. "minimalist-dark" drops the
+      ornament for a clean dark UI.
+  visual_accent_color:
+    name: Accent colour override
+    description: >-
+      Optional #RRGGBB hex (e.g. #ff5500) that overrides the active theme's
+      accent ramp — bulbs, marquee text glow, progress bar, and ratings
+      badges all derive from it. Leave blank to use the theme's default
+      ramp. Short form (#abc) and named colours are rejected.
+  log_level:
+    name: Log level
+    description: Verbosity of the add-on log.
+network:
+  8099/tcp: Direct HTTP access for external kiosks. Leave empty to disable.
