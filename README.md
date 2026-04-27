@@ -6,7 +6,7 @@
   </a>
 </p>
 
-> This README describes Plex Now Showing v2.0.0. V1.x was the original
+> This README describes Home Assistant Now Showing v2.0.0. V1.x was the original
 > Plex-only, frontend-only release; v2 adds add-on and Docker installs,
 > multi-backend playback, and no-code display controls.
 
