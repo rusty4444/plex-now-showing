@@ -54,7 +54,7 @@ not exposed to the tablet browser.
 | Area | V2.0.0 adds |
 |------|-----------------|
 | Safer config | Hard-coded tokens were removed from `now_showing.html`. Runtime config now comes from the add-on/server, `localStorage`, URL hash, or `now_showing.config.js`. |
-| First-run setup | Frontend-only installs open a `#setup` form when no HA token is found. The gear icon reopens setup later. |
+| First-run setup | Frontend-only installs open a `#setup` form when no HA token is found. The gear icon reopens setup later, including Connection, Display, and Automation tabs. |
 | Home Assistant add-on | `addons/plex-now-showing` wraps the server as a Supervisor add-on with Ingress, a config form, logs, multi-arch GHCR images, and optional direct port `8099`. |
 | Docker Compose | `docker/docker-compose.example.yml` and `.env.example` run the same image for HA Container users. |
 | Unified server | `server/` serves the kiosk and exposes `/api/state`, `/api/config`, `/api/media-info/:ratingKey`, `/api/artwork`, `/api/night-mode`, and `/healthz`. |
@@ -89,6 +89,8 @@ not exposed to the tablet browser.
   `playfair-display`.
 - Optional Fully Kiosk Browser auto-switching between your dashboard and the
   Now Showing page.
+- Setup Automation tab with Blueprint import/download links and a built-in
+  Fully Kiosk switcher config helper.
 
 ## Requirements
 
@@ -223,6 +225,8 @@ tablet browser must hold the HA token.
    - **Display**: theme preset, accent color, frame style, marquee font,
      progress bar, ratings badges, genre chips, info-panel mode, backdrops,
      burn-in mitigation, pixel nudge, and night dimming
+   - **Automation**: import/download the tablet-switching Blueprint, or prepare
+     built-in Fully Kiosk switcher settings for the add-on or Docker
 
 <p align="center">
   <img src="screenshots/v2-setup-connection.png" alt="Setup Connection tab" width="300">
@@ -352,6 +356,11 @@ You can automate tablet navigation in either of two ways:
 
 Do not run both for the same tablet, or each playback transition will fire
 twice.
+
+The setup page's **Automation** tab has a Blueprint import/download button and
+a built-in switcher toggle that generates matching add-on and Docker config.
+The built-in switcher still runs server-side, so copy the generated values into
+the add-on options or Docker `.env`, then restart.
 
 Add-on options:
 

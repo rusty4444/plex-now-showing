@@ -96,6 +96,12 @@ Advanced users can still set `pns.visualProgressBar=true` /
 `#visualTheme=neon-80s` / `#visualAccentColor=%23ff5500`
 to the kiosk URL hash.
 
+The setup page also includes an **Automation** tab. It links to the Home
+Assistant Blueprint import/download flow and can generate the equivalent
+add-on options / Docker env for the built-in Fully Kiosk switcher. The switcher
+itself runs server-side, so paste the generated values into the add-on options
+or Docker `.env`, then restart the add-on/container.
+
 ### Fully Kiosk auto-switcher (#48)
 
 If you’d rather not touch HA automations, flip `switcher_enabled: true` and

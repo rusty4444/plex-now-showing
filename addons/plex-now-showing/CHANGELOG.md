@@ -90,6 +90,9 @@ The project follows [Semantic Versioning](https://semver.org/).
 - Marquee font picker (`visual_marquee_font`) adds Bebas Neue, Anton, Oswald,
   Monoton, and Playfair Display choices to the add-on, Docker, server, and
   frontend-only setup paths.
+- Setup Automation tab links to the tablet-switching Blueprint import/download
+  flow and generates add-on/Docker config for the built-in Fully Kiosk
+  switcher.
 
 ### Fixed
 - Dev add-on installs now use a matching pre-release image tag and the build
