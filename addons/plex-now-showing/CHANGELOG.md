@@ -3,7 +3,7 @@
 All notable changes to the Plex Now Showing add-on will be documented here.
 The project follows [Semantic Versioning](https://semver.org/).
 
-## 0.1.0 — Unreleased
+## 2.0.0 - 2026-04-27
 
 ### Added
 - Initial add-on wrapper for the unified Node 20 server (closes #44).
@@ -87,12 +87,15 @@ The project follows [Semantic Versioning](https://semver.org/).
   option: theme, accent colour, frame style, progress bar, ratings badges,
   genre chips, info panel mode, backdrops, burn-in mitigation, pixel nudge,
   and night dimming.
+- Marquee font picker (`visual_marquee_font`) adds Bebas Neue, Anton, Oswald,
+  Monoton, and Playfair Display choices to the add-on, Docker, server, and
+  frontend-only setup paths.
 
 ### Fixed
-- Dev add-on installs now use a matching pre-release image tag
-  (`0.1.0-dev`) and the build workflow publishes the exact `config.yaml`
-  version tag alongside the rolling `:dev` alias, so Supervisor no longer
-  tries to pull a missing `:0.1.0` image from GHCR.
+- Dev add-on installs now use a matching pre-release image tag and the build
+  workflow publishes the exact `config.yaml` version tag alongside the rolling
+  `:dev` alias, so Supervisor no longer tries to pull a missing release image
+  from GHCR.
 - Blank Plex username now correctly disables user filtering in both server and
   frontend-only mode, so HA Plex entities with a `username` attribute still
   show as active playback.

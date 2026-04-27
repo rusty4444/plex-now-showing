@@ -9,9 +9,9 @@
 # Docs on each field: https://developers.home-assistant.io/docs/add-ons/configuration
 
 name: Plex Now Showing
-version: "0.1.0-dev"
+version: "2.0.0"
 slug: plex_now_showing
-description: Cinema-style now-playing kiosk for Plex, served directly from Home Assistant.
+description: Cinema-style now-playing kiosk for Plex, Jellyfin, Emby, and Kodi.
 url: https://github.com/rusty4444/plex-now-showing
 arch:
   - amd64
@@ -65,6 +65,7 @@ options:
   visual_genre_chips: false
   visual_info_panel_mode: on_tap
   visual_frame_style: bulbs
+  visual_marquee_font: bebas-neue
   # Backdrop art on pause (#21). Master switch is off; backdrop_style picks
   # fullscreen (landscape-only crossfade, default) vs ambient (blurred
   # fanart behind the poster on every orientation). Delay is the pause
@@ -113,6 +114,7 @@ schema:
   visual_genre_chips: "bool"
   visual_info_panel_mode: "list(on_tap|on_pause|always)"
   visual_frame_style: "list(bulbs|gold-line|none)"
+  visual_marquee_font: "list(bebas-neue|anton|oswald|monoton|playfair-display)"
   visual_use_backdrops: "bool"
   visual_backdrop_style: "list(fullscreen|ambient)"
   visual_backdrop_delay_ms: "int(1000,600000)"

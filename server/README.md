@@ -68,6 +68,7 @@ For HA Container users running via Docker Compose. Set:
 | `VISUAL_GENRE_CHIPS` | `false` | Show genre pills next to the content rating in the info panel (needs `PLEX_URL` + `PLEX_TOKEN`) |
 | `VISUAL_INFO_PANEL_MODE` | `on_tap` | When to show the info panel: `on_tap`, `on_pause`, or `always` |
 | `VISUAL_FRAME_STYLE` | `bulbs` | Screen-edge frame style: `bulbs`, `gold-line`, or `none` |
+| `VISUAL_MARQUEE_FONT` | `bebas-neue` | NOW SHOWING banner font: `bebas-neue`, `anton`, `oswald`, `monoton`, or `playfair-display` |
 | `VISUAL_USE_BACKDROPS` | `false` | Master switch for backdrop art on pause (#21). Needs `PLEX_URL` + `PLEX_TOKEN` |
 | `VISUAL_BACKDROP_STYLE` | `fullscreen` | `fullscreen` (landscape-only crossfade) or `ambient` (blurred fanart behind the poster, all orientations) |
 | `VISUAL_BACKDROP_DELAY_MS` | `10000` | Pause threshold for the fullscreen fade-in (ms, clamped 1000–600000) |

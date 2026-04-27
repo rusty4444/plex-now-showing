@@ -30,4 +30,13 @@ window.NOW_SHOWING_CONFIG = {
   // Display
   landscape: false,   // true = fit entire poster on widescreen displays
   poll:      5000,    // ms between HA polls
+
+  // Optional visual controls. The #setup Display tab writes these same keys
+  // to localStorage for frontend-only installs.
+  // visualTheme: 'classic-gold',
+  // visualFrameStyle: 'bulbs',
+  // visualMarqueeFont: 'bebas-neue',
+  // visualAccentColor: '',
+  // visualProgressBar: false,
+  // visualInfoPanelMode: 'on_tap',
 };

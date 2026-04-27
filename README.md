@@ -6,8 +6,9 @@
   </a>
 </p>
 
-> This README describes the `dev` branch / V2 work. The `main` branch is the
-> stable V1 Plex-only, single-file release.
+> This README describes Plex Now Showing v2.0.0. V1.x was the original
+> Plex-only, frontend-only release; v2 adds add-on and Docker installs,
+> multi-backend playback, and no-code display controls.
 
 A full-screen cinema marquee display for Home Assistant that shows what is
 currently playing on Plex, Jellyfin, Emby, or Kodi. It is designed for
@@ -27,6 +28,12 @@ presets, optional metadata panels, and kiosk-friendly burn-in controls.
 </p>
 
 <p align="center">
+  <img src="screenshots/v2-now-showing-euphoria.png" alt="V2 bulb frame theme with poster art" width="260">
+  &nbsp;&nbsp;
+  <img src="screenshots/v2-now-showing-gold-line.png" alt="V2 gold-line frame style" width="260">
+</p>
+
+<p align="center">
   <img src="screenshots/landscape-mode.jpg" alt="Landscape Mode with Blurred Background" width="620">
 </p>
 
@@ -42,9 +49,9 @@ All three paths use the same kiosk UI. The add-on and Docker paths add the
 Node server that proxies Home Assistant and Plex metadata so API tokens are
 not exposed to the tablet browser.
 
-## What Is New On `dev` Vs `main`
+## What Changed From V1.x
 
-| Area | V2 / `dev` adds |
+| Area | V2.0.0 adds |
 |------|-----------------|
 | Safer config | Hard-coded tokens were removed from `now_showing.html`. Runtime config now comes from the add-on/server, `localStorage`, URL hash, or `now_showing.config.js`. |
 | First-run setup | Frontend-only installs open a `#setup` form when no HA token is found. The gear icon reopens setup later. |
@@ -53,7 +60,7 @@ not exposed to the tablet browser.
 | Unified server | `server/` serves the kiosk and exposes `/api/state`, `/api/config`, `/api/media-info/:ratingKey`, `/api/artwork`, `/api/night-mode`, and `/healthz`. |
 | Multi-backend support | `backend` selects `plex`, `jellyfin`, `emby`, or `kodi`; `player` can pin any exact `media_player` entity. Plex-specific `plex_player` is still accepted for compatibility. |
 | Fully Kiosk switching | Use either the bundled HA Blueprint or the add-on/server's built-in Fully Kiosk REST switcher. |
-| Visual toggles | Progress bar, ratings badges, genre chips, info-panel display modes, pause backdrops, burn-in mitigation, night dimming, frame styles, theme presets, and accent color overrides. |
+| Visual toggles | Progress bar, ratings badges, genre chips, info-panel display modes, pause backdrops, burn-in mitigation, night dimming, frame styles, marquee font picker, theme presets, and accent color overrides. |
 | CI / release plumbing | Multi-arch add-on builds, config linting, Docker image publishing, server tests, add-on docs, and examples. |
 
 ## Features
@@ -78,6 +85,8 @@ not exposed to the tablet browser.
   `minimalist-dark`.
 - Strict `#RRGGBB` accent color override that reskins the active theme.
 - Frame style picker: animated `bulbs`, quiet `gold-line`, or `none`.
+- Marquee font picker: `bebas-neue`, `anton`, `oswald`, `monoton`, or
+  `playfair-display`.
 - Optional Fully Kiosk Browser auto-switching between your dashboard and the
   Now Showing page.
 
@@ -119,8 +128,8 @@ because Home Assistant Supervisor supplies the API token automatically.
    - `backend`: `plex`, `jellyfin`, `emby`, or `kodi`
    - `player`: optional exact entity ID, for example `media_player.kodi`
    - `plex_url` and `plex_token`: optional, Plex enhanced metadata only
-   - visual options such as `visual_theme`, `visual_frame_style`, and
-     `visual_progress_bar`
+   - visual options such as `visual_theme`, `visual_frame_style`,
+     `visual_marquee_font`, and `visual_progress_bar`
 6. Start the add-on.
 7. Click **Open Web UI** for Ingress, or open:
 
@@ -151,7 +160,8 @@ Open:
 http://<docker-host>:8099/now_showing.html
 ```
 
-For the current `dev` branch image, set this in `docker/.env`:
+For the stable v2 release, keep `TAG=latest` or pin this release with
+`TAG=2.0.0`. For the rolling `dev` branch image, set this in `docker/.env`:
 
 ```env
 TAG=dev
@@ -175,6 +185,7 @@ PLEX_USERNAME=
 LANDSCAPE=false
 VISUAL_THEME=classic-gold
 VISUAL_FRAME_STYLE=bulbs
+VISUAL_MARQUEE_FONT=bebas-neue
 VISUAL_PROGRESS_BAR=false
 ```
 
@@ -209,9 +220,15 @@ tablet browser must hold the HA token.
 3. If no token is configured, the page opens `#setup`. Fill:
    - **Connection**: Home Assistant URL, HA token, backend, optional player,
      optional Plex URL/token, and landscape mode
-   - **Display**: theme preset, accent color, frame style, progress bar,
-     ratings badges, genre chips, info-panel mode, backdrops, burn-in
-     mitigation, pixel nudge, and night dimming
+   - **Display**: theme preset, accent color, frame style, marquee font,
+     progress bar, ratings badges, genre chips, info-panel mode, backdrops,
+     burn-in mitigation, pixel nudge, and night dimming
+
+<p align="center">
+  <img src="screenshots/v2-setup-connection.png" alt="Setup Connection tab" width="300">
+  &nbsp;&nbsp;
+  <img src="screenshots/v2-setup-display.png" alt="Setup Display tab" width="300">
+</p>
 
 4. Save and launch. Values are stored in that browser's `localStorage`.
 
@@ -234,6 +251,10 @@ window.NOW_SHOWING_CONFIG = {
   plexToken: '',
   landscape: false,
   poll: 5000,
+  visualTheme: 'classic-gold',
+  visualFrameStyle: 'bulbs',
+  visualMarqueeFont: 'bebas-neue',
+  visualProgressBar: false,
 };
 ```
 
@@ -251,6 +272,7 @@ example:
 ```javascript
 localStorage.setItem('pns.visualTheme', 'neon-80s');
 localStorage.setItem('pns.visualFrameStyle', 'gold-line');
+localStorage.setItem('pns.visualMarqueeFont', 'anton');
 localStorage.setItem('pns.visualProgressBar', 'true');
 localStorage.setItem('pns.visualAccentColor', '#ff5500');
 ```
@@ -258,7 +280,7 @@ localStorage.setItem('pns.visualAccentColor', '#ff5500');
 Equivalent URL hash example:
 
 ```text
-#visualTheme=minimalist-dark&visualFrameStyle=none&visualProgressBar=true&visualAccentColor=%23ff5500
+#visualTheme=minimalist-dark&visualFrameStyle=none&visualMarqueeFont=monoton&visualProgressBar=true&visualAccentColor=%23ff5500
 ```
 
 ## Core Configuration
@@ -291,6 +313,7 @@ something.
 | Genre chips | `visual_genre_chips` | `VISUAL_GENRE_CHIPS` | `visualGenreChips` | Plex metadata required |
 | Info panel mode | `visual_info_panel_mode` | `VISUAL_INFO_PANEL_MODE` | `visualInfoPanelMode` | `on_tap`, `on_pause`, `always` |
 | Frame style | `visual_frame_style` | `VISUAL_FRAME_STYLE` | `visualFrameStyle` | `bulbs`, `gold-line`, `none` |
+| Marquee font | `visual_marquee_font` | `VISUAL_MARQUEE_FONT` | `visualMarqueeFont` | `bebas-neue`, `anton`, `oswald`, `monoton`, `playfair-display` |
 | Backdrops | `visual_use_backdrops` | `VISUAL_USE_BACKDROPS` | `visualUseBackdrops` | Plex metadata required |
 | Backdrop style | `visual_backdrop_style` | `VISUAL_BACKDROP_STYLE` | `visualBackdropStyle` | `fullscreen`, `ambient` |
 | Backdrop delay | `visual_backdrop_delay_ms` | `VISUAL_BACKDROP_DELAY_MS` | `visualBackdropDelayMs` | `1000` to `600000` ms |

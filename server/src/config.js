@@ -73,6 +73,11 @@ export function loadConfig(env = process.env) {
       // decorative screen-edge frame for OLED / minimalist installs.
       frameStyle: parseEnum(env.VISUAL_FRAME_STYLE,
         ['bulbs', 'gold-line', 'none'], 'bulbs'),
+      // Marquee font picker (#62/#63). Defaults to Bebas Neue, which is the
+      // original v1 headline font.
+      marqueeFont: parseEnum(env.VISUAL_MARQUEE_FONT,
+        ['bebas-neue', 'anton', 'oswald', 'monoton', 'playfair-display'],
+        'bebas-neue'),
       // Two presentation styles:
       //   'fullscreen' — landscape only; after backdropDelayMs of pause,
       //                   crossfade the poster view to the Plex fanart.

@@ -6,7 +6,7 @@
   <title>Now Showing</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Bebas+Neue&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@400;500;600&family=Monoton&family=Oswald:wght@600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -42,6 +42,9 @@
       --text-dim: #998c6e;
       --red-curtain: #5c1010;
       --marquee-height: 14vh;
+      --marquee-font-family: 'Bebas Neue', sans-serif;
+      --marquee-font-weight: 400;
+      --marquee-letter-spacing: 0.35em;
     }
 
     body[data-theme="classic-gold"] {
@@ -111,6 +114,39 @@
       --text-light: #f3f4f6;
       --text-dim: #6b7280;
       --red-curtain: #18181b;
+    }
+
+    /* Marquee font picker (#62/#63). The default matches v1 exactly; the
+     * alternate fonts only touch the NOW SHOWING banner and preserve the rest
+     * of the typography stack. */
+    body[data-marquee-font="bebas-neue"] {
+      --marquee-font-family: 'Bebas Neue', sans-serif;
+      --marquee-font-weight: 400;
+      --marquee-letter-spacing: 0.35em;
+    }
+
+    body[data-marquee-font="anton"] {
+      --marquee-font-family: 'Anton', sans-serif;
+      --marquee-font-weight: 400;
+      --marquee-letter-spacing: 0.22em;
+    }
+
+    body[data-marquee-font="oswald"] {
+      --marquee-font-family: 'Oswald', sans-serif;
+      --marquee-font-weight: 700;
+      --marquee-letter-spacing: 0.24em;
+    }
+
+    body[data-marquee-font="monoton"] {
+      --marquee-font-family: 'Monoton', cursive;
+      --marquee-font-weight: 400;
+      --marquee-letter-spacing: 0.12em;
+    }
+
+    body[data-marquee-font="playfair-display"] {
+      --marquee-font-family: 'Playfair Display', serif;
+      --marquee-font-weight: 900;
+      --marquee-letter-spacing: 0.14em;
     }
 
     /* The accent-colour picker (#66) writes a single hex into
@@ -281,9 +317,9 @@
       position: absolute;
       inset: 0;
       background:
-        radial-gradient(ellipse at 20% 0%, rgba(180,40,40,0.3) 0%, transparent 50%),
-        radial-gradient(ellipse at 50% 0%, rgba(180,40,40,0.4) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 0%, rgba(180,40,40,0.3) 0%, transparent 50%);
+        radial-gradient(ellipse at 20% 0%, color-mix(in srgb, var(--red-curtain) 58%, transparent) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--red-curtain) 72%, transparent) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 0%, color-mix(in srgb, var(--red-curtain) 58%, transparent) 0%, transparent 50%);
     }
 
     /* Gold inner trim on marquee */
@@ -291,7 +327,7 @@
       content: '';
       position: absolute;
       inset: 3px;
-      border: 2px solid rgba(200, 160, 50, 0.35);
+      border: 2px solid color-mix(in srgb, var(--accent-mid) 35%, transparent);
       pointer-events: none;
       z-index: 2;
     }
@@ -309,9 +345,10 @@
     }
 
     .marquee-text h1 {
-      font-family: 'Bebas Neue', sans-serif;
+      font-family: var(--marquee-font-family);
+      font-weight: var(--marquee-font-weight);
       font-size: clamp(3.5rem, 10vw, 8rem);
-      letter-spacing: 0.35em;
+      letter-spacing: var(--marquee-letter-spacing);
       color: var(--text-light);
       text-shadow:
         0 0 20px color-mix(in srgb, var(--accent-glow) 40%, transparent),
@@ -387,7 +424,7 @@
       pointer-events: none;
       display: none;
       box-shadow:
-        0 0 0 1px rgba(200, 160, 50, 0.35),
+        0 0 0 1px color-mix(in srgb, var(--accent-mid) 35%, transparent),
         0 2px 6px rgba(0, 0, 0, 0.6);
     }
     body.visual-progress-bar .progress-bar { display: block; }
@@ -434,7 +471,7 @@
       left: 3px;
       right: 3px;
       bottom: 3px;
-      border: 2px solid rgba(200, 160, 50, 0.25);
+      border: 2px solid color-mix(in srgb, var(--accent-mid) 25%, transparent);
       border-top: none;
       pointer-events: none;
       z-index: 5;
@@ -791,7 +828,7 @@
       font-size: clamp(0.8rem, 2vw, 1rem);
       letter-spacing: 0.1em;
       color: var(--accent-light);
-      background: rgba(200, 160, 50, 0.12);
+      background: color-mix(in srgb, var(--accent-mid) 12%, transparent);
       padding: 4px 12px;
       border-radius: 4px;
       text-transform: uppercase;
@@ -962,10 +999,10 @@
       width: 100%;
       max-width: 680px;
       background: rgba(20, 20, 20, 0.92);
-      border: 1px solid rgba(200, 160, 50, 0.25);
+      border: 1px solid color-mix(in srgb, var(--accent-mid) 25%, transparent);
       border-radius: 12px;
       padding: 28px 28px 24px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 30px rgba(200, 160, 50, 0.08);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 30px color-mix(in srgb, var(--accent-mid) 8%, transparent);
       font-family: 'Inter', sans-serif;
     }
 
@@ -994,7 +1031,7 @@
     .setup-tab {
       padding: 9px 12px;
       border-radius: 6px;
-      border: 1px solid rgba(200, 160, 50, 0.24);
+      border: 1px solid color-mix(in srgb, var(--accent-mid) 24%, transparent);
       background: rgba(255, 255, 255, 0.04);
       color: var(--text-dim);
       font-family: 'Bebas Neue', sans-serif;
@@ -1005,7 +1042,7 @@
     .setup-tab.active {
       border-color: var(--accent-light);
       color: var(--accent-light);
-      background: rgba(200, 160, 50, 0.12);
+      background: color-mix(in srgb, var(--accent-mid) 12%, transparent);
     }
     .setup-tab-panel { display: none; }
     .setup-tab-panel.active { display: block; }
@@ -1054,7 +1091,7 @@
     .setup-field select {
       width: 100%;
       background: #0a0a0a;
-      border: 1px solid rgba(200, 160, 50, 0.25);
+      border: 1px solid color-mix(in srgb, var(--accent-mid) 25%, transparent);
       border-radius: 6px;
       padding: 10px 12px;
       color: var(--text-light);
@@ -1065,7 +1102,7 @@
     .setup-field select:focus {
       outline: none;
       border-color: var(--accent-light);
-      box-shadow: 0 0 0 3px rgba(200, 160, 50, 0.15);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-mid) 15%, transparent);
     }
     .setup-field input::placeholder { color: #555; }
     .setup-field input[type="checkbox"] {
@@ -1086,7 +1123,7 @@
       align-items: center;
       min-height: 41px;
       padding: 10px 12px;
-      border: 1px solid rgba(200, 160, 50, 0.25);
+      border: 1px solid color-mix(in srgb, var(--accent-mid) 25%, transparent);
       border-radius: 6px;
       background: #0a0a0a;
       color: var(--text-light);
@@ -1112,7 +1149,7 @@
       flex: 1;
       padding: 11px 14px;
       border-radius: 6px;
-      border: 1px solid rgba(200, 160, 50, 0.35);
+      border: 1px solid color-mix(in srgb, var(--accent-mid) 35%, transparent);
       background: transparent;
       color: var(--text-light);
       font-family: 'Bebas Neue', sans-serif;
@@ -1283,6 +1320,16 @@
               <option value="bulbs">Bulbs</option>
               <option value="gold-line">Gold Line</option>
               <option value="none">None</option>
+            </select>
+          </div>
+          <div class="setup-field">
+            <label for="cfgVisualMarqueeFont">Marquee Font</label>
+            <select id="cfgVisualMarqueeFont" autocomplete="off">
+              <option value="bebas-neue">Bebas Neue</option>
+              <option value="anton">Anton</option>
+              <option value="oswald">Oswald</option>
+              <option value="monoton">Monoton</option>
+              <option value="playfair-display">Playfair Display</option>
             </select>
           </div>
         </div>
@@ -1594,6 +1641,7 @@
     const INFO_PANEL_MODES = ['on_tap', 'on_pause', 'always'];
     const BACKDROP_STYLES = ['fullscreen', 'ambient'];
     const FRAME_STYLES = ['bulbs', 'gold-line', 'none'];
+    const MARQUEE_FONTS = ['bebas-neue', 'anton', 'oswald', 'monoton', 'playfair-display'];
     // #23 — theme presets. Must mirror the enum in server/src/config.js.
     // Adding one here without updating the server will leak through (the
     // setup page reads localStorage), but the add-on schema will reject it.
@@ -1621,14 +1669,15 @@
       // the active theme's default".
       theme: 'classic-gold',
       accentColor: '',
+      marqueeFont: 'bebas-neue',
     };
 
-    // #28 helper — clamp a float read from URL hash / localStorage. Mirrors
+    // #28 helper — clamp a float read through the runtime config resolver.
+    // Mirrors
     // readIntClamped() defined further below but for floats (night mode
     // opacity).
     function readFloatClamped(key, defaultValue, min, max) {
-      const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
-      const raw = hash.get(key) || localStorage.getItem('pns.' + key);
+      const raw = readConfig(key);
       if (raw == null || raw === '') return defaultValue;
       const n = parseFloat(String(raw));
       if (!Number.isFinite(n)) return defaultValue;
@@ -1636,65 +1685,49 @@
     }
 
     function readInfoPanelMode(defaultValue) {
-      // Hash override takes precedence over localStorage so tablet operators can
-      // test modes without clearing storage — same pattern as readBool().
-      const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
-      const fromHash = hash.get('visualInfoPanelMode');
-      if (fromHash && INFO_PANEL_MODES.includes(fromHash)) return fromHash;
-      const fromStorage = localStorage.getItem('pns.visualInfoPanelMode');
-      if (fromStorage && INFO_PANEL_MODES.includes(fromStorage)) return fromStorage;
+      const value = String(readConfig('visualInfoPanelMode')).trim().toLowerCase();
+      if (value && INFO_PANEL_MODES.includes(value)) return value;
       return defaultValue;
     }
 
     function readBackdropStyle(defaultValue) {
-      // Same resolution order as readInfoPanelMode — hash > localStorage >
-      // default. Only known enum values are honoured.
-      const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
-      const fromHash = hash.get('visualBackdropStyle');
-      if (fromHash && BACKDROP_STYLES.includes(fromHash)) return fromHash;
-      const fromStorage = localStorage.getItem('pns.visualBackdropStyle');
-      if (fromStorage && BACKDROP_STYLES.includes(fromStorage)) return fromStorage;
+      const value = String(readConfig('visualBackdropStyle')).trim().toLowerCase();
+      if (value && BACKDROP_STYLES.includes(value)) return value;
       return defaultValue;
     }
 
     function readFrameStyle(defaultValue) {
-      const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
-      const fromHash = (hash.get('visualFrameStyle') || '').trim().toLowerCase();
-      if (fromHash && FRAME_STYLES.includes(fromHash)) return fromHash;
-      const fromStorage = (localStorage.getItem('pns.visualFrameStyle') || '').trim().toLowerCase();
-      if (fromStorage && FRAME_STYLES.includes(fromStorage)) return fromStorage;
+      const value = String(readConfig('visualFrameStyle')).trim().toLowerCase();
+      if (value && FRAME_STYLES.includes(value)) return value;
       return defaultValue;
     }
 
-    // #23 theme preset resolver — hash > localStorage > default. Unknown
-    // names fall back instead of throwing so a stale tablet picking a theme
-    // that's been renamed server-side still renders.
+    function readMarqueeFont(defaultValue) {
+      const value = String(readConfig('visualMarqueeFont')).trim().toLowerCase();
+      if (value && MARQUEE_FONTS.includes(value)) return value;
+      return defaultValue;
+    }
+
+    // #23 theme preset resolver. Unknown names fall back instead of throwing
+    // so a stale tablet picking a renamed theme still renders.
     function readVisualTheme(defaultValue) {
-      const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
-      const fromHash = hash.get('visualTheme');
-      if (fromHash && VISUAL_THEMES.includes(fromHash)) return fromHash;
-      const fromStorage = localStorage.getItem('pns.visualTheme');
-      if (fromStorage && VISUAL_THEMES.includes(fromStorage)) return fromStorage;
+      const value = String(readConfig('visualTheme')).trim().toLowerCase();
+      if (value && VISUAL_THEMES.includes(value)) return value;
       return defaultValue;
     }
 
-    // #66 accent colour resolver — hash > localStorage > default. Same
-    // strict #RRGGBB validation as the server's parseHexColor() so the
-    // contract is identical on both sides; bad input falls through to the
-    // theme default.
+    // #66 accent colour resolver. Same strict #RRGGBB validation as the
+    // server's parseHexColor() so the contract is identical on both sides;
+    // bad input falls through to the theme default.
     const HEX_RE = /^#[0-9a-f]{6}$/;
     function readAccentColor(defaultValue) {
-      const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
-      const fromHash = (hash.get('visualAccentColor') || '').trim().toLowerCase();
-      if (fromHash && HEX_RE.test(fromHash)) return fromHash;
-      const fromStorage = (localStorage.getItem('pns.visualAccentColor') || '').trim().toLowerCase();
-      if (fromStorage && HEX_RE.test(fromStorage)) return fromStorage;
+      const value = String(readConfig('visualAccentColor')).trim().toLowerCase();
+      if (value && HEX_RE.test(value)) return value;
       return defaultValue;
     }
 
     function readIntClamped(key, defaultValue, min, max) {
-      const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
-      const raw = hash.get(key) || localStorage.getItem('pns.' + key);
+      const raw = readConfig(key);
       if (raw == null || raw === '') return defaultValue;
       const n = parseInt(String(raw), 10);
       if (!Number.isFinite(n)) return defaultValue;
@@ -1709,6 +1742,7 @@
       VISUAL.genreChips = readBool('visualGenreChips', false);
       VISUAL.infoPanelMode = readInfoPanelMode('on_tap');
       VISUAL.frameStyle = readFrameStyle('bulbs');
+      VISUAL.marqueeFont = readMarqueeFont('bebas-neue');
       VISUAL.useBackdrops = readBool('visualUseBackdrops', false);
       VISUAL.backdropStyle = readBackdropStyle('fullscreen');
       VISUAL.backdropDelayMs = readIntClamped('visualBackdropDelayMs', 10000, 1000, 600000);
@@ -1716,11 +1750,7 @@
       VISUAL.burnInMitigation = readBool('visualBurnInMitigation', false);
       VISUAL.nudgeIntervalMs  = readIntClamped('visualNudgeIntervalMs', 60000, 5000, 600000);
       VISUAL.nudgeAmplitudePx = readIntClamped('visualNudgeAmplitudePx', 4, 1, 16);
-      {
-        const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
-        VISUAL.nightModeEntity = hash.get('visualNightModeEntity')
-          || localStorage.getItem('pns.visualNightModeEntity') || '';
-      }
+      VISUAL.nightModeEntity = readConfig('visualNightModeEntity');
       VISUAL.nightModeOpacity = readFloatClamped('visualNightModeOpacity', 0.4, 0, 0.95);
       // #23/#66 theme + accent. Local resolution first; server overrides
       // below if /api/config responds with non-empty values.
@@ -1743,6 +1773,9 @@
         }
         if (v && typeof v.frameStyle === 'string' && FRAME_STYLES.includes(v.frameStyle)) {
           VISUAL.frameStyle = v.frameStyle;
+        }
+        if (v && typeof v.marqueeFont === 'string' && MARQUEE_FONTS.includes(v.marqueeFont)) {
+          VISUAL.marqueeFont = v.marqueeFont;
         }
         if (v && typeof v.useBackdrops === 'boolean') VISUAL.useBackdrops = v.useBackdrops;
         if (v && typeof v.backdropStyle === 'string' && BACKDROP_STYLES.includes(v.backdropStyle)) {
@@ -1881,6 +1914,7 @@
       // #65 frame style. The data attribute drives CSS, while syncFrameStyle()
       // owns the bulb DOM and chase timer so non-bulb modes do no extra work.
       document.body.dataset.frameStyle = VISUAL.frameStyle;
+      document.body.dataset.marqueeFont = VISUAL.marqueeFont;
       syncFrameStyle();
       // #21 backdrop art. Two body classes:
       //   backdrop-ambient-mode  — flag for CSS to reveal the blurred layer
@@ -1941,6 +1975,7 @@
       ['plexToken', 'cfgPlexToken', ''],
       ['visualTheme', 'cfgVisualTheme', 'classic-gold'],
       ['visualFrameStyle', 'cfgVisualFrameStyle', 'bulbs'],
+      ['visualMarqueeFont', 'cfgVisualMarqueeFont', 'bebas-neue'],
       ['visualAccentColor', 'cfgVisualAccentColor', ''],
       ['visualInfoPanelMode', 'cfgVisualInfoPanelMode', 'on_tap'],
       ['visualBackdropStyle', 'cfgVisualBackdropStyle', 'fullscreen'],
@@ -3082,7 +3117,7 @@
       idleContent.classList.remove('visible');
 
       // Ambient glow
-      ambientGlow.style.background = `radial-gradient(ellipse at 50% 40%, rgba(200, 160, 50, 0.08) 0%, transparent 70%)`;
+      ambientGlow.style.background = 'radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--accent-mid) 8%, transparent) 0%, transparent 70%)';
       ambientGlow.classList.add('active');
 
       // Progress bar — updated every poll; no-ops when toggle is off.

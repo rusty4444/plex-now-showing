@@ -64,6 +64,7 @@ export_opt VISUAL_RATINGS_BADGES      visual_ratings_badges
 export_opt VISUAL_GENRE_CHIPS         visual_genre_chips
 export_opt VISUAL_INFO_PANEL_MODE     visual_info_panel_mode
 export_opt VISUAL_FRAME_STYLE         visual_frame_style
+export_opt VISUAL_MARQUEE_FONT        visual_marquee_font
 export_opt VISUAL_USE_BACKDROPS       visual_use_backdrops
 export_opt VISUAL_BACKDROP_STYLE      visual_backdrop_style
 export_opt VISUAL_BACKDROP_DELAY_MS   visual_backdrop_delay_ms
@@ -98,6 +99,7 @@ bashio::log.info "Visual ratings badges:    ${VISUAL_RATINGS_BADGES:-false}"
 bashio::log.info "Visual genre chips:       ${VISUAL_GENRE_CHIPS:-false}"
 bashio::log.info "Info panel mode:          ${VISUAL_INFO_PANEL_MODE:-on_tap}"
 bashio::log.info "Frame style:              ${VISUAL_FRAME_STYLE:-bulbs}"
+bashio::log.info "Marquee font:             ${VISUAL_MARQUEE_FONT:-bebas-neue}"
 bashio::log.info "Backdrop art:             ${VISUAL_USE_BACKDROPS:-false} (${VISUAL_BACKDROP_STYLE:-fullscreen}, delay ${VISUAL_BACKDROP_DELAY_MS:-10000}ms)"
 bashio::log.info "Burn-in mitigation:       ${VISUAL_BURN_IN_MITIGATION:-false} (nudge ${VISUAL_NUDGE_AMPLITUDE_PX:-4}px every ${VISUAL_NUDGE_INTERVAL_MS:-60000}ms, night entity=${VISUAL_NIGHT_MODE_ENTITY:-<none>}, opacity=${VISUAL_NIGHT_MODE_OPACITY:-0.4})"
 bashio::log.info "Visual theme:             ${VISUAL_THEME:-classic-gold}"

@@ -161,6 +161,22 @@ test('VISUAL_FRAME_STYLE defaults to bulbs and accepts the three frame modes', (
   assert.equal(bogus.config.visual.frameStyle, 'bulbs');
 });
 
+test('VISUAL_MARQUEE_FONT defaults to Bebas Neue and accepts supported fonts', () => {
+  const def = loadConfig({ SUPERVISOR_TOKEN: 'x' });
+  assert.equal(def.config.visual.marqueeFont, 'bebas-neue');
+
+  for (const s of ['bebas-neue', 'anton', 'oswald', 'monoton', 'playfair-display']) {
+    const { config } = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_MARQUEE_FONT: s });
+    assert.equal(config.visual.marqueeFont, s);
+  }
+
+  const upper = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_MARQUEE_FONT: 'OSWALD' });
+  assert.equal(upper.config.visual.marqueeFont, 'oswald');
+
+  const bogus = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_MARQUEE_FONT: 'comic-sans' });
+  assert.equal(bogus.config.visual.marqueeFont, 'bebas-neue');
+});
+
 test('VISUAL_BACKDROP_DELAY_MS is clamped to [1000, 600000]', () => {
   const ok = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_BACKDROP_DELAY_MS: '15000' });
   assert.equal(ok.config.visual.backdropDelayMs, 15000);

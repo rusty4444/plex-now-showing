@@ -122,7 +122,7 @@ Goal: beyond one session, one server, one language.
 PR checklist:
 
 - [ ] References the tracking issue (`Closes #N`)
-- [ ] Updates `CHANGELOG.md` under `## [Unreleased]`
+- [ ] Updates `CHANGELOG.md` under the current release heading
 - [ ] Updates this `DEV_README.md` checkbox
 - [ ] No tokens, secrets, or personal URLs in the diff
 - [ ] Screenshots (if visual) or recording (if interaction)

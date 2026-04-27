@@ -1,7 +1,7 @@
 {
   "name": "plex-now-showing-server",
-  "version": "0.1.0",
-  "description": "Serves the Plex Now Showing HTML and proxies Home Assistant + Plex so tokens stay server-side.",
+  "version": "2.0.0",
+  "description": "Serves the Now Showing kiosk and proxies Home Assistant plus Plex metadata so tokens stay server-side.",
   "type": "module",
   "engines": {
     "node": ">=20"
