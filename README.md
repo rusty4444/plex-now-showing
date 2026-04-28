@@ -126,7 +126,7 @@ because Home Assistant Supervisor supplies the API token automatically.
    https://developers.home-assistant.io/docs/add-ons/presentation/#offering-stable-and-canary-version
 
 4. Install **Plex Now Showing**.
-5. Configure the add-on:
+5. Configure the add-on (all config can be done from the web UI):
    - `backend`: `plex`, `jellyfin`, `emby`, or `kodi`
    - `player`: optional exact entity ID, for example `media_player.kodi`
    - `plex_url` and `plex_token`: optional, Plex enhanced metadata only
