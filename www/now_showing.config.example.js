@@ -50,6 +50,7 @@ window.NOW_SHOWING_CONFIG = {
   // visualFrameStyle: 'bulbs',
   // visualMarqueeFont: 'bebas-neue',
   // visualAccentColor: '',
+  // visualCornerRadiusPx: 0,
   // visualProgressBar: false,
   // visualInfoPanelMode: 'on_tap',
 };

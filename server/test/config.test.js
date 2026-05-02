@@ -331,6 +331,23 @@ test('VISUAL_ACCENT_COLOR accepts #RRGGBB and rejects everything else', () => {
   assert.equal(garbage.config.visual.accentColor, '');
 });
 
+test('VISUAL_CORNER_RADIUS_PX defaults to 0 and clamps to [0, 48]', () => {
+  const def = loadConfig({ SUPERVISOR_TOKEN: 'x' });
+  assert.equal(def.config.visual.cornerRadiusPx, 0);
+
+  const ok = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_CORNER_RADIUS_PX: '16' });
+  assert.equal(ok.config.visual.cornerRadiusPx, 16);
+
+  const tooLow = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_CORNER_RADIUS_PX: '-5' });
+  assert.equal(tooLow.config.visual.cornerRadiusPx, 0);
+
+  const tooHigh = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_CORNER_RADIUS_PX: '99' });
+  assert.equal(tooHigh.config.visual.cornerRadiusPx, 48);
+
+  const garbage = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_CORNER_RADIUS_PX: 'round' });
+  assert.equal(garbage.config.visual.cornerRadiusPx, 0);
+});
+
 test('switcher is off by default, on requires FULLY_KIOSKS', () => {
   const off = loadConfig({ SUPERVISOR_TOKEN: 'x' });
   assert.equal(off.config.switcherEnabled, false);

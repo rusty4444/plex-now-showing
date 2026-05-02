@@ -65,6 +65,7 @@ probe of `/api`) and switches to `/api/state`. Plex-only metadata calls use
 | `visual_night_mode_opacity` | `0.4` | Dim overlay opacity when night mode is active. Clamped to `0` – `0.95`. |
 | `visual_theme` | `classic-gold` | Theme preset — one of `classic-gold` / `art-deco-silver` / `neon-80s` / `minimalist-dark`. Reskins the bulbs, marquee glow, progress bar, and ratings badges. |
 | `visual_accent_color` | _empty_ | Optional `#RRGGBB` hex (e.g. `#ff5500`) that overrides the active theme's accent ramp. Empty = use theme default. Strict format — short form, names, and `rgb()` are rejected. |
+| `visual_corner_radius_px` | `0` | Corner radius in pixels for the inner marquee, poster, and info panel. Clamped `0`-`48`; default `0` keeps the sharp cinema look. |
 | `log_level` | `info` | s6 / add-on log verbosity. |
 
 ### Visual toggles (V2)
@@ -85,10 +86,12 @@ through to the browser automatically — no rebuild, no per-tablet config.
 | `visual_burn_in_mitigation` | Master switch for long-running-kiosk protection. When on, the whole UI drifts by a few pixels every minute (configurable via `visual_nudge_interval_ms` + `visual_nudge_amplitude_px`) using a smooth 400 ms GPU transform, and a dim overlay can be triggered by an HA entity or the OS dark-mode media query. Off by default. |
 | `visual_night_mode_entity` | Optional HA entity id (`input_boolean`, `switch`, or `binary_sensor`). When its state is `on`, the kiosk fades in a dim overlay (opacity from `visual_night_mode_opacity`, default 40%). Leave empty and the kiosk uses `window.matchMedia('(prefers-color-scheme: dark)')` instead — handy for tablets that flip themselves at night. Requires `visual_burn_in_mitigation: true`. |
 | `visual_theme` / `visual_accent_color` | Top-level look-and-feel (#23 + #66). `visual_theme` picks one of four presets via `<body data-theme>`: `classic-gold` (default, original warm bulb look), `art-deco-silver` (cooler chrome highlights and brushed-metal glow), `neon-80s` (hot pink + cyan with magenta bulbs), or `minimalist-dark` (clean dark UI, ornament backed off). `visual_accent_color` is an optional strict `#RRGGBB` override (e.g. `#ff5500`) that re-derives the four-stop accent ramp via CSS `color-mix(in srgb, ...)` — leave blank to use the theme's default ramp. Both are presentation-only; nothing on the server changes. |
+| `visual_corner_radius_px` | Corner / frame radius slider (#68). `0` preserves the original sharp poster and marquee. Higher values round the inner marquee, poster, and info panel while leaving the outer bulb frame square, so it composes with `visual_frame_style: bulbs`. |
 
 HACS-only users (no add-on / server) can open `#setup`, switch to the
 **Display** tab, and configure every visual toggle without editing code. The
-form writes the same per-tablet `pns.*` keys the kiosk reads at runtime.
+wide preview at the top of the tab updates as controls change, and the form
+writes the same per-tablet `pns.*` keys the kiosk reads at runtime.
 Advanced users can still set `pns.visualProgressBar=true` /
 `pns.visualRatingsBadges=true` / `pns.visualGenreChips=true` /
 `pns.visualInfoPanelMode=on_pause` / `pns.visualFrameStyle=gold-line` /
@@ -97,7 +100,8 @@ Advanced users can still set `pns.visualProgressBar=true` /
 `pns.visualBurnInMitigation=true` (with optional
 `pns.visualNudgeIntervalMs`, `pns.visualNudgeAmplitudePx`,
 `pns.visualNightModeEntity`, `pns.visualNightModeOpacity`) /
-`pns.visualTheme=art-deco-silver` / `pns.visualAccentColor=#ff5500` in
+`pns.visualTheme=art-deco-silver` / `pns.visualAccentColor=#ff5500` /
+`pns.visualCornerRadiusPx=16` in
 `localStorage`, or add the matching
 `#visualProgressBar=true` / `#visualRatingsBadges=true` /
 `#visualGenreChips=true` / `#visualInfoPanelMode=always` /
@@ -105,7 +109,8 @@ Advanced users can still set `pns.visualProgressBar=true` /
 `#visualMarqueeFont=monoton` /
 `#visualUseBackdrops=true` / `#visualBackdropStyle=ambient` /
 `#visualBurnInMitigation=true` /
-`#visualTheme=neon-80s` / `#visualAccentColor=%23ff5500`
+`#visualTheme=neon-80s` / `#visualAccentColor=%23ff5500` /
+`#visualCornerRadiusPx=16`
 to the kiosk URL hash.
 
 The setup page also includes an **Automation** tab. It links to the Home

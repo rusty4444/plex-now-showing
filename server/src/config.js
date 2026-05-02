@@ -143,6 +143,9 @@ export function loadConfig(env = process.env) {
       // Hex validation is strict (#RRGGBB only) so a typo can't break the
       // whole UI — falls back to '' (theme default) on bad input.
       accentColor: parseHexColor(env.VISUAL_ACCENT_COLOR, ''),
+      // Corner / frame radius slider (#68). Applies to the inner marquee,
+      // poster, and info panel only; the outer bulb frame stays square.
+      cornerRadiusPx: parseIntClamped(env.VISUAL_CORNER_RADIUS_PX, 0, 0, 48),
     },
     // Where the static HTML lives (overridden in tests)
     staticDir: env.STATIC_DIR || new URL('../../www', import.meta.url).pathname,

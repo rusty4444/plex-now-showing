@@ -98,6 +98,7 @@ options:
   # default ramp).
   visual_theme: classic-gold
   visual_accent_color: ""
+  visual_corner_radius_px: 0
   log_level: info
 schema:
   display_mode: "list(now_showing|coming_soon)"
@@ -149,5 +150,6 @@ schema:
   visual_night_mode_opacity: "float(0,0.95)"
   visual_theme: "list(classic-gold|art-deco-silver|neon-80s|minimalist-dark)"
   visual_accent_color: "str?"
+  visual_corner_radius_px: "int(0,48)"
   log_level: "list(trace|debug|info|notice|warning|error|fatal)?"
 image: ghcr.io/rusty4444/plex-now-showing-{arch}

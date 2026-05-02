@@ -45,6 +45,7 @@
       --marquee-font-family: 'Bebas Neue', sans-serif;
       --marquee-font-weight: 400;
       --marquee-letter-spacing: 0.35em;
+      --pns-corner-radius: 0px;
     }
 
     body[data-theme="classic-gold"] {
@@ -288,6 +289,7 @@
       border-image: linear-gradient(135deg, var(--accent-light), var(--accent-dark), var(--accent-light), var(--accent-dark)) 1;
       overflow: hidden;
       z-index: 2;
+      border-radius: var(--pns-corner-radius) var(--pns-corner-radius) 0 0;
     }
 
     /* Red curtain background */
@@ -367,6 +369,7 @@
       border-image: linear-gradient(135deg, var(--accent-light), var(--accent-dark), var(--accent-light), var(--accent-dark)) 1;
       overflow: hidden;
       background: var(--bg-marquee);
+      border-radius: 0 0 var(--pns-corner-radius) var(--pns-corner-radius);
     }
 
     /* ===== BURN-IN MITIGATION (#28) =====
@@ -475,6 +478,7 @@
       border-top: none;
       pointer-events: none;
       z-index: 5;
+      border-radius: 0 0 max(0px, calc(var(--pns-corner-radius) - 6px)) max(0px, calc(var(--pns-corner-radius) - 6px));
     }
 
     /* ===== POSTER AREA ===== */
@@ -490,6 +494,7 @@
       background-color: var(--bg-marquee);
       opacity: 0;
       transition: opacity 0.8s ease;
+      border-radius: inherit;
     }
 
     .landscape-mode .poster-area {
@@ -800,6 +805,8 @@
       padding: 28px 24px 32px;
       transform: translateY(30px);
       transition: transform 0.4s ease;
+      border-radius: var(--pns-corner-radius) var(--pns-corner-radius) 0 0;
+      overflow: hidden;
     }
 
     .info-overlay.visible .info-panel {
@@ -1021,7 +1028,7 @@
 
     .setup-card {
       width: 100%;
-      max-width: 680px;
+      max-width: 960px;
       background: rgba(20, 20, 20, 0.92);
       border: 1px solid color-mix(in srgb, var(--accent-mid) 25%, transparent);
       border-radius: 12px;
@@ -1163,6 +1170,254 @@
       grid-template-columns: 1fr auto;
       gap: 8px;
       align-items: center;
+    }
+    .setup-range-row {
+      display: grid;
+      grid-template-columns: 1fr 56px;
+      gap: 10px;
+      align-items: center;
+    }
+    .setup-range-row output {
+      color: var(--text-dim);
+      font-size: 0.78rem;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    .setup-visual-preview {
+      --preview-accent-light: var(--accent-light);
+      --preview-accent-mid: var(--accent-mid);
+      --preview-accent-dark: var(--accent-dark);
+      --preview-accent-glow: var(--accent-glow);
+      --preview-bg-dark: var(--bg-dark);
+      --preview-bg-marquee: var(--bg-marquee);
+      --preview-text-light: var(--text-light);
+      --preview-text-dim: var(--text-dim);
+      --preview-red-curtain: var(--red-curtain);
+      --preview-radius: 0px;
+      --preview-nudge-x: 0px;
+      --preview-nudge-y: 0px;
+      position: relative;
+      margin-bottom: 18px;
+      padding: 10px;
+      border: 1px solid color-mix(in srgb, var(--preview-accent-mid) 38%, transparent);
+      background:
+        radial-gradient(circle at 20% 18%, color-mix(in srgb, var(--preview-accent-glow) 12%, transparent), transparent 32%),
+        var(--preview-bg-dark);
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.42);
+      overflow: hidden;
+      transition: border-color 0.18s ease, background 0.18s ease;
+    }
+    .setup-visual-preview[data-frame-style="gold-line"] {
+      border: 2px solid color-mix(in srgb, var(--preview-accent-light) 78%, transparent);
+      box-shadow:
+        inset 0 0 0 5px color-mix(in srgb, var(--preview-accent-dark) 36%, transparent),
+        0 14px 36px rgba(0, 0, 0, 0.42);
+    }
+    .setup-visual-preview[data-frame-style="none"] {
+      border-color: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.36);
+    }
+    .setup-preview-bulbs {
+      position: absolute;
+      inset: 5px;
+      pointer-events: none;
+      z-index: 3;
+    }
+    .setup-visual-preview[data-frame-style="gold-line"] .setup-preview-bulbs,
+    .setup-visual-preview[data-frame-style="none"] .setup-preview-bulbs {
+      display: none;
+    }
+    .setup-preview-bulbs span {
+      position: absolute;
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--preview-accent-light);
+      box-shadow: 0 0 10px color-mix(in srgb, var(--preview-accent-glow) 70%, transparent);
+    }
+    .setup-preview-bulbs span:nth-child(1) { left: 4%; top: 0; }
+    .setup-preview-bulbs span:nth-child(2) { left: 22%; top: 0; opacity: 0.45; }
+    .setup-preview-bulbs span:nth-child(3) { left: 40%; top: 0; }
+    .setup-preview-bulbs span:nth-child(4) { left: 58%; top: 0; opacity: 0.45; }
+    .setup-preview-bulbs span:nth-child(5) { left: 76%; top: 0; }
+    .setup-preview-bulbs span:nth-child(6) { right: 4%; top: 0; opacity: 0.45; }
+    .setup-preview-bulbs span:nth-child(7) { left: 0; top: 28%; }
+    .setup-preview-bulbs span:nth-child(8) { right: 0; top: 28%; opacity: 0.45; }
+    .setup-preview-bulbs span:nth-child(9) { left: 0; bottom: 8%; opacity: 0.45; }
+    .setup-preview-bulbs span:nth-child(10) { right: 0; bottom: 8%; }
+    .setup-preview-stage {
+      position: relative;
+      overflow: hidden;
+      aspect-ratio: 16 / 9;
+      min-height: 260px;
+      background: var(--preview-bg-marquee);
+      color: var(--preview-text-light);
+      border: 3px solid var(--preview-accent-mid);
+      border-radius: var(--preview-radius);
+      transition: transform 0.18s ease;
+    }
+    .setup-visual-preview.burn-in-on .setup-preview-stage {
+      transform: translate3d(var(--preview-nudge-x), var(--preview-nudge-y), 0);
+    }
+    .setup-preview-marquee {
+      height: 25%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-bottom: 3px solid var(--preview-accent-mid);
+      border-radius: var(--preview-radius) var(--preview-radius) 0 0;
+      background:
+        repeating-linear-gradient(90deg, rgba(0,0,0,0.15) 0 2px, transparent 2px 16px),
+        linear-gradient(180deg, #7a1a1a, var(--preview-red-curtain), #2a0808);
+    }
+    .setup-preview-marquee span {
+      font-family: var(--preview-marquee-font, var(--marquee-font-family));
+      font-weight: var(--preview-marquee-weight, var(--marquee-font-weight));
+      letter-spacing: var(--preview-marquee-spacing, var(--marquee-letter-spacing));
+      color: var(--preview-text-light);
+      font-size: clamp(1.15rem, 5vw, 3.3rem);
+      text-shadow:
+        0 0 14px color-mix(in srgb, var(--preview-accent-glow) 46%, transparent),
+        0 2px 4px rgba(0, 0, 0, 0.65);
+      white-space: nowrap;
+    }
+    .setup-preview-poster {
+      position: relative;
+      height: 75%;
+      overflow: hidden;
+      border-radius: 0 0 var(--preview-radius) var(--preview-radius);
+      background:
+        radial-gradient(circle at 28% 28%, color-mix(in srgb, var(--preview-accent-glow) 16%, transparent), transparent 24%),
+        linear-gradient(135deg, #171717, #050505);
+    }
+    .setup-preview-backdrop {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      background:
+        linear-gradient(135deg, color-mix(in srgb, var(--preview-accent-light) 42%, transparent), transparent 38%),
+        radial-gradient(circle at 74% 34%, rgba(255,255,255,0.22), transparent 30%),
+        linear-gradient(180deg, #172033, #090b11);
+      filter: blur(8px) brightness(0.72);
+      transform: scale(1.08);
+      transition: opacity 0.18s ease;
+    }
+    .setup-visual-preview.backdrop-on .setup-preview-backdrop { opacity: 0.82; }
+    .setup-preview-art {
+      position: absolute;
+      left: 7%;
+      top: 12%;
+      bottom: 12%;
+      width: 28%;
+      border: 2px solid color-mix(in srgb, var(--preview-accent-light) 64%, transparent);
+      border-radius: max(2px, calc(var(--preview-radius) * 0.45));
+      background:
+        linear-gradient(160deg, color-mix(in srgb, var(--preview-accent-light) 32%, transparent), transparent 38%),
+        linear-gradient(180deg, #263040, #111318);
+      box-shadow:
+        0 12px 26px rgba(0,0,0,0.5),
+        0 0 20px color-mix(in srgb, var(--preview-accent-glow) 18%, transparent);
+    }
+    .setup-preview-copy {
+      position: absolute;
+      left: 40%;
+      right: 7%;
+      top: 14%;
+      bottom: 12%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .setup-preview-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1rem, 3vw, 2.15rem);
+      font-weight: 900;
+      line-height: 1.05;
+    }
+    .setup-preview-subtitle {
+      color: var(--preview-text-dim);
+      font-size: 0.82rem;
+    }
+    .setup-preview-progress {
+      display: none;
+      height: 6px;
+      width: 78%;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(0,0,0,0.72);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .setup-visual-preview.progress-on .setup-preview-progress { display: block; }
+    .setup-preview-progress span {
+      display: block;
+      height: 100%;
+      width: 62%;
+      background: linear-gradient(90deg, var(--preview-accent-dark), var(--preview-accent-light), var(--preview-accent-glow));
+    }
+    .setup-preview-ratings,
+    .setup-preview-genres {
+      display: none;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .setup-visual-preview.ratings-on .setup-preview-ratings,
+    .setup-visual-preview.genres-on .setup-preview-genres { display: flex; }
+    .setup-preview-ratings span,
+    .setup-preview-genres span,
+    .setup-preview-meta span {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      padding: 3px 8px;
+      border-radius: max(3px, calc(var(--preview-radius) * 0.25));
+      background: color-mix(in srgb, var(--preview-accent-mid) 18%, rgba(0,0,0,0.55));
+      border: 1px solid color-mix(in srgb, var(--preview-accent-light) 22%, transparent);
+      color: var(--preview-text-light);
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+    .setup-preview-genres span {
+      border-radius: 999px;
+      background: rgba(80, 110, 150, 0.28);
+    }
+    .setup-preview-panel {
+      display: none;
+      margin-top: 2px;
+      padding: 12px;
+      border-radius: max(0px, calc(var(--preview-radius) * 0.7));
+      background: linear-gradient(to top, rgba(0,0,0,0.86), rgba(0,0,0,0.52));
+      border: 1px solid color-mix(in srgb, var(--preview-accent-mid) 24%, transparent);
+    }
+    .setup-visual-preview.info-on .setup-preview-panel { display: block; }
+    .setup-preview-panel strong {
+      display: block;
+      margin-bottom: 4px;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+    }
+    .setup-preview-panel p {
+      color: var(--preview-text-dim);
+      font-size: 0.72rem;
+      line-height: 1.35;
+    }
+    .setup-preview-night {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: #000;
+      opacity: 0;
+      transition: opacity 0.18s ease;
+    }
+    .setup-visual-preview.burn-in-on .setup-preview-night {
+      opacity: var(--preview-night-opacity, 0.18);
+    }
+    .setup-preview-caption {
+      margin-top: 8px;
+      color: var(--text-dim);
+      font-size: 0.72rem;
+      text-align: center;
     }
     .setup-copy {
       min-height: 130px;
@@ -1413,6 +1668,37 @@
 
       <div class="setup-tab-panel" id="setupPanelDisplay" role="tabpanel" aria-labelledby="setupTabDisplay" data-setup-panel="display">
         <div class="setup-section-title">Theme</div>
+        <div class="setup-visual-preview" id="setupVisualPreview" data-frame-style="bulbs" aria-live="polite">
+          <div class="setup-preview-bulbs" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <div class="setup-preview-stage">
+            <div class="setup-preview-marquee"><span id="setupPreviewMarquee">NOW SHOWING</span></div>
+            <div class="setup-preview-poster">
+              <div class="setup-preview-backdrop"></div>
+              <div class="setup-preview-art"></div>
+              <div class="setup-preview-copy">
+                <div class="setup-preview-title">Theatre Preview</div>
+                <div class="setup-preview-subtitle">Season 2, Episode 4 / Paused</div>
+                <div class="setup-preview-progress"><span></span></div>
+                <div class="setup-preview-ratings">
+                  <span>IMDb 8.7</span><span>RT 94%</span>
+                </div>
+                <div class="setup-preview-genres">
+                  <span>Sci-Fi</span><span>Drama</span>
+                </div>
+                <div class="setup-preview-panel">
+                  <strong>Info panel</strong>
+                  <div class="setup-preview-meta"><span>TV-14</span><span>48m</span></div>
+                  <p>Use this preview to test the setup controls before saving them to the kiosk.</p>
+                </div>
+              </div>
+              <div class="setup-preview-night"></div>
+            </div>
+          </div>
+          <div class="setup-preview-caption" id="setupPreviewCaption">Classic Gold / Bulbs / Sharp corners</div>
+        </div>
         <div class="setup-field-grid">
           <div class="setup-field">
             <label for="cfgVisualTheme">Theme Preset</label>
@@ -1449,6 +1735,15 @@
             <input id="cfgVisualAccentColorPicker" type="color" value="#c8a032" aria-label="Pick accent color">
           </div>
           <div class="hint">Leave blank for the theme default. Strict #RRGGBB only.</div>
+        </div>
+
+        <div class="setup-field">
+          <label for="cfgVisualCornerRadiusPx">Corner Radius</label>
+          <div class="setup-range-row">
+            <input id="cfgVisualCornerRadiusPx" type="range" min="0" max="48" step="1" autocomplete="off">
+            <output id="cfgVisualCornerRadiusPxValue" for="cfgVisualCornerRadiusPx">0px</output>
+          </div>
+          <div class="hint">Rounds the marquee, poster, and info panel. The outer bulb frame stays square.</div>
         </div>
 
         <div class="setup-section-title">Info Panel</div>
@@ -1869,6 +2164,7 @@
       // the active theme's default".
       theme: 'classic-gold',
       accentColor: '',
+      cornerRadiusPx: 0,
       marqueeFont: 'bebas-neue',
     };
 
@@ -1956,6 +2252,7 @@
       // below if /api/config responds with non-empty values.
       VISUAL.theme = readVisualTheme('classic-gold');
       VISUAL.accentColor = readAccentColor('');
+      VISUAL.cornerRadiusPx = readIntClamped('visualCornerRadiusPx', 0, 0, 48);
 
       await serverModeReady;
       if (!SERVER_MODE) return;
@@ -2008,6 +2305,9 @@
         if (v && typeof v.accentColor === 'string') {
           const c = v.accentColor.trim().toLowerCase();
           VISUAL.accentColor = (c === '' || HEX_RE.test(c)) ? c : '';
+        }
+        if (v && Number.isFinite(v.cornerRadiusPx)) {
+          VISUAL.cornerRadiusPx = Math.max(0, Math.min(48, v.cornerRadiusPx));
         }
       } catch (err) {
         console.warn('[plex-now-showing] /api/config fetch failed — using local defaults.', err);
@@ -2166,6 +2466,10 @@
       } else {
         document.body.style.removeProperty('--accent-override');
       }
+
+      // #68 corner radius. Applies only to inner panels through CSS custom
+      // property consumers; the outer bulb frame remains square.
+      document.documentElement.style.setProperty('--pns-corner-radius', `${VISUAL.cornerRadiusPx || 0}px`);
     }
 
     // ===== SETUP PAGE CONTROLLER (#setup) =====
@@ -2198,6 +2502,7 @@
       ['visualFrameStyle', 'cfgVisualFrameStyle', 'bulbs'],
       ['visualMarqueeFont', 'cfgVisualMarqueeFont', 'bebas-neue'],
       ['visualAccentColor', 'cfgVisualAccentColor', ''],
+      ['visualCornerRadiusPx', 'cfgVisualCornerRadiusPx', '0'],
       ['visualInfoPanelMode', 'cfgVisualInfoPanelMode', 'on_tap'],
       ['visualBackdropStyle', 'cfgVisualBackdropStyle', 'fullscreen'],
       ['visualBackdropDelayMs', 'cfgVisualBackdropDelayMs', '10000'],
@@ -2230,6 +2535,7 @@
       comingSoonShowsCount: { min: 0, max: 50, fallback: 5, float: false },
       comingSoonCycleInterval: { min: 2, max: 300, fallback: 8, float: false },
       comingSoonDaysOffset: { min: 0, max: 365, fallback: 0, float: false },
+      visualCornerRadiusPx: { min: 0, max: 48, fallback: 0, float: false },
     };
     const ACCENT_PICKER_DEFAULT = '#c8a032';
     const BLUEPRINT_URL = 'https://raw.githubusercontent.com/rusty4444/plex-now-showing/dev/blueprints/automation/rusty4444/plex_now_showing_display.yaml';
@@ -2252,6 +2558,83 @@
       streaming: 'Optional. Pin a Roku, Google TV, Android TV, Apple TV, or similar entity.',
       kaleidescape: 'Optional. Pin your Kaleidescape player if you have multiple rooms.',
     };
+    const SETUP_THEME_PREVIEW = {
+      'classic-gold': {
+        label: 'Classic Gold',
+        accentLight: '#e8c84a',
+        accentMid: '#c9a73b',
+        accentDark: '#8b6f2a',
+        accentGlow: '#ffd75e',
+        bgDark: '#0a0a0a',
+        bgMarquee: '#111111',
+        textLight: '#f5f0e0',
+        textDim: '#998c6e',
+        redCurtain: '#5c1010',
+      },
+      'art-deco-silver': {
+        label: 'Art Deco Silver',
+        accentLight: '#e6e8ee',
+        accentMid: '#b9bcc6',
+        accentDark: '#6f7480',
+        accentGlow: '#f7f9ff',
+        bgDark: '#0c0e12',
+        bgMarquee: '#14171c',
+        textLight: '#ecedf2',
+        textDim: '#8d909a',
+        redCurtain: '#2b3340',
+      },
+      'neon-80s': {
+        label: 'Neon 80s',
+        accentLight: '#ff5cf0',
+        accentMid: '#c026d3',
+        accentDark: '#6b21a8',
+        accentGlow: '#00e5ff',
+        bgDark: '#0a0420',
+        bgMarquee: '#15082e',
+        textLight: '#fff0ff',
+        textDim: '#a878c8',
+        redCurtain: '#1a0838',
+      },
+      'minimalist-dark': {
+        label: 'Minimalist Dark',
+        accentLight: '#e5e7eb',
+        accentMid: '#9ca3af',
+        accentDark: '#4b5563',
+        accentGlow: '#f9fafb',
+        bgDark: '#050505',
+        bgMarquee: '#0a0a0a',
+        textLight: '#f3f4f6',
+        textDim: '#6b7280',
+        redCurtain: '#18181b',
+      },
+    };
+    const SETUP_FONT_PREVIEW = {
+      'bebas-neue': { family: "'Bebas Neue', sans-serif", weight: '400', spacing: '0.35em', label: 'Bebas Neue' },
+      anton: { family: "'Anton', sans-serif", weight: '400', spacing: '0.22em', label: 'Anton' },
+      oswald: { family: "'Oswald', sans-serif", weight: '700', spacing: '0.24em', label: 'Oswald' },
+      monoton: { family: "'Monoton', cursive", weight: '400', spacing: '0.12em', label: 'Monoton' },
+      'playfair-display': { family: "'Playfair Display', serif", weight: '900', spacing: '0.14em', label: 'Playfair Display' },
+    };
+    const SETUP_VISUAL_FIELD_IDS = [
+      'cfgVisualTheme',
+      'cfgVisualFrameStyle',
+      'cfgVisualMarqueeFont',
+      'cfgVisualAccentColor',
+      'cfgVisualAccentColorPicker',
+      'cfgVisualCornerRadiusPx',
+      'cfgVisualProgressBar',
+      'cfgVisualRatingsBadges',
+      'cfgVisualGenreChips',
+      'cfgVisualInfoPanelMode',
+      'cfgVisualUseBackdrops',
+      'cfgVisualBackdropStyle',
+      'cfgVisualBackdropDelayMs',
+      'cfgVisualBurnInMitigation',
+      'cfgVisualNudgeIntervalMs',
+      'cfgVisualNudgeAmplitudePx',
+      'cfgVisualNightModeEntity',
+      'cfgVisualNightModeOpacity',
+    ];
 
     function setupVisible(show) {
       const el = document.getElementById('setupOverlay');
@@ -2280,6 +2663,7 @@
         syncSetupVisualFields();
         syncSetupAutomationFields();
         syncAccentPickerFromText();
+        syncCornerRadiusField();
         initSetupAutomationLinks();
       } catch (_) { /* storage unavailable */ }
     }
@@ -2329,6 +2713,7 @@
         if (field) field.style.display = isComingSoon ? 'none' : '';
       }
       if (!isComingSoon) syncSetupBackendFields();
+      syncSetupVisualPreview();
     }
 
     async function loadSetupPlayers() {
@@ -2478,6 +2863,7 @@
         'cfgVisualNightModeEntity',
         'cfgVisualNightModeOpacity',
       ], burnIn);
+      syncSetupVisualPreview();
     }
 
     function syncAccentPickerFromText() {
@@ -2486,6 +2872,7 @@
       if (!text || !picker) return;
       const value = text.value.trim().toLowerCase();
       picker.value = HEX_RE.test(value) ? value : ACCENT_PICKER_DEFAULT;
+      syncSetupVisualPreview();
     }
 
     function syncAccentTextFromPicker() {
@@ -2493,6 +2880,120 @@
       const picker = document.getElementById('cfgVisualAccentColorPicker');
       if (!text || !picker) return;
       text.value = picker.value.toLowerCase();
+      syncSetupVisualPreview();
+    }
+
+    function hexToRgb(hex) {
+      const value = String(hex || '').replace('#', '');
+      if (!/^[0-9a-f]{6}$/i.test(value)) return null;
+      return {
+        r: parseInt(value.slice(0, 2), 16),
+        g: parseInt(value.slice(2, 4), 16),
+        b: parseInt(value.slice(4, 6), 16),
+      };
+    }
+
+    function rgbToHex({ r, g, b }) {
+      return '#' + [r, g, b]
+        .map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0'))
+        .join('');
+    }
+
+    function mixHex(a, b, amount) {
+      const left = hexToRgb(a);
+      const right = hexToRgb(b);
+      if (!left || !right) return a;
+      return rgbToHex({
+        r: left.r * (1 - amount) + right.r * amount,
+        g: left.g * (1 - amount) + right.g * amount,
+        b: left.b * (1 - amount) + right.b * amount,
+      });
+    }
+
+    function syncSetupVisualPreview() {
+      const preview = document.getElementById('setupVisualPreview');
+      if (!preview) return;
+
+      const themeKey = document.getElementById('cfgVisualTheme')?.value || 'classic-gold';
+      const theme = SETUP_THEME_PREVIEW[themeKey] || SETUP_THEME_PREVIEW['classic-gold'];
+      const accentRaw = (document.getElementById('cfgVisualAccentColor')?.value || '').trim().toLowerCase();
+      const accent = HEX_RE.test(accentRaw) ? accentRaw : '';
+      const radius = Math.max(0, Math.min(48, parseInt(document.getElementById('cfgVisualCornerRadiusPx')?.value || '0', 10) || 0));
+      const fontKey = document.getElementById('cfgVisualMarqueeFont')?.value || 'bebas-neue';
+      const font = SETUP_FONT_PREVIEW[fontKey] || SETUP_FONT_PREVIEW['bebas-neue'];
+      const frameStyle = document.getElementById('cfgVisualFrameStyle')?.value || 'bulbs';
+      const infoMode = document.getElementById('cfgVisualInfoPanelMode')?.value || 'on_tap';
+      const useBackdrops = !!document.getElementById('cfgVisualUseBackdrops')?.checked;
+      const backdropStyle = document.getElementById('cfgVisualBackdropStyle')?.value || 'fullscreen';
+      const burnIn = !!document.getElementById('cfgVisualBurnInMitigation')?.checked;
+      const nudgeAmplitude = Math.max(1, Math.min(16, parseInt(document.getElementById('cfgVisualNudgeAmplitudePx')?.value || '4', 10) || 4));
+      const nightOpacity = Math.max(0, Math.min(0.95, parseFloat(document.getElementById('cfgVisualNightModeOpacity')?.value || '0.4') || 0.4));
+      const displayMode = readDisplayMode(document.getElementById('cfgDisplayMode')?.value || DISPLAY_MODE);
+      const comingSoonTitle = document.getElementById('cfgComingSoonTitle')?.value.trim() || 'COMING SOON';
+
+      const palette = {
+        ...theme,
+        accentLight: accent || theme.accentLight,
+        accentMid: accent ? mixHex(accent, '#000000', 0.2) : theme.accentMid,
+        accentDark: accent ? mixHex(accent, '#000000', 0.5) : theme.accentDark,
+        accentGlow: accent ? mixHex(accent, '#ffffff', 0.3) : theme.accentGlow,
+      };
+      const vars = {
+        '--preview-accent-light': palette.accentLight,
+        '--preview-accent-mid': palette.accentMid,
+        '--preview-accent-dark': palette.accentDark,
+        '--preview-accent-glow': palette.accentGlow,
+        '--preview-bg-dark': palette.bgDark,
+        '--preview-bg-marquee': palette.bgMarquee,
+        '--preview-text-light': palette.textLight,
+        '--preview-text-dim': palette.textDim,
+        '--preview-red-curtain': palette.redCurtain,
+        '--preview-radius': `${radius}px`,
+        '--preview-marquee-font': font.family,
+        '--preview-marquee-weight': font.weight,
+        '--preview-marquee-spacing': font.spacing,
+        '--preview-night-opacity': String(Math.max(0.08, nightOpacity * 0.45)),
+        '--preview-nudge-x': `${Math.min(10, nudgeAmplitude)}px`,
+        '--preview-nudge-y': `${-Math.min(6, Math.max(2, Math.round(nudgeAmplitude / 2)))}px`,
+      };
+      for (const [key, value] of Object.entries(vars)) preview.style.setProperty(key, value);
+
+      preview.dataset.frameStyle = FRAME_STYLES.includes(frameStyle) ? frameStyle : 'bulbs';
+      preview.classList.toggle('progress-on', !!document.getElementById('cfgVisualProgressBar')?.checked);
+      preview.classList.toggle('ratings-on', !!document.getElementById('cfgVisualRatingsBadges')?.checked);
+      preview.classList.toggle('genres-on', !!document.getElementById('cfgVisualGenreChips')?.checked);
+      preview.classList.toggle('info-on', infoMode !== 'on_tap');
+      preview.classList.toggle('backdrop-on', useBackdrops);
+      preview.classList.toggle('burn-in-on', burnIn);
+
+      const marquee = document.getElementById('setupPreviewMarquee');
+      if (marquee) marquee.textContent = displayMode === 'coming_soon' ? comingSoonTitle.toUpperCase() : 'NOW SHOWING';
+
+      const caption = document.getElementById('setupPreviewCaption');
+      if (caption) {
+        const bits = [
+          theme.label,
+          accent ? `Accent ${accent}` : 'Theme accent',
+          frameStyle,
+          font.label,
+          `${radius}px radius`,
+          infoMode === 'on_tap' ? 'Info hidden until tap' : `Info ${infoMode.replace('_', ' ')}`,
+          useBackdrops ? `${backdropStyle} backdrop` : '',
+          burnIn ? `${nudgeAmplitude}px nudge + night dim sample` : '',
+        ].filter(Boolean);
+        caption.textContent = bits.join(' / ');
+      }
+    }
+
+    function syncCornerRadiusField() {
+      const input = document.getElementById('cfgVisualCornerRadiusPx');
+      const output = document.getElementById('cfgVisualCornerRadiusPxValue');
+      if (!input) return;
+      const n = Math.max(0, Math.min(48, parseInt(input.value || '0', 10) || 0));
+      input.value = String(n);
+      if (output) output.textContent = `${n}px`;
+      document.documentElement.style.setProperty('--pns-corner-radius', `${n}px`);
+      syncSetupVisualPreview();
     }
 
     function normalizeSetupNumber(key, id) {
@@ -2651,6 +3152,7 @@
       const loadPlayers = document.getElementById('setupLoadPlayersBtn');
       const accent = document.getElementById('cfgVisualAccentColor');
       const accentPicker = document.getElementById('cfgVisualAccentColorPicker');
+      const cornerRadius = document.getElementById('cfgVisualCornerRadiusPx');
       const copyBlueprint = document.getElementById('setupCopyBlueprintBtn');
       const copySwitcher = document.getElementById('setupCopySwitcherBtn');
       if (form)  form.addEventListener('submit', (e) => { e.preventDefault(); setupSave(); });
@@ -2662,6 +3164,18 @@
       if (loadPlayers) loadPlayers.addEventListener('click', loadSetupPlayers);
       for (const tab of document.querySelectorAll('[data-setup-tab]')) {
         tab.addEventListener('click', () => switchSetupTab(tab.dataset.setupTab));
+      }
+      for (const id of SETUP_VISUAL_FIELD_IDS) {
+        const input = document.getElementById(id);
+        if (!input) continue;
+        input.addEventListener('input', syncSetupVisualFields);
+        input.addEventListener('change', syncSetupVisualFields);
+      }
+      for (const id of ['cfgDisplayMode', 'cfgComingSoonTitle']) {
+        const input = document.getElementById(id);
+        if (!input) continue;
+        input.addEventListener('input', syncSetupVisualPreview);
+        input.addEventListener('change', syncSetupVisualPreview);
       }
       for (const id of ['cfgVisualUseBackdrops', 'cfgVisualBurnInMitigation']) {
         const input = document.getElementById(id);
@@ -2682,6 +3196,7 @@
       }
       if (accent) accent.addEventListener('input', syncAccentPickerFromText);
       if (accentPicker) accentPicker.addEventListener('input', syncAccentTextFromPicker);
+      if (cornerRadius) cornerRadius.addEventListener('input', syncCornerRadiusField);
       if (copyBlueprint) copyBlueprint.addEventListener('click', () => copySetupText(BLUEPRINT_URL, 'Blueprint URL'));
       if (copySwitcher) copySwitcher.addEventListener('click', () => copySetupText(buildSwitcherConfigText(), 'Switcher config'));
       if (gear)  gear.addEventListener('click', () => {
