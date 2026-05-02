@@ -17,7 +17,7 @@ window.NOW_SHOWING_CONFIG = {
   // haToken: 'PASTE_LONG_LIVED_TOKEN_HERE',        // better: store in localStorage via #setup
 
   // Backend selection
-  backend: 'plex',    // plex | jellyfin | emby | kodi
+  backend: 'plex',    // plex | jellyfin | emby | kodi | apple_tv | kaleidescape
   player:  '',        // optional: lock to a specific media_player entity id
 
   // Plex filtering

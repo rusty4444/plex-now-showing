@@ -5,13 +5,14 @@ configuration:
   backend:
     name: Backend
     description: >-
-      Media backend to watch in Home Assistant: Plex, Jellyfin, Emby, or Kodi.
+      Media backend to watch in Home Assistant: Plex, Jellyfin, Emby, Kodi,
+      Apple TV, or Kaleidescape.
   player:
     name: Player entity
     description: >-
-      Optional media_player entity id to pin, e.g. media_player.kodi or
-      media_player.jellyfin_living_room. Leave empty to auto-detect active
-      players for the selected backend.
+      Optional media_player entity id to pin, e.g. media_player.kodi,
+      media_player.living_room_apple_tv, or media_player.kaleidescape_theater.
+      Leave empty to auto-detect active players for the selected backend.
   plex_url:
     name: Plex URL
     description: >-

@@ -690,6 +690,30 @@
       text-shadow: 0 1px 4px rgba(0,0,0,0.8);
     }
 
+    .media-info .app-badge {
+      display: none;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      margin-top: 7px;
+      font-family: 'Inter', sans-serif;
+      font-size: clamp(0.62rem, 1.2vw, 0.78rem);
+      color: rgba(255,255,255,0.78);
+      text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+    }
+
+    .media-info .app-badge.visible {
+      display: flex;
+    }
+
+    .media-info .app-badge img {
+      width: 20px;
+      height: 20px;
+      object-fit: contain;
+      border-radius: 4px;
+      background: rgba(0,0,0,0.22);
+    }
+
     /* ===== IDLE STATE ===== */
     .idle-wrap {
       position: absolute;
@@ -1276,6 +1300,8 @@
             <option value="jellyfin">Jellyfin</option>
             <option value="emby">Emby</option>
             <option value="kodi">Kodi</option>
+            <option value="apple_tv">Apple TV</option>
+            <option value="kaleidescape">Kaleidescape</option>
           </select>
         </div>
 
@@ -1530,6 +1556,10 @@
       <div class="media-info" id="mediaInfo">
         <div class="media-type" id="mediaType"></div>
         <div class="player-name" id="playerName"></div>
+        <div class="app-badge" id="appBadge">
+          <img id="appIcon" alt="" loading="lazy">
+          <span id="appName"></span>
+        </div>
       </div>
 
       <!-- PLAYBACK PROGRESS BAR (#17) — opt-in via VISUAL_PROGRESS_BAR env -->
@@ -1643,12 +1673,22 @@
       return Number.isFinite(n) ? n : defaultValue;
     }
 
-    const BACKENDS = ['plex', 'jellyfin', 'emby', 'kodi'];
+    const BACKENDS = ['plex', 'jellyfin', 'emby', 'kodi', 'apple_tv', 'kaleidescape'];
     const BACKEND_RULES = {
       plex: { entityPrefix: 'media_player.plex_', exactEntities: [] },
       jellyfin: { entityPrefix: 'media_player.jellyfin_', exactEntities: ['media_player.jellyfin'] },
       emby: { entityPrefix: 'media_player.emby_', exactEntities: ['media_player.emby'] },
       kodi: { entityPrefix: 'media_player.kodi_', exactEntities: ['media_player.kodi'] },
+      apple_tv: {
+        entityPrefix: 'media_player.apple_tv',
+        exactEntities: ['media_player.apple_tv'],
+        entityIncludes: ['_apple_tv', 'appletv']
+      },
+      kaleidescape: {
+        entityPrefix: 'media_player.kaleidescape_',
+        exactEntities: ['media_player.kaleidescape'],
+        entityIncludes: ['kaleidescape']
+      },
     };
     function readBackend(value) {
       const v = String(value || '').trim().toLowerCase();
@@ -2114,9 +2154,15 @@
       }
       const player = document.getElementById('cfgPlayer');
       if (player) {
-        player.placeholder = backend === 'plex'
-          ? 'media_player.plex_plex_for_lg_tv'
-          : `media_player.${backend}`;
+        const examples = {
+          plex: 'media_player.plex_plex_for_lg_tv',
+          jellyfin: 'media_player.jellyfin_living_room',
+          emby: 'media_player.emby_living_room',
+          kodi: 'media_player.kodi_theater',
+          apple_tv: 'media_player.living_room_apple_tv',
+          kaleidescape: 'media_player.kaleidescape_theater'
+        };
+        player.placeholder = examples[backend] || `media_player.${backend}`;
       }
     }
 
@@ -2430,6 +2476,9 @@
     const mediaInfo = document.getElementById('mediaInfo');
     const mediaType = document.getElementById('mediaType');
     const playerName = document.getElementById('playerName');
+    const appBadge = document.getElementById('appBadge');
+    const appIcon = document.getElementById('appIcon');
+    const appName = document.getElementById('appName');
     const ambientGlow = document.getElementById('ambientGlow');
     const backdropAmbient = document.getElementById('backdropAmbient');
     const backdropImage = document.getElementById('backdropImage');
@@ -2758,7 +2807,9 @@
       }
 
       // Player
-      infoPlayer.textContent = `Playing on ${d.playerName}`;
+      infoPlayer.textContent = d.appName
+        ? `Playing on ${d.playerName} via ${d.appName}`
+        : `Playing on ${d.playerName}`;
 
       infoOverlay.classList.add('visible');
 
@@ -2984,11 +3035,44 @@
     function isBackendPlayer(state, rule) {
       if (!state || typeof state.entity_id !== 'string') return false;
       return state.entity_id.startsWith(rule.entityPrefix)
-        || rule.exactEntities.includes(state.entity_id);
+        || rule.exactEntities.includes(state.entity_id)
+        || (rule.entityIncludes || []).some(token => state.entity_id.includes(token));
+    }
+
+    const APP_ICON_SLUGS = {
+      'Disney+': 'disney-plus',
+      'Prime Video': 'amazon-prime',
+      'Amazon Prime Video': 'amazon-prime',
+      'Apple TV': 'apple-tv-plus',
+      'Apple TV+': 'apple-tv-plus',
+      'HBO Max': 'hbo',
+      'Max': 'hbo',
+      'YouTube': 'youtube',
+      'Netflix': 'netflix',
+      'Hulu': 'hulu',
+      'Plex': 'plex',
+      'Spotify': 'spotify',
+      'Twitch': 'twitch',
+      'Infuse': 'infuse',
+      'Paramount+': 'paramount-plus',
+      'Peacock': 'peacock'
+    };
+
+    function appIconUrlFor(app) {
+      if (!app) return '';
+      const slug = APP_ICON_SLUGS[app]
+        || String(app).trim().toLowerCase()
+          .replace(/&/g, 'and')
+          .replace(/\+/g, '-plus')
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+      if (!slug) return '';
+      return `https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/${slug}.png`;
     }
 
     function buildMediaData(playerState) {
       const attrs = playerState.attributes || {};
+      const app = attrs.app_name || '';
       return {
         title: attrs.media_title || 'Unknown Title',
         seriesTitle: attrs.media_series_title || '',
@@ -3003,7 +3087,10 @@
         position: Number.isFinite(attrs.media_position) ? attrs.media_position : 0,
         positionUpdatedAt: attrs.media_position_updated_at || '',
         summary: attrs.media_summary || '',
-        ratingKey: attrs.media_content_id || ''
+        ratingKey: attrs.media_content_id || '',
+        appName: app,
+        appId: attrs.app_id || '',
+        appIconUrl: appIconUrlFor(app)
       };
     }
 
@@ -3190,6 +3277,30 @@
       else if (typeof mql.addListener === 'function') mql.addListener(handler); // Safari
     } catch (_) { /* matchMedia unsupported — skip */ }
 
+    function renderAppBadge(data) {
+      if (!appBadge || !appIcon || !appName) return;
+      const label = data && data.appName ? String(data.appName).trim() : '';
+      if (!label) {
+        appBadge.classList.remove('visible');
+        appName.textContent = '';
+        appIcon.removeAttribute('src');
+        return;
+      }
+      appName.textContent = label;
+      const icon = data.appIconUrl || appIconUrlFor(label);
+      if (icon) {
+        appIcon.style.display = '';
+        appIcon.src = icon;
+      } else {
+        appIcon.style.display = 'none';
+        appIcon.removeAttribute('src');
+      }
+      appIcon.onerror = () => {
+        appIcon.style.display = 'none';
+      };
+      appBadge.classList.add('visible');
+    }
+
     // ===== UPDATE DISPLAY =====
     function showMedia(data) {
       const artworkUrl = data.artwork.startsWith('http')
@@ -3211,6 +3322,7 @@
         // the progress bar's paused class, then bail out of the full re-render.
         syncInfoPanelForMode(data);
         setProgressFromState(data);
+        renderAppBadge(data);
         // #21 fullscreen backdrop reacts to pause/play transitions only (the
         // ambient layer doesn't change on state). The media key hasn't
         // changed, so backdropCtx.artUrl is still valid — (re)schedule on
@@ -3271,6 +3383,7 @@
 
       mediaType.textContent = typeLabel;
       playerName.textContent = data.playerName;
+      renderAppBadge(data);
       mediaInfo.classList.add('visible');
 
       // Hide idle
@@ -3325,6 +3438,7 @@
       posterOverlay.style.display = 'none';
       posterTitle.style.display = 'none';
       mediaInfo.classList.remove('visible');
+      renderAppBadge(null);
       idleContent.classList.add('visible');
       ambientGlow.classList.remove('active');
       hideProgressBar();

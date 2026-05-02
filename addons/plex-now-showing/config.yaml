@@ -11,7 +11,7 @@
 name: Plex Now Showing
 version: "2.0.0"
 slug: plex_now_showing
-description: Cinema-style now-playing kiosk for Plex, Jellyfin, Emby, and Kodi.
+description: Cinema-style now-playing kiosk for Plex, Jellyfin, Emby, Kodi, Apple TV, and Kaleidescape.
 url: https://github.com/rusty4444/plex-now-showing
 arch:
   - amd64
@@ -88,7 +88,7 @@ options:
   visual_accent_color: ""
   log_level: info
 schema:
-  backend: "list(plex|jellyfin|emby|kodi)"
+  backend: "list(plex|jellyfin|emby|kodi|apple_tv|kaleidescape)"
   player: "str?"
   plex_url: "str?"
   plex_token: "password?"

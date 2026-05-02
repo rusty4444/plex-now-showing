@@ -11,9 +11,9 @@
 > multi-backend playback, and no-code display controls.
 
 A full-screen cinema marquee display for Home Assistant that shows what is
-currently playing on Plex, Jellyfin, Emby, or Kodi. It is designed for
-wall-mounted tablets running Fully Kiosk Browser, but it also works in any
-modern browser.
+currently playing on Plex, Jellyfin, Emby, Kodi, Apple TV, or Kaleidescape.
+It is designed for wall-mounted tablets running Fully Kiosk Browser, but it
+also works in any modern browser.
 
 V2 keeps the original marquee feel while adding a secure server/add-on path,
 Docker support, multi-backend playback detection, tablet switching, visual
@@ -58,7 +58,7 @@ not exposed to the tablet browser.
 | Home Assistant add-on | `addons/plex-now-showing` wraps the server as a Supervisor add-on with Ingress, a config form, logs, multi-arch GHCR images, and optional direct port `8099`. |
 | Docker Compose | `docker/docker-compose.example.yml` and `.env.example` run the same image for HA Container users. |
 | Unified server | `server/` serves the kiosk and exposes `/api/state`, `/api/config`, `/api/media-info/:ratingKey`, `/api/artwork`, `/api/night-mode`, and `/healthz`. |
-| Multi-backend support | `backend` selects `plex`, `jellyfin`, `emby`, or `kodi`; `player` can pin any exact `media_player` entity. Plex-specific `plex_player` is still accepted for compatibility. |
+| Multi-backend support | `backend` selects `plex`, `jellyfin`, `emby`, `kodi`, `apple_tv`, or `kaleidescape`; `player` can pin any exact `media_player` entity. Plex-specific `plex_player` is still accepted for compatibility. |
 | Fully Kiosk switching | Use either the bundled HA Blueprint or the add-on/server's built-in Fully Kiosk REST switcher. |
 | Visual toggles | Progress bar, ratings badges, genre chips, info-panel display modes, pause backdrops, burn-in mitigation, night dimming, frame styles, marquee font picker, theme presets, and accent color overrides. |
 | CI / release plumbing | Multi-arch add-on builds, config linting, Docker image publishing, server tests, add-on docs, and examples. |
@@ -67,8 +67,10 @@ not exposed to the tablet browser.
 
 - Cinema marquee display with animated bulb frame, title overlays, idle state,
   and portrait or landscape layouts.
-- Playback support for Plex, Jellyfin, Emby, and Kodi Home Assistant
-  `media_player` entities.
+- Playback support for Plex, Jellyfin, Emby, Kodi, Apple TV, and
+  Kaleidescape Home Assistant `media_player` entities.
+- Apple TV app-name badges with app icons when Home Assistant exposes
+  `app_name`.
 - Optional exact player pinning via `player`.
 - Plex username filtering so shared Plex servers can show only your sessions.
 - Tap-for-info panel with synopsis, player, rating, duration, progress, and
@@ -95,7 +97,7 @@ not exposed to the tablet browser.
 ## Requirements
 
 - Home Assistant with at least one supported media integration configured:
-  Plex, Jellyfin, Emby, or Kodi.
+  Plex, Jellyfin, Emby, Kodi, Apple TV, or Kaleidescape.
 - One or more active `media_player` entities from that integration.
 - Fully Kiosk Browser if you want automatic wall-tablet switching.
 - Plex URL + Plex token only if you want Plex-only enhanced metadata such as
@@ -127,7 +129,8 @@ because Home Assistant Supervisor supplies the API token automatically.
 
 4. Install **Plex Now Showing**.
 5. Configure the add-on:
-   - `backend`: `plex`, `jellyfin`, `emby`, or `kodi`
+   - `backend`: `plex`, `jellyfin`, `emby`, `kodi`, `apple_tv`, or
+     `kaleidescape`
    - `player`: optional exact entity ID, for example `media_player.kodi`
    - `plex_url` and `plex_token`: optional, Plex enhanced metadata only
    - visual options such as `visual_theme`, `visual_frame_style`,
@@ -248,7 +251,7 @@ Then edit `now_showing.config.js` before copying it to Home Assistant:
 window.NOW_SHOWING_CONFIG = {
   haUrl: 'http://homeassistant.local:8123',
   haToken: 'YOUR_LONG_LIVED_ACCESS_TOKEN',
-  backend: 'plex', // plex | jellyfin | emby | kodi
+  backend: 'plex', // plex | jellyfin | emby | kodi | apple_tv | kaleidescape
   player: '',
   plexUsername: '',
   plexUrl: '',
@@ -291,7 +294,7 @@ Equivalent URL hash example:
 
 | Purpose | Add-on option | Docker env | Frontend key | Values |
 |---------|---------------|------------|--------------|--------|
-| Media backend | `backend` | `BACKEND` | `backend` | `plex`, `jellyfin`, `emby`, `kodi` |
+| Media backend | `backend` | `BACKEND` | `backend` | `plex`, `jellyfin`, `emby`, `kodi`, `apple_tv`, `kaleidescape` |
 | Exact player pin | `player` | `PLAYER` | `player` | Any `media_player.*` entity ID |
 | Plex username filter | `plex_username` | `PLEX_USERNAME` | `plexUsername` | Optional Plex username; blank shows the first active Plex player |
 | Legacy Plex player pin | `plex_player` | `PLEX_PLAYER` | `plexPlayer` | Prefer `player` for new installs |
@@ -340,6 +343,8 @@ for the selected backend:
 | Jellyfin | `media_player.jellyfin_*` or `media_player.jellyfin` |
 | Emby | `media_player.emby_*` or `media_player.emby` |
 | Kodi | `media_player.kodi_*` or `media_player.kodi` |
+| Apple TV | `media_player.apple_tv`, `media_player.apple_tv*`, or entity IDs containing `_apple_tv` / `appletv` |
+| Kaleidescape | `media_player.kaleidescape`, `media_player.kaleidescape_*`, or entity IDs containing `kaleidescape` |
 
 If `player` is set, that exact entity is used regardless of backend prefix.
 For Plex, `plex_username` still filters auto-detected sessions to your user.
@@ -430,7 +435,8 @@ paused, or always visible while media is active.
 
 Looking for a dashboard card showing recently added media? Check out
 [recently-added-media-card](https://github.com/rusty4444/recently-added-media-card),
-a unified Lovelace card that supports Plex, Kodi, Jellyfin, and Emby.
+a unified Lovelace card that supports Plex, Kodi, Jellyfin, Emby, and related
+Home Assistant media sources.
 
 Want to show upcoming movies and TV episodes alongside your recently added
 media? Check out
