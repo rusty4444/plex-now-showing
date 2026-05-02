@@ -11,7 +11,7 @@
 name: Plex Now Showing
 version: "2.0.0"
 slug: plex_now_showing
-description: Cinema-style now-playing kiosk for Plex, Jellyfin, Emby, Kodi, Apple TV, and Kaleidescape.
+description: Cinema-style now-playing kiosk for Plex, Jellyfin, Emby, Kodi, Apple TV, streaming devices, and Kaleidescape.
 url: https://github.com/rusty4444/plex-now-showing
 arch:
   - amd64
@@ -40,6 +40,7 @@ ports_description:
 map:
   - ssl
 options:
+  display_mode: now_showing
   backend: plex
   player: ""
   plex_url: ""
@@ -51,6 +52,17 @@ options:
   poll_interval: 5000
   state_ttl_ms: 3000
   media_info_ttl_ms: 600000
+  coming_soon_ttl_ms: 900000
+  coming_soon_title: Coming Soon
+  radarr_url: ""
+  radarr_api_key: ""
+  sonarr_url: ""
+  sonarr_api_key: ""
+  coming_soon_movies_count: 5
+  coming_soon_shows_count: 5
+  coming_soon_cycle_interval: 8
+  coming_soon_days_offset: 0
+  coming_soon_image_type: poster
   proxy_secret: ""
   allowed_origins: []
   # Fully Kiosk auto-switcher (#48) — disabled by default. Enable this OR the
@@ -88,7 +100,8 @@ options:
   visual_accent_color: ""
   log_level: info
 schema:
-  backend: "list(plex|jellyfin|emby|kodi|apple_tv|kaleidescape)"
+  display_mode: "list(now_showing|coming_soon)"
+  backend: "list(plex|jellyfin|emby|kodi|apple_tv|streaming|kaleidescape)"
   player: "str?"
   plex_url: "str?"
   plex_token: "password?"
@@ -99,6 +112,17 @@ schema:
   poll_interval: "int(1000,60000)"
   state_ttl_ms: "int(500,30000)"
   media_info_ttl_ms: "int(10000,3600000)"
+  coming_soon_ttl_ms: "int(10000,3600000)"
+  coming_soon_title: "str?"
+  radarr_url: "str?"
+  radarr_api_key: "password?"
+  sonarr_url: "str?"
+  sonarr_api_key: "password?"
+  coming_soon_movies_count: "int(0,50)"
+  coming_soon_shows_count: "int(0,50)"
+  coming_soon_cycle_interval: "int(2,300)"
+  coming_soon_days_offset: "int(0,365)"
+  coming_soon_image_type: "list(poster|fanart)"
   proxy_secret: "password?"
   allowed_origins:
     - "url?"

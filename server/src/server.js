@@ -24,6 +24,7 @@ import { mediaInfoRoute } from './routes/mediaInfo.js';
 import { artworkRoute } from './routes/artwork.js';
 import { plexArtRoute } from './routes/plexArt.js';
 import { nightModeRoute } from './routes/nightMode.js';
+import { comingSoonRoute } from './routes/comingSoon.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8'));
@@ -58,6 +59,7 @@ export function createApp({ config, haClient }) {
 
   const stateCache = createCache(config.stateTtl);
   const mediaInfoCache = createCache(config.mediaInfoTtl);
+  const comingSoonCache = createCache(config.comingSoonTtl);
 
   app.use(rootRoute({ config, version: pkg.version }));
   app.use(healthzRoute({ config, version: pkg.version }));
@@ -67,6 +69,7 @@ export function createApp({ config, haClient }) {
   app.use(artworkRoute({ config }));
   app.use(plexArtRoute({ config }));
   app.use(nightModeRoute({ haClient, config }));
+  app.use(comingSoonRoute({ cache: comingSoonCache, config }));
 
   // Static HTML last so /api/* wins on overlap.
   app.use(express.static(config.staticDir, {

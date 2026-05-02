@@ -28,6 +28,7 @@ export_opt() {
 
 # ---- User options → env ----
 export_opt BACKEND           backend
+export_opt DISPLAY_MODE      display_mode
 export_opt PLAYER            player
 export_opt PLEX_URL          plex_url
 export_opt PLEX_TOKEN        plex_token
@@ -38,7 +39,18 @@ export_opt THEME             theme
 export_opt POLL              poll_interval
 export_opt STATE_TTL_MS      state_ttl_ms
 export_opt MEDIA_INFO_TTL_MS media_info_ttl_ms
+export_opt COMING_SOON_TTL_MS coming_soon_ttl_ms
 export_opt PROXY_SECRET      proxy_secret
+export_opt COMING_SOON_TITLE coming_soon_title
+export_opt RADARR_URL        radarr_url
+export_opt RADARR_API_KEY    radarr_api_key
+export_opt SONARR_URL        sonarr_url
+export_opt SONARR_API_KEY    sonarr_api_key
+export_opt COMING_SOON_MOVIES_COUNT coming_soon_movies_count
+export_opt COMING_SOON_SHOWS_COUNT  coming_soon_shows_count
+export_opt COMING_SOON_CYCLE_INTERVAL coming_soon_cycle_interval
+export_opt COMING_SOON_DAYS_OFFSET coming_soon_days_offset
+export_opt COMING_SOON_IMAGE_TYPE  coming_soon_image_type
 
 # allowed_origins is a list → join with commas for the server's parser.
 if bashio::config.has_value 'allowed_origins'; then
@@ -82,6 +94,7 @@ export_opt VISUAL_ACCENT_COLOR        visual_accent_color
 
 # ---- Diagnostics (no secrets) ----
 bashio::log.info "Backend:                  ${BACKEND:-plex}"
+bashio::log.info "Display mode:             ${DISPLAY_MODE:-now_showing}"
 bashio::log.info "Player entity:            ${PLAYER:-<auto>}"
 bashio::log.info "Plex URL configured:      $([[ -n "${PLEX_URL}"   ]] && echo yes || echo no)"
 bashio::log.info "Plex token configured:    $([[ -n "${PLEX_TOKEN}" ]] && echo yes || echo no)"
@@ -92,6 +105,10 @@ bashio::log.info "Theme:                    ${THEME}"
 bashio::log.info "Poll interval (ms):       ${POLL}"
 bashio::log.info "State cache TTL (ms):     ${STATE_TTL_MS}"
 bashio::log.info "Media-info cache TTL (ms):${MEDIA_INFO_TTL_MS}"
+bashio::log.info "Coming Soon cache TTL:    ${COMING_SOON_TTL_MS:-900000}"
+bashio::log.info "Coming Soon title:        ${COMING_SOON_TITLE:-Coming Soon}"
+bashio::log.info "Radarr configured:        $([[ -n "${RADARR_URL}" && -n "${RADARR_API_KEY}" ]] && echo yes || echo no)"
+bashio::log.info "Sonarr configured:        $([[ -n "${SONARR_URL}" && -n "${SONARR_API_KEY}" ]] && echo yes || echo no)"
 bashio::log.info "Proxy secret:             $([[ -n "${PROXY_SECRET}" ]] && echo set || echo unset)"
 bashio::log.info "Allowed origins:          ${ALLOWED_ORIGINS:-<any (ingress-only)>}"
 bashio::log.info "Visual progress bar:      ${VISUAL_PROGRESS_BAR:-false}"

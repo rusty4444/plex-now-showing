@@ -121,6 +121,34 @@ test('Jellyfin, Emby, Kodi, Apple TV, and Kaleidescape scan matching media playe
   assert.equal(normalise(providerStates, { backend: 'kaleidescape' }).title, 'Blade Runner 2049');
 });
 
+test('streaming backend scans app_name media players for Roku and Google TV style entities', () => {
+  const providerStates = [
+    {
+      entity_id: 'media_player.living_room_roku',
+      state: 'playing',
+      attributes: {
+        media_title: 'Bluey',
+        friendly_name: 'Living Room Roku',
+        app_name: 'Disney+',
+        entity_picture: '/api/media_player_proxy/media_player.living_room_roku',
+      },
+    },
+    {
+      entity_id: 'media_player.bedroom_tv',
+      state: 'playing',
+      attributes: {
+        media_title: 'Plain HDMI',
+        friendly_name: 'Bedroom TV',
+      },
+    },
+  ];
+
+  const r = normalise(providerStates, { backend: 'streaming' });
+  assert.equal(r.title, 'Bluey');
+  assert.equal(r.appName, 'Disney+');
+  assert.equal(r.playerName, 'Living Room Roku');
+});
+
 test('backend falls back to plex on unknown values', () => {
   const r = normalise(states, { backend: 'laserdisc', plexUsername: 'rusty' });
   assert.ok(r, 'should still find an active Plex player');

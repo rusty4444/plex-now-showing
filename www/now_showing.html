@@ -1294,33 +1294,103 @@
         </div>
 
         <div class="setup-field">
-          <label for="cfgBackend">Backend</label>
-          <select id="cfgBackend" autocomplete="off">
-            <option value="plex">Plex</option>
-            <option value="jellyfin">Jellyfin</option>
-            <option value="emby">Emby</option>
-            <option value="kodi">Kodi</option>
-            <option value="apple_tv">Apple TV</option>
-            <option value="kaleidescape">Kaleidescape</option>
+          <label for="cfgDisplayMode">Display Mode</label>
+          <select id="cfgDisplayMode" autocomplete="off">
+            <option value="now_showing">Now Showing</option>
+            <option value="coming_soon">Coming Soon</option>
           </select>
+          <div class="hint">Now Showing watches active media players. Coming Soon uses Radarr/Sonarr.</div>
         </div>
 
-        <div class="setup-field">
-          <label for="cfgPlexUsername">Plex Username</label>
-          <input id="cfgPlexUsername" type="text" placeholder="your_plex_username" autocomplete="off">
-          <div class="hint">Filters playback to only your sessions.</div>
-        </div>
+        <div class="setup-section-title" id="cfgPlayersSectionTitle">Players</div>
 
-        <details class="setup-advanced">
-          <summary>Optional &mdash; player &amp; Plex API</summary>
-
-          <div class="setup-field" style="margin-top:10px;">
-            <label for="cfgPlayer">Specific Player (entity id)</label>
-            <input id="cfgPlayer" type="text" placeholder="media_player.plex_plex_for_lg_tv" autocomplete="off">
-            <div class="hint">Optional. Lock the display to one player.</div>
+        <div class="setup-field-grid" id="cfgPlayersSection">
+          <div class="setup-field">
+            <label for="cfgBackend">Backend</label>
+            <select id="cfgBackend" autocomplete="off">
+              <option value="plex">Plex</option>
+              <option value="jellyfin">Jellyfin</option>
+              <option value="emby">Emby</option>
+              <option value="kodi">Kodi</option>
+              <option value="apple_tv">Apple TV</option>
+              <option value="streaming">Streaming Device</option>
+              <option value="kaleidescape">Kaleidescape</option>
+            </select>
+            <div class="hint" id="cfgBackendHint">Select which Home Assistant media integration to watch.</div>
           </div>
 
           <div class="setup-field">
+            <label for="cfgPlayer">Player Entity</label>
+            <input id="cfgPlayer" type="text" list="cfgPlayerOptions" placeholder="media_player.plex_plex_for_lg_tv" autocomplete="off">
+            <datalist id="cfgPlayerOptions"></datalist>
+            <div class="hint" id="cfgPlayerHint">Optional. Leave blank to auto-detect an active player.</div>
+          </div>
+        </div>
+
+        <div class="setup-row" id="cfgLoadPlayersRow" style="margin-top:0;">
+          <button class="setup-btn" id="setupLoadPlayersBtn" type="button">Load Players</button>
+        </div>
+
+        <div class="setup-field" id="cfgPlexUsernameField">
+          <label for="cfgPlexUsername">Plex Username</label>
+          <input id="cfgPlexUsername" type="text" placeholder="your_plex_username" autocomplete="off">
+          <div class="hint">Filters Plex playback to only your sessions when no player is pinned.</div>
+        </div>
+
+        <details class="setup-advanced" id="cfgComingSoonDetails">
+          <summary>Coming Soon sources</summary>
+
+          <div class="setup-field-grid" style="margin-top:10px;">
+            <div class="setup-field">
+              <label for="cfgComingSoonTitle">Marquee Text</label>
+              <input id="cfgComingSoonTitle" type="text" placeholder="Coming Soon" autocomplete="off">
+            </div>
+            <div class="setup-field">
+              <label for="cfgComingSoonImageType">Image Type</label>
+              <select id="cfgComingSoonImageType" autocomplete="off">
+                <option value="poster">Poster</option>
+                <option value="fanart">Fanart</option>
+              </select>
+            </div>
+            <div class="setup-field">
+              <label for="cfgRadarrUrl">Radarr URL</label>
+              <input id="cfgRadarrUrl" type="url" placeholder="http://192.168.1.100:7878" autocomplete="off">
+            </div>
+            <div class="setup-field">
+              <label for="cfgRadarrApiKey">Radarr API Key</label>
+              <input id="cfgRadarrApiKey" type="password" autocomplete="off" spellcheck="false">
+            </div>
+            <div class="setup-field">
+              <label for="cfgSonarrUrl">Sonarr URL</label>
+              <input id="cfgSonarrUrl" type="url" placeholder="http://192.168.1.100:8989" autocomplete="off">
+            </div>
+            <div class="setup-field">
+              <label for="cfgSonarrApiKey">Sonarr API Key</label>
+              <input id="cfgSonarrApiKey" type="password" autocomplete="off" spellcheck="false">
+            </div>
+            <div class="setup-field">
+              <label for="cfgComingSoonMoviesCount">Movies</label>
+              <input id="cfgComingSoonMoviesCount" type="number" min="0" max="50" step="1" inputmode="numeric" autocomplete="off">
+            </div>
+            <div class="setup-field">
+              <label for="cfgComingSoonShowsCount">Shows</label>
+              <input id="cfgComingSoonShowsCount" type="number" min="0" max="50" step="1" inputmode="numeric" autocomplete="off">
+            </div>
+            <div class="setup-field">
+              <label for="cfgComingSoonCycleInterval">Cycle Interval (s)</label>
+              <input id="cfgComingSoonCycleInterval" type="number" min="2" max="300" step="1" inputmode="numeric" autocomplete="off">
+            </div>
+            <div class="setup-field">
+              <label for="cfgComingSoonDaysOffset">Days Offset</label>
+              <input id="cfgComingSoonDaysOffset" type="number" min="0" max="365" step="1" inputmode="numeric" autocomplete="off">
+            </div>
+          </div>
+        </details>
+
+        <details class="setup-advanced" id="cfgPlexMetadataDetails">
+          <summary>Plex metadata API</summary>
+
+          <div class="setup-field" style="margin-top:10px;">
             <label for="cfgPlexUrl">Plex Server URL</label>
             <input id="cfgPlexUrl" type="url" placeholder="http://192.168.1.10:32400" autocomplete="off">
             <div class="hint">Enables media-file details (resolution, codec, bitrate).</div>
@@ -1331,14 +1401,14 @@
             <input id="cfgPlexToken" type="password" placeholder="xxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
             <div class="hint">Required if Plex URL is set.</div>
           </div>
-
-          <div class="setup-field">
-            <label class="setup-check" for="cfgLandscape">
-              <input id="cfgLandscape" type="checkbox">
-              Landscape mode (fit whole poster)
-            </label>
-          </div>
         </details>
+
+        <div class="setup-field">
+          <label class="setup-check" for="cfgLandscape">
+            <input id="cfgLandscape" type="checkbox">
+            Landscape mode (fit whole poster)
+          </label>
+        </div>
       </div>
 
       <div class="setup-tab-panel" id="setupPanelDisplay" role="tabpanel" aria-labelledby="setupTabDisplay" data-setup-panel="display">
@@ -1673,7 +1743,7 @@
       return Number.isFinite(n) ? n : defaultValue;
     }
 
-    const BACKENDS = ['plex', 'jellyfin', 'emby', 'kodi', 'apple_tv', 'kaleidescape'];
+    const BACKENDS = ['plex', 'jellyfin', 'emby', 'kodi', 'apple_tv', 'streaming', 'kaleidescape'];
     const BACKEND_RULES = {
       plex: { entityPrefix: 'media_player.plex_', exactEntities: [] },
       jellyfin: { entityPrefix: 'media_player.jellyfin_', exactEntities: ['media_player.jellyfin'] },
@@ -1684,6 +1754,11 @@
         exactEntities: ['media_player.apple_tv'],
         entityIncludes: ['_apple_tv', 'appletv']
       },
+      streaming: {
+        entityPrefix: 'media_player.',
+        exactEntities: [],
+        requiredAttributes: ['app_name']
+      },
       kaleidescape: {
         entityPrefix: 'media_player.kaleidescape_',
         exactEntities: ['media_player.kaleidescape'],
@@ -1693,6 +1768,11 @@
     function readBackend(value) {
       const v = String(value || '').trim().toLowerCase();
       return BACKENDS.includes(v) ? v : 'plex';
+    }
+    const DISPLAY_MODES = ['now_showing', 'coming_soon'];
+    function readDisplayMode(value) {
+      const v = String(value || '').trim().toLowerCase().replace(/-/g, '_');
+      return DISPLAY_MODES.includes(v) ? v : 'now_showing';
     }
 
     const HA_URL        = readConfig('haUrl',        { aliases: ['ha_url'], defaultValue: window.location.origin });
@@ -1706,6 +1786,19 @@
     const LANDSCAPE_MODE = readBool('landscape', runtimeConfig.landscape === true);
     const POLL_INTERVAL  = readInt('poll', 5000);
     let ACTIVE_BACKEND = BACKEND;
+    let DISPLAY_MODE = readDisplayMode(readConfig('displayMode', { aliases: ['display_mode', 'mode'], defaultValue: 'now_showing' }));
+    const COMING_SOON = {
+      title: readConfig('comingSoonTitle', { aliases: ['coming_soon_title'], defaultValue: 'Coming Soon' }),
+      radarrUrl: readConfig('radarrUrl', { aliases: ['radarr_url'] }),
+      radarrApiKey: readConfig('radarrApiKey', { aliases: ['radarr_api_key'], sensitive: true }),
+      sonarrUrl: readConfig('sonarrUrl', { aliases: ['sonarr_url'] }),
+      sonarrApiKey: readConfig('sonarrApiKey', { aliases: ['sonarr_api_key'], sensitive: true }),
+      moviesCount: readIntClamped('comingSoonMoviesCount', 5, 0, 50),
+      showsCount: readIntClamped('comingSoonShowsCount', 5, 0, 50),
+      cycleInterval: readIntClamped('comingSoonCycleInterval', 8, 2, 300),
+      daysOffset: readIntClamped('comingSoonDaysOffset', 0, 0, 365),
+      imageType: readConfig('comingSoonImageType', { aliases: ['coming_soon_image_type'], defaultValue: 'poster' }) === 'fanart' ? 'fanart' : 'poster',
+    };
 
     // ===== SERVER MODE DETECTION =====
     //
@@ -1723,6 +1816,7 @@
         const body = await resp.json();
         SERVER_MODE = body && body.name === 'plex-now-showing-server';
         if (SERVER_MODE) ACTIVE_BACKEND = readBackend(body.backend || ACTIVE_BACKEND);
+        if (SERVER_MODE) DISPLAY_MODE = readDisplayMode(body.displayMode || DISPLAY_MODE);
         if (SERVER_MODE) console.info('[plex-now-showing] Running against unified server — using /api/state proxy.');
         return SERVER_MODE;
       } catch (_) {
@@ -1870,6 +1964,16 @@
         if (!resp.ok) return;
         const body = await resp.json();
         if (body && body.backend) ACTIVE_BACKEND = readBackend(body.backend);
+        if (body && body.displayMode) DISPLAY_MODE = readDisplayMode(body.displayMode);
+        if (body && body.comingSoon) {
+          const cs = body.comingSoon;
+          if (typeof cs.title === 'string') COMING_SOON.title = cs.title || 'Coming Soon';
+          if (Number.isFinite(cs.moviesCount)) COMING_SOON.moviesCount = cs.moviesCount;
+          if (Number.isFinite(cs.showsCount)) COMING_SOON.showsCount = cs.showsCount;
+          if (Number.isFinite(cs.cycleInterval)) COMING_SOON.cycleInterval = cs.cycleInterval;
+          if (Number.isFinite(cs.daysOffset)) COMING_SOON.daysOffset = cs.daysOffset;
+          if (cs.imageType === 'poster' || cs.imageType === 'fanart') COMING_SOON.imageType = cs.imageType;
+        }
         const v = body && body.visual;
         if (v && typeof v.progressBar === 'boolean') VISUAL.progressBar = v.progressBar;
         if (v && typeof v.ratingsBadges === 'boolean') VISUAL.ratingsBadges = v.ratingsBadges;
@@ -2074,11 +2178,22 @@
       // localStorage key (without pns. prefix), input element id, default
       ['haUrl', 'cfgHaUrl', ''],
       ['haToken', 'cfgHaToken', ''],
+      ['displayMode', 'cfgDisplayMode', DISPLAY_MODE],
       ['backend', 'cfgBackend', BACKEND],
       ['plexUsername', 'cfgPlexUsername', ''],
       ['player', 'cfgPlayer', ''],
       ['plexUrl', 'cfgPlexUrl', ''],
       ['plexToken', 'cfgPlexToken', ''],
+      ['comingSoonTitle', 'cfgComingSoonTitle', 'Coming Soon'],
+      ['radarrUrl', 'cfgRadarrUrl', ''],
+      ['radarrApiKey', 'cfgRadarrApiKey', ''],
+      ['sonarrUrl', 'cfgSonarrUrl', ''],
+      ['sonarrApiKey', 'cfgSonarrApiKey', ''],
+      ['comingSoonMoviesCount', 'cfgComingSoonMoviesCount', '5'],
+      ['comingSoonShowsCount', 'cfgComingSoonShowsCount', '5'],
+      ['comingSoonCycleInterval', 'cfgComingSoonCycleInterval', '8'],
+      ['comingSoonDaysOffset', 'cfgComingSoonDaysOffset', '0'],
+      ['comingSoonImageType', 'cfgComingSoonImageType', 'poster'],
       ['visualTheme', 'cfgVisualTheme', 'classic-gold'],
       ['visualFrameStyle', 'cfgVisualFrameStyle', 'bulbs'],
       ['visualMarqueeFont', 'cfgVisualMarqueeFont', 'bebas-neue'],
@@ -2111,10 +2226,32 @@
       visualNudgeAmplitudePx: { min: 1, max: 16, fallback: 4, float: false },
       visualNightModeOpacity: { min: 0, max: 0.95, fallback: 0.4, float: true },
       switcherIntervalMs: { min: 1000, max: 60000, fallback: 5000, float: false },
+      comingSoonMoviesCount: { min: 0, max: 50, fallback: 5, float: false },
+      comingSoonShowsCount: { min: 0, max: 50, fallback: 5, float: false },
+      comingSoonCycleInterval: { min: 2, max: 300, fallback: 8, float: false },
+      comingSoonDaysOffset: { min: 0, max: 365, fallback: 0, float: false },
     };
     const ACCENT_PICKER_DEFAULT = '#c8a032';
     const BLUEPRINT_URL = 'https://raw.githubusercontent.com/rusty4444/plex-now-showing/dev/blueprints/automation/rusty4444/plex_now_showing_display.yaml';
     const BLUEPRINT_IMPORT_URL = 'https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=' + encodeURIComponent(BLUEPRINT_URL);
+    const SETUP_BACKEND_HINTS = {
+      plex: 'Watches media_player.plex_* entities and can filter by Plex username.',
+      jellyfin: 'Watches media_player.jellyfin_* or media_player.jellyfin entities.',
+      emby: 'Watches media_player.emby_* or media_player.emby entities.',
+      kodi: 'Watches media_player.kodi_* or media_player.kodi entities.',
+      apple_tv: 'Watches Apple TV media_player entities and shows app_name icons.',
+      streaming: 'Watches any media_player.* entity with app_name, media_title, and artwork attributes.',
+      kaleidescape: 'Watches Kaleidescape media_player entities exposed by Home Assistant.',
+    };
+    const SETUP_PLAYER_HINTS = {
+      plex: 'Optional. Leave blank to auto-detect, or pin one Plex media_player entity.',
+      jellyfin: 'Optional. Leave blank to auto-detect, or pin one Jellyfin media_player entity.',
+      emby: 'Optional. Leave blank to auto-detect, or pin one Emby media_player entity.',
+      kodi: 'Optional. Leave blank to auto-detect, or pin one Kodi media_player entity.',
+      apple_tv: 'Optional. Pin your Apple TV entity if auto-detection sees more than one.',
+      streaming: 'Optional. Pin a Roku, Google TV, Android TV, Apple TV, or similar entity.',
+      kaleidescape: 'Optional. Pin your Kaleidescape player if you have multiple rooms.',
+    };
 
     function setupVisible(show) {
       const el = document.getElementById('setupOverlay');
@@ -2138,6 +2275,7 @@
           const stored = window.localStorage.getItem('pns.' + key);
           input.checked = stored == null ? !!defaultValue : /^(1|true|yes|on)$/i.test(stored);
         }
+        syncSetupDisplayModeFields();
         syncSetupBackendFields();
         syncSetupVisualFields();
         syncSetupAutomationFields();
@@ -2148,10 +2286,13 @@
 
     function syncSetupBackendFields() {
       const backend = readBackend(document.getElementById('cfgBackend')?.value || BACKEND);
-      for (const id of ['cfgPlexUsername', 'cfgPlexUrl', 'cfgPlexToken']) {
-        const field = document.getElementById(id)?.closest('.setup-field');
-        if (field) field.style.display = backend === 'plex' ? '' : 'none';
-      }
+      const isPlex = backend === 'plex';
+      const usernameField = document.getElementById('cfgPlexUsernameField');
+      const metadataDetails = document.getElementById('cfgPlexMetadataDetails');
+      if (usernameField) usernameField.style.display = isPlex ? '' : 'none';
+      if (metadataDetails) metadataDetails.style.display = isPlex ? '' : 'none';
+      const backendHint = document.getElementById('cfgBackendHint');
+      if (backendHint) backendHint.textContent = SETUP_BACKEND_HINTS[backend] || SETUP_BACKEND_HINTS.plex;
       const player = document.getElementById('cfgPlayer');
       if (player) {
         const examples = {
@@ -2160,10 +2301,83 @@
           emby: 'media_player.emby_living_room',
           kodi: 'media_player.kodi_theater',
           apple_tv: 'media_player.living_room_apple_tv',
+          streaming: 'media_player.living_room_roku',
           kaleidescape: 'media_player.kaleidescape_theater'
         };
         player.placeholder = examples[backend] || `media_player.${backend}`;
       }
+      const playerHint = document.getElementById('cfgPlayerHint');
+      if (playerHint) playerHint.textContent = SETUP_PLAYER_HINTS[backend] || SETUP_PLAYER_HINTS.plex;
+    }
+
+    function syncSetupDisplayModeFields() {
+      const mode = readDisplayMode(document.getElementById('cfgDisplayMode')?.value || DISPLAY_MODE);
+      const comingSoon = document.getElementById('cfgComingSoonDetails');
+      const isComingSoon = mode === 'coming_soon';
+      if (comingSoon) {
+        comingSoon.style.display = isComingSoon ? '' : 'none';
+        comingSoon.open = isComingSoon;
+      }
+      for (const id of [
+        'cfgPlayersSectionTitle',
+        'cfgPlayersSection',
+        'cfgLoadPlayersRow',
+        'cfgPlexUsernameField',
+        'cfgPlexMetadataDetails',
+      ]) {
+        const field = document.getElementById(id);
+        if (field) field.style.display = isComingSoon ? 'none' : '';
+      }
+      if (!isComingSoon) syncSetupBackendFields();
+    }
+
+    async function loadSetupPlayers() {
+      const haUrl = document.getElementById('cfgHaUrl')?.value.trim() || window.location.origin;
+      const haTok = document.getElementById('cfgHaToken')?.value.trim();
+      const backend = readBackend(document.getElementById('cfgBackend')?.value || BACKEND);
+      if (!haTok) {
+        setupStatus('Enter an HA token to load player entities, or type the entity id manually.', 'err');
+        return;
+      }
+      setupStatus('Loading media players...');
+      let states;
+      try {
+        const r = await fetch(haUrl.replace(/\/$/, '') + '/api/states', {
+          headers: { 'Authorization': 'Bearer ' + haTok, 'Content-Type': 'application/json' }
+        });
+        if (!r.ok) { setupStatus('HA returned ' + r.status + ' while loading players.', 'err'); return; }
+        states = await r.json();
+      } catch (e) {
+        setupStatus('Could not load players: ' + e.message, 'err');
+        return;
+      }
+      const rule = BACKEND_RULES[backend] || BACKEND_RULES.plex;
+      const players = Array.isArray(states)
+        ? states.filter(s => isBackendPlayer(s, rule))
+        : [];
+      const options = document.getElementById('cfgPlayerOptions');
+      if (options) {
+        options.innerHTML = '';
+        for (const state of players) {
+          const attrs = state.attributes || {};
+          const option = document.createElement('option');
+          option.value = state.entity_id;
+          option.label = [
+            attrs.friendly_name || state.entity_id,
+            state.state,
+            attrs.app_name,
+          ].filter(Boolean).join(' / ');
+          options.appendChild(option);
+        }
+      }
+      if (players.length === 1) {
+        const player = document.getElementById('cfgPlayer');
+        if (player && !player.value) player.value = players[0].entity_id;
+      }
+      setupStatus(players.length
+        ? `Loaded ${players.length} ${backend.replace('_', ' ')} player${players.length === 1 ? '' : 's'}.`
+        : `No ${backend.replace('_', ' ')} players found. You can still type the entity id manually.`,
+        players.length ? 'ok' : 'err');
     }
 
     function switchSetupTab(name) {
@@ -2309,11 +2523,37 @@
     }
 
     async function setupTest() {
+      const displayMode = readDisplayMode(document.getElementById('cfgDisplayMode')?.value || DISPLAY_MODE);
       const haUrl = document.getElementById('cfgHaUrl').value.trim() || window.location.origin;
       const haTok = document.getElementById('cfgHaToken').value.trim();
       const backend = readBackend(document.getElementById('cfgBackend').value);
       const plexUrl = document.getElementById('cfgPlexUrl').value.trim();
       const plexTok = document.getElementById('cfgPlexToken').value.trim();
+      const radarrUrl = document.getElementById('cfgRadarrUrl')?.value.trim() || '';
+      const radarrKey = document.getElementById('cfgRadarrApiKey')?.value.trim() || '';
+      const sonarrUrl = document.getElementById('cfgSonarrUrl')?.value.trim() || '';
+      const sonarrKey = document.getElementById('cfgSonarrApiKey')?.value.trim() || '';
+
+      if (displayMode === 'coming_soon') {
+        if (!((radarrUrl && radarrKey) || (sonarrUrl && sonarrKey))) {
+          setupStatus('Add Radarr or Sonarr details first.', 'err');
+          return;
+        }
+        setupStatus('Testing Coming Soon source...');
+        const sourceUrl = radarrUrl || sonarrUrl;
+        const sourceKey = radarrKey || sonarrKey;
+        try {
+          const r = await fetch(sourceUrl.replace(/\/$/, '') + '/api/v3/system/status', {
+            headers: { 'X-Api-Key': sourceKey }
+          });
+          if (!r.ok) { setupStatus('Source returned ' + r.status + '. Check URL and API key.', 'err'); return; }
+        } catch (e) {
+          setupStatus('Could not reach Coming Soon source: ' + e.message, 'err');
+          return;
+        }
+        setupStatus('Coming Soon source responded.', 'ok');
+        return;
+      }
 
       if (!haTok) { setupStatus('Enter an HA token first.', 'err'); return; }
       setupStatus('Testing Home Assistant\u2026');
@@ -2346,7 +2586,18 @@
 
     function setupSave() {
       const haTok = document.getElementById('cfgHaToken').value.trim();
-      if (!haTok) { setupStatus('HA token is required.', 'err'); return; }
+      const displayMode = readDisplayMode(document.getElementById('cfgDisplayMode')?.value || DISPLAY_MODE);
+      if (!haTok && displayMode !== 'coming_soon') { setupStatus('HA token is required.', 'err'); return; }
+      if (displayMode === 'coming_soon') {
+        const hasSource = (document.getElementById('cfgRadarrUrl')?.value.trim()
+          && document.getElementById('cfgRadarrApiKey')?.value.trim())
+          || (document.getElementById('cfgSonarrUrl')?.value.trim()
+          && document.getElementById('cfgSonarrApiKey')?.value.trim());
+        if (!hasSource) {
+          setupStatus('Coming Soon mode needs Radarr or Sonarr details.', 'err');
+          return;
+        }
+      }
       const accentInput = document.getElementById('cfgVisualAccentColor');
       const accentColor = (accentInput?.value || '').trim().toLowerCase();
       if (accentColor && !HEX_RE.test(accentColor)) {
@@ -2395,7 +2646,9 @@
       const save  = document.getElementById('setupSaveBtn');
       const clear = document.getElementById('setupClearBtn');
       const gear  = document.getElementById('setupGear');
+      const displayMode = document.getElementById('cfgDisplayMode');
       const backend = document.getElementById('cfgBackend');
+      const loadPlayers = document.getElementById('setupLoadPlayersBtn');
       const accent = document.getElementById('cfgVisualAccentColor');
       const accentPicker = document.getElementById('cfgVisualAccentColorPicker');
       const copyBlueprint = document.getElementById('setupCopyBlueprintBtn');
@@ -2404,7 +2657,9 @@
       if (test)  test.addEventListener('click', setupTest);
       if (save)  save.addEventListener('click', setupSave);
       if (clear) clear.addEventListener('click', setupClear);
+      if (displayMode) displayMode.addEventListener('change', syncSetupDisplayModeFields);
       if (backend) backend.addEventListener('change', syncSetupBackendFields);
+      if (loadPlayers) loadPlayers.addEventListener('click', loadSetupPlayers);
       for (const tab of document.querySelectorAll('[data-setup-tab]')) {
         tab.addEventListener('click', () => switchSetupTab(tab.dataset.setupTab));
       }
@@ -2438,14 +2693,17 @@
       // Show the gear icon on the live display whenever we have any saved
       // config — it's the escape hatch to reopen setup.
       const hasSavedConfig = (() => {
-        try { return !!window.localStorage.getItem('pns.haToken'); } catch (_) { return false; }
+        try {
+          return !!(window.localStorage.getItem('pns.haToken')
+            || window.localStorage.getItem('pns.displayMode'));
+        } catch (_) { return false; }
       })();
       if (gear && hasSavedConfig) gear.style.display = 'block';
 
       // First-run: if we have no HA token at all and no config script supplied
       // one, auto-open setup. Also honour explicit `#setup` in the hash.
       const forceSetup = /(^|&)setup(=|&|$)/.test(window.location.hash.replace(/^#/, ''));
-      if (forceSetup || !HA_TOKEN) {
+      if (forceSetup || (!HA_TOKEN && DISPLAY_MODE !== 'coming_soon')) {
         switchSetupTab('connection');
         populateSetupForm();
         setupVisible(true);
@@ -2458,7 +2716,7 @@
       initSetup();
     }
 
-    if (!HA_TOKEN) {
+    if (!HA_TOKEN && DISPLAY_MODE !== 'coming_soon') {
       console.warn('[plex-now-showing] No HA token configured — opening setup.');
     }
     if (HA_TOKEN && ACTIVE_BACKEND === 'plex' && !PLEX_USERNAME) {
@@ -2484,6 +2742,7 @@
     const backdropImage = document.getElementById('backdropImage');
     const bulbsOuterContainer = document.getElementById('bulbsOuter');
     const marquee = document.getElementById('marquee');
+    const marqueeHeading = marquee ? marquee.querySelector('h1') : null;
 
     // ===== STATE =====
     let currentMediaKey = '';
@@ -2727,7 +2986,9 @@
       infoTitle.textContent = d.seriesTitle || d.title;
 
       // Subtitle
-      if (d.seriesTitle) {
+      if (d.comingSoon && d.subtitle) {
+        infoSubtitle.textContent = d.subtitle;
+      } else if (d.seriesTitle) {
         let sub = d.title;
         if (d.season && d.episode) {
           sub = `S${String(d.season).padStart(2,'0')}E${String(d.episode).padStart(2,'0')} · ${d.title}`;
@@ -2739,13 +3000,15 @@
 
       // Meta tags
       let tags = [];
-      let typeLabel = 'Movie';
-      if (d.contentType === 'tvshow' || d.contentType === 'episode' || d.seriesTitle) {
+      let typeLabel = d.comingSoon ? (d.typeLabel || 'Coming Soon') : 'Movie';
+      if (!d.comingSoon && (d.contentType === 'tvshow' || d.contentType === 'episode' || d.seriesTitle)) {
         typeLabel = 'TV Series';
-      } else if (d.contentType === 'music') {
+      } else if (!d.comingSoon && d.contentType === 'music') {
         typeLabel = 'Music';
       }
       tags.push(typeLabel);
+      if (d.comingSoon && d.countdown) tags.push(d.countdown);
+      if (d.comingSoon && d.releaseLabel) tags.push(d.releaseLabel);
       if (d.contentRating) tags.push(d.contentRating);
       if (d.duration) {
         const mins = Math.round(d.duration / 60);
@@ -2775,7 +3038,7 @@
       // we fall through to the direct fetch which requires the URL + token.
       infoTech.innerHTML = '';
       renderRatingsBadges(null); // reset
-      if (d.ratingKey && hasPlexMetadataAccess()) {
+      if (!d.comingSoon && d.ratingKey && hasPlexMetadataAccess()) {
         const mi = await fetchPlexMediaInfo(d.ratingKey);
         if (mi) {
           renderRatingsBadges(mi.ratings);
@@ -2960,8 +3223,192 @@
       chaseOffset = (chaseOffset + 1) % 3;
     }
 
+    let comingSoonCache = { items: [], fetchedAt: 0 };
+
+    function syncDisplayModeText() {
+      if (!marqueeHeading) return;
+      marqueeHeading.textContent = DISPLAY_MODE === 'coming_soon'
+        ? (COMING_SOON.title || 'Coming Soon')
+        : 'NOW SHOWING';
+      document.body.classList.toggle('display-coming-soon', DISPLAY_MODE === 'coming_soon');
+    }
+
+    async function fetchComingSoonData() {
+      await serverModeReady;
+      let payload = null;
+      if (SERVER_MODE) {
+        const resp = await fetch('/api/coming-soon', { cache: 'no-store' });
+        if (!resp.ok) return null;
+        payload = await resp.json();
+        if (payload && payload.title) COMING_SOON.title = payload.title;
+        if (payload && payload.imageType) COMING_SOON.imageType = payload.imageType;
+        if (payload && Number.isFinite(payload.cycleInterval)) COMING_SOON.cycleInterval = payload.cycleInterval;
+        comingSoonCache = { items: Array.isArray(payload.items) ? payload.items : [], fetchedAt: Date.now() };
+      } else if (Date.now() - comingSoonCache.fetchedAt > 15 * 60 * 1000) {
+        comingSoonCache = { items: await fetchComingSoonDirect(), fetchedAt: Date.now() };
+      }
+
+      syncDisplayModeText();
+      const items = comingSoonCache.items;
+      if (!items.length) return null;
+      const intervalMs = Math.max(2, Number(COMING_SOON.cycleInterval) || 8) * 1000;
+      const index = Math.floor(Date.now() / intervalMs) % items.length;
+      return buildComingSoonMediaData(items[index]);
+    }
+
+    async function fetchComingSoonDirect() {
+      const start = new Date(Date.now() - (Number(COMING_SOON.daysOffset) || 0) * 86400000);
+      const end = new Date(Date.now() + 90 * 86400000);
+      const startDate = start.toISOString().split('T')[0];
+      const endDate = end.toISOString().split('T')[0];
+      const fetches = [];
+
+      if (COMING_SOON.radarrUrl && COMING_SOON.radarrApiKey) {
+        const base = COMING_SOON.radarrUrl.replace(/\/$/, '');
+        fetches.push(fetch(`${base}/api/v3/calendar?start=${startDate}&end=${endDate}&unmonitored=false`, {
+          headers: { 'X-Api-Key': COMING_SOON.radarrApiKey }
+        }).then(r => r.ok ? r.json() : []));
+      } else fetches.push(Promise.resolve([]));
+
+      if (COMING_SOON.sonarrUrl && COMING_SOON.sonarrApiKey) {
+        const base = COMING_SOON.sonarrUrl.replace(/\/$/, '');
+        fetches.push(fetch(`${base}/api/v3/calendar?start=${startDate}&end=${endDate}&unmonitored=false&includeSeries=true`, {
+          headers: { 'X-Api-Key': COMING_SOON.sonarrApiKey }
+        }).then(r => r.ok ? r.json() : []));
+      } else fetches.push(Promise.resolve([]));
+
+      const [radarr, sonarr] = await Promise.all(fetches);
+      return interleaveComingSoonItems(
+        mapRadarrComingSoon(radarr).slice(0, COMING_SOON.moviesCount),
+        mapSonarrComingSoon(sonarr).slice(0, COMING_SOON.showsCount),
+      );
+    }
+
+    function mapRadarrComingSoon(items) {
+      const base = COMING_SOON.radarrUrl.replace(/\/$/, '');
+      const start = new Date(Date.now() - (Number(COMING_SOON.daysOffset) || 0) * 86400000);
+      start.setHours(0, 0, 0, 0);
+      return (Array.isArray(items) ? items : [])
+        .filter(m => !m.hasFile && m.digitalRelease && new Date(m.digitalRelease) >= start)
+        .sort((a, b) => new Date(a.digitalRelease) - new Date(b.digitalRelease))
+        .map(m => ({
+          type: 'movie',
+          typeLabel: 'Movie',
+          title: m.title || 'Untitled Movie',
+          subtitle: [m.year, Array.isArray(m.genres) ? m.genres.join(' / ') : ''].filter(Boolean).join(' / '),
+          releaseDate: m.digitalRelease,
+          countdown: formatComingSoonCountdown(m.digitalRelease),
+          releaseLabel: formatComingSoonDate(m.digitalRelease),
+          overview: m.overview || '',
+          posterUrl: coverImage(m.images, 'poster'),
+          fanartUrl: coverImage(m.images, 'fanart'),
+          localPosterUrl: m.id ? `${base}/api/v3/MediaCover/${m.id}/poster.jpg?apikey=${encodeURIComponent(COMING_SOON.radarrApiKey)}` : '',
+          localFanartUrl: m.id ? `${base}/api/v3/MediaCover/${m.id}/fanart.jpg?apikey=${encodeURIComponent(COMING_SOON.radarrApiKey)}` : '',
+        }));
+    }
+
+    function mapSonarrComingSoon(items) {
+      const base = COMING_SOON.sonarrUrl.replace(/\/$/, '');
+      const start = new Date(Date.now() - (Number(COMING_SOON.daysOffset) || 0) * 86400000);
+      start.setHours(0, 0, 0, 0);
+      const seen = new Set();
+      return (Array.isArray(items) ? items : [])
+        .filter(ep => !ep.hasFile && ep.airDateUtc && new Date(ep.airDateUtc) >= start)
+        .sort((a, b) => new Date(a.airDateUtc) - new Date(b.airDateUtc))
+        .filter(ep => {
+          const id = ep.seriesId || ep.series?.id || ep.series?.title || ep.title;
+          if (seen.has(id)) return false;
+          seen.add(id);
+          return true;
+        })
+        .map(ep => {
+          const series = ep.series || {};
+          const season = String(ep.seasonNumber || 0).padStart(2, '0');
+          const episode = String(ep.episodeNumber || 0).padStart(2, '0');
+          const releaseDate = ep.airDate || (ep.airDateUtc ? ep.airDateUtc.split('T')[0] : '');
+          const sid = series.id || ep.seriesId;
+          return {
+            type: 'tv',
+            typeLabel: 'TV',
+            title: series.title || ep.title || 'Untitled Series',
+            subtitle: `S${season}E${episode}${ep.title ? ` / ${ep.title}` : ''}`,
+            releaseDate,
+            countdown: formatComingSoonCountdown(releaseDate),
+            releaseLabel: formatComingSoonDate(releaseDate),
+            overview: ep.overview || '',
+            posterUrl: coverImage(series.images, 'poster'),
+            fanartUrl: coverImage(series.images, 'fanart'),
+            localPosterUrl: sid ? `${base}/api/v3/MediaCover/${sid}/poster.jpg?apikey=${encodeURIComponent(COMING_SOON.sonarrApiKey)}` : '',
+            localFanartUrl: sid ? `${base}/api/v3/MediaCover/${sid}/fanart.jpg?apikey=${encodeURIComponent(COMING_SOON.sonarrApiKey)}` : '',
+          };
+        });
+    }
+
+    function buildComingSoonMediaData(item) {
+      const useFanart = COMING_SOON.imageType === 'fanart';
+      const artwork = useFanart
+        ? (item.fanartUrl || item.localFanartUrl || item.posterUrl || item.localPosterUrl || '')
+        : (item.posterUrl || item.localPosterUrl || item.fanartUrl || item.localFanartUrl || '');
+      return {
+        title: item.title || 'Coming Soon',
+        subtitle: item.subtitle || '',
+        contentType: item.type === 'tv' ? 'episode' : 'movie',
+        artwork,
+        playerName: [item.countdown, item.releaseLabel].filter(Boolean).join(' / '),
+        state: 'playing',
+        duration: 0,
+        position: 0,
+        positionUpdatedAt: '',
+        summary: item.overview || '',
+        ratingKey: '',
+        comingSoon: true,
+        typeLabel: item.typeLabel || (item.type === 'tv' ? 'TV' : 'Movie'),
+        releaseLabel: item.releaseLabel || '',
+        countdown: item.countdown || '',
+      };
+    }
+
+    function interleaveComingSoonItems(movies, shows) {
+      const out = [];
+      const max = Math.max(movies.length, shows.length);
+      for (let i = 0; i < max; i++) {
+        if (i < movies.length) out.push(movies[i]);
+        if (i < shows.length) out.push(shows[i]);
+      }
+      return out;
+    }
+
+    function coverImage(images, type) {
+      if (!Array.isArray(images)) return '';
+      return images.find(i => i && i.coverType === type)?.remoteUrl || '';
+    }
+
+    function formatComingSoonCountdown(dateStr) {
+      const target = new Date(String(dateStr).substring(0, 10) + 'T00:00:00');
+      if (Number.isNaN(target.getTime())) return '';
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const diff = Math.round((target - today) / 86400000);
+      if (diff < 0) return 'Available';
+      if (diff === 0) return 'Today';
+      if (diff === 1) return 'Tomorrow';
+      if (diff < 7) return `In ${diff} days`;
+      if (diff < 14) return 'In 1 week';
+      if (diff < 30) return `In ${Math.round(diff / 7)} weeks`;
+      if (diff < 60) return 'In 1 month';
+      return `In ${Math.round(diff / 30)} months`;
+    }
+
+    function formatComingSoonDate(dateStr) {
+      const d = new Date(dateStr);
+      if (Number.isNaN(d.getTime())) return '';
+      return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
     // ===== FETCH NOW-SHOWING DATA FROM HA =====
     async function fetchNowShowingData() {
+      if (DISPLAY_MODE === 'coming_soon') return fetchComingSoonData();
+
       // Unified-server path: /api/state is already normalised.
       await serverModeReady;
       if (SERVER_MODE) {
@@ -3034,6 +3481,7 @@
 
     function isBackendPlayer(state, rule) {
       if (!state || typeof state.entity_id !== 'string') return false;
+      if ((rule.requiredAttributes || []).some(name => !(state.attributes || {})[name])) return false;
       return state.entity_id.startsWith(rule.entityPrefix)
         || rule.exactEntities.includes(state.entity_id)
         || (rule.entityIncludes || []).some(token => state.entity_id.includes(token));
@@ -3366,18 +3814,20 @@
         subtitleText.textContent = sub;
       } else {
         titleText.textContent = data.title;
-        subtitleText.textContent = '';
+        subtitleText.textContent = data.comingSoon ? (data.subtitle || data.releaseLabel || '') : '';
       }
 
       // Media type label
-      let typeLabel = 'Movie';
-      if (data.contentType === 'tvshow' || data.contentType === 'episode' || data.seriesTitle) {
+      let typeLabel = data.comingSoon ? (data.typeLabel || 'Coming Soon') : 'Movie';
+      if (!data.comingSoon && (data.contentType === 'tvshow' || data.contentType === 'episode' || data.seriesTitle)) {
         typeLabel = 'TV Series';
-      } else if (data.contentType === 'music') {
+      } else if (!data.comingSoon && data.contentType === 'music') {
         typeLabel = 'Music';
       }
 
-      if (data.state === 'paused') {
+      if (data.comingSoon && data.countdown) {
+        typeLabel += ' / ' + data.countdown;
+      } else if (data.state === 'paused') {
         typeLabel += ' · Paused';
       }
 
@@ -3462,6 +3912,7 @@
       // flash the default UI and then repaint.
       await loadVisualConfig();
       applyVisualToggles();
+      syncDisplayModeText();
       poll();
       setInterval(poll, POLL_INTERVAL);
     }

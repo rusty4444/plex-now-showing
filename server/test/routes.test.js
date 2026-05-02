@@ -31,6 +31,20 @@ function baseConfig(overrides = {}) {
     allowedOrigins: [],
     stateTtl: 3000,
     mediaInfoTtl: 600000,
+    comingSoonTtl: 900000,
+    displayMode: 'now_showing',
+    comingSoon: {
+      title: 'Coming Soon',
+      radarrUrl: '',
+      radarrApiKey: '',
+      sonarrUrl: '',
+      sonarrApiKey: '',
+      moviesCount: 5,
+      showsCount: 5,
+      cycleInterval: 8,
+      daysOffset: 0,
+      imageType: 'poster',
+    },
     visual: { progressBar: false, ratingsBadges: false, genreChips: false, infoPanelMode: 'on_tap' },
     staticDir: join(__dirname, '..', 'fixtures'),
     ...overrides,
@@ -107,8 +121,18 @@ test('GET /api/config defaults every visual toggle off', async () => {
     assert.equal(resp.headers.get('cache-control'), 'no-store');
     const body = await resp.json();
     assert.deepEqual(body, {
+      displayMode: 'now_showing',
       backend: 'plex',
       player: '',
+      comingSoon: {
+        title: 'Coming Soon',
+        enabled: false,
+        moviesCount: 5,
+        showsCount: 5,
+        cycleInterval: 8,
+        daysOffset: 0,
+        imageType: 'poster',
+      },
       visual: {
         progressBar: false,
         ratingsBadges: false,
@@ -137,7 +161,63 @@ test('GET /api exposes the configured backend', async () => {
   try {
     const body = await fetch(`${url}/api`).then(r => r.json());
     assert.equal(body.name, 'plex-now-showing-server');
+    assert.equal(body.displayMode, 'now_showing');
     assert.equal(body.backend, 'jellyfin');
+    assert.equal(body.endpoints.comingSoon, '/api/coming-soon');
+  } finally { server.close(); }
+});
+
+test('GET /api/coming-soon returns configured upcoming items', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({
+    ok: true,
+    status: 200,
+    json: async () => [{
+      id: 1,
+      title: 'The Future',
+      year: 2026,
+      digitalRelease: '2026-06-01T00:00:00Z',
+      hasFile: false,
+      images: [{ coverType: 'poster', remoteUrl: 'https://img/poster.jpg' }],
+    }],
+  });
+
+  const haClient = { getStates: async () => haStates };
+  const { server, url } = await startApp(baseConfig({
+    comingSoon: {
+      title: 'Coming Soon',
+      radarrUrl: 'http://radarr.local:7878',
+      radarrApiKey: 'rk',
+      sonarrUrl: '',
+      sonarrApiKey: '',
+      moviesCount: 5,
+      showsCount: 5,
+      cycleInterval: 8,
+      daysOffset: 0,
+      imageType: 'poster',
+    },
+  }), haClient);
+  try {
+    const resp = await originalFetch(`${url}/api/coming-soon`);
+    assert.equal(resp.status, 200);
+    const body = await resp.json();
+    assert.equal(body.title, 'Coming Soon');
+    assert.equal(body.items.length, 1);
+    assert.equal(body.items[0].title, 'The Future');
+  } finally {
+    server.close();
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('GET /api/coming-soon returns 503 when no source is configured', async () => {
+  const haClient = { getStates: async () => haStates };
+  const { server, url } = await startApp(baseConfig(), haClient);
+  try {
+    const resp = await fetch(`${url}/api/coming-soon`);
+    assert.equal(resp.status, 503);
+    const body = await resp.json();
+    assert.equal(body.error, 'coming_soon_not_configured');
   } finally { server.close(); }
 });
 

@@ -11,9 +11,11 @@ export function rootRoute({ config, version }) {
       name: 'plex-now-showing-server',
       version,
       mode: config.mode,
+      displayMode: config.displayMode || 'now_showing',
       backend: config.backend || 'plex',
       endpoints: {
         state: '/api/state',
+        comingSoon: '/api/coming-soon',
         config: '/api/config',
         mediaInfo: '/api/media-info/:ratingKey',
         healthz: '/healthz',

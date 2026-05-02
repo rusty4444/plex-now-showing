@@ -96,9 +96,17 @@ The project follows [Semantic Versioning](https://semver.org/).
 - Apple TV backend support (closes #77). `backend: apple_tv` auto-detects
   active Apple TV media players, carries HA `app_name` through to the kiosk,
   and shows a compact app badge/icon when available.
+- Generic streaming backend support (refs #77). `backend: streaming`
+  auto-detects any active `media_player.*` entity with an `app_name`
+  attribute, so the same app-name, title, artwork, and dashboard-icons badge
+  path works for Roku, Google TV, Android TV, YouTube, Disney+, Netflix, Plex,
+  and similar providers.
 - Kaleidescape backend support (closes #78). `backend: kaleidescape`
   auto-detects active Kaleidescape `media_player` entities exposed by Home
   Assistant and renders their now-playing artwork and metadata.
+- Coming Soon display mode (closes #33). `display_mode: coming_soon` turns
+  the kiosk into a Radarr/Sonarr upcoming-release carousel with a Coming Soon
+  marquee, poster/fanart selection, counts, cycle interval, and days offset.
 
 ### Fixed
 - Dev add-on installs now use a matching pre-release image tag and the build

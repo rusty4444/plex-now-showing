@@ -23,10 +23,13 @@ export function loadConfig(env = process.env) {
     : (env.HA_URL || '').replace(/\/$/, '');
   const haToken = mode === 'addon' ? supervisorToken : (env.HA_TOKEN || '');
   const backend = normaliseBackend(env.BACKEND || env.MEDIA_SERVER || env.SERVER_TYPE, 'plex');
+  const displayMode = parseEnum(env.DISPLAY_MODE || env.DISPLAY_MODE_DEFAULT,
+    ['now_showing', 'coming_soon'], 'now_showing');
 
   const config = {
     mode,
     port: parseInt(env.PORT || '8099', 10),
+    displayMode,
     backend,
     haUrl,
     haToken,
@@ -45,6 +48,19 @@ export function loadConfig(env = process.env) {
     // TTLs (ms) — tuned below 1× poll interval so a second tablet doesn't re-hit HA
     stateTtl: parseInt(env.STATE_TTL_MS || '3000', 10),
     mediaInfoTtl: parseInt(env.MEDIA_INFO_TTL_MS || '600000', 10), // 10 min
+    comingSoonTtl: parseInt(env.COMING_SOON_TTL_MS || '900000', 10), // 15 min
+    comingSoon: {
+      title: env.COMING_SOON_TITLE || 'Coming Soon',
+      radarrUrl: (env.RADARR_URL || '').replace(/\/$/, ''),
+      radarrApiKey: env.RADARR_API_KEY || '',
+      sonarrUrl: (env.SONARR_URL || '').replace(/\/$/, ''),
+      sonarrApiKey: env.SONARR_API_KEY || '',
+      moviesCount: parseIntClamped(env.COMING_SOON_MOVIES_COUNT, 5, 0, 50),
+      showsCount: parseIntClamped(env.COMING_SOON_SHOWS_COUNT, 5, 0, 50),
+      cycleInterval: parseIntClamped(env.COMING_SOON_CYCLE_INTERVAL, 8, 2, 300),
+      daysOffset: parseIntClamped(env.COMING_SOON_DAYS_OFFSET, 0, 0, 365),
+      imageType: parseEnum(env.COMING_SOON_IMAGE_TYPE, ['poster', 'fanart'], 'poster'),
+    },
     // Fully Kiosk auto-switcher (#48). Disabled by default; users who prefer
     // the HA Blueprint (#47) can leave it off and vice versa.
     switcherEnabled: parseBool(env.SWITCHER_ENABLED, false),
@@ -181,6 +197,12 @@ function validate(c) {
   if (c.plexUrl && !c.plexToken) errors.push('plexToken is required when plexUrl is set');
   if (!Number.isFinite(c.port) || c.port < 1 || c.port > 65535) errors.push('port must be between 1 and 65535');
   if (!Number.isFinite(c.poll) || c.poll < 1000) errors.push('poll must be \u2265 1000 ms');
+  if (!Number.isFinite(c.comingSoonTtl) || c.comingSoonTtl < 10000) errors.push('comingSoonTtl must be \u2265 10000 ms');
+  if (c.displayMode === 'coming_soon') {
+    const hasSource = !!((c.comingSoon.radarrUrl && c.comingSoon.radarrApiKey)
+      || (c.comingSoon.sonarrUrl && c.comingSoon.sonarrApiKey));
+    if (!hasSource) errors.push('at least one Coming Soon source is required when DISPLAY_MODE=coming_soon');
+  }
   if (c.switcherEnabled && !c.fullyKiosksRaw) {
     errors.push('FULLY_KIOSKS is required when SWITCHER_ENABLED is true');
   }
