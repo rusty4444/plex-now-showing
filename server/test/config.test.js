@@ -29,7 +29,7 @@ test('backend defaults to plex and accepts supported HA media backends', () => {
   const def = loadConfig({ SUPERVISOR_TOKEN: 'x' });
   assert.equal(def.config.backend, 'plex');
 
-  for (const backend of ['plex', 'jellyfin', 'emby', 'kodi', 'apple_tv', 'kaleidescape']) {
+  for (const backend of ['plex', 'jellyfin', 'emby', 'kodi', 'apple_tv', 'streaming', 'kaleidescape']) {
     const { config } = loadConfig({ SUPERVISOR_TOKEN: 'x', BACKEND: backend });
     assert.equal(config.backend, backend);
   }
@@ -71,6 +71,53 @@ test('TTL defaults match spec (3 s state, 10 min media-info)', () => {
   const { config } = loadConfig({ SUPERVISOR_TOKEN: 'x' });
   assert.equal(config.stateTtl, 3000);
   assert.equal(config.mediaInfoTtl, 600000);
+  assert.equal(config.comingSoonTtl, 900000);
+});
+
+test('display mode defaults to now_showing and accepts coming_soon', () => {
+  const def = loadConfig({ SUPERVISOR_TOKEN: 'x' });
+  assert.equal(def.config.displayMode, 'now_showing');
+
+  const comingSoon = loadConfig({
+    SUPERVISOR_TOKEN: 'x',
+    DISPLAY_MODE: 'coming_soon',
+    RADARR_URL: 'http://radarr.local:7878',
+    RADARR_API_KEY: 'rk',
+  });
+  assert.equal(comingSoon.config.displayMode, 'coming_soon');
+  assert.deepEqual(comingSoon.errors, []);
+
+  const invalid = loadConfig({ SUPERVISOR_TOKEN: 'x', DISPLAY_MODE: 'lobby' });
+  assert.equal(invalid.config.displayMode, 'now_showing');
+});
+
+test('coming soon config parses source settings and validates required source', () => {
+  const missing = loadConfig({ SUPERVISOR_TOKEN: 'x', DISPLAY_MODE: 'coming_soon' });
+  assert.ok(missing.errors.some(e => e.includes('Coming Soon source')));
+
+  const { config, errors } = loadConfig({
+    SUPERVISOR_TOKEN: 'x',
+    RADARR_URL: 'http://radarr.local:7878/',
+    RADARR_API_KEY: 'rk',
+    SONARR_URL: 'http://sonarr.local:8989/',
+    SONARR_API_KEY: 'sk',
+    COMING_SOON_TITLE: 'Next Releases',
+    COMING_SOON_MOVIES_COUNT: '9',
+    COMING_SOON_SHOWS_COUNT: '3',
+    COMING_SOON_CYCLE_INTERVAL: '12',
+    COMING_SOON_DAYS_OFFSET: '2',
+    COMING_SOON_IMAGE_TYPE: 'fanart',
+  });
+
+  assert.deepEqual(errors, []);
+  assert.equal(config.comingSoon.title, 'Next Releases');
+  assert.equal(config.comingSoon.radarrUrl, 'http://radarr.local:7878');
+  assert.equal(config.comingSoon.sonarrUrl, 'http://sonarr.local:8989');
+  assert.equal(config.comingSoon.moviesCount, 9);
+  assert.equal(config.comingSoon.showsCount, 3);
+  assert.equal(config.comingSoon.cycleInterval, 12);
+  assert.equal(config.comingSoon.daysOffset, 2);
+  assert.equal(config.comingSoon.imageType, 'fanart');
 });
 
 test('visual toggles all default to false', () => {

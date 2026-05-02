@@ -4,6 +4,7 @@ export const BACKENDS = Object.freeze([
   'emby',
   'kodi',
   'apple_tv',
+  'streaming',
   'kaleidescape',
 ]);
 
@@ -42,6 +43,14 @@ export const BACKEND_RULES = Object.freeze({
     entityPrefix: 'media_player.apple_tv',
     exactEntities: Object.freeze(['media_player.apple_tv']),
     entityIncludes: Object.freeze(['_apple_tv', 'appletv']),
+    defaultPlayer: '',
+  }),
+  streaming: Object.freeze({
+    id: 'streaming',
+    label: 'Streaming Device',
+    entityPrefix: 'media_player.',
+    exactEntities: Object.freeze([]),
+    requiredAttributes: Object.freeze(['app_name']),
     defaultPlayer: '',
   }),
   kaleidescape: Object.freeze({

@@ -11,7 +11,8 @@
 > multi-backend playback, and no-code display controls.
 
 A full-screen cinema marquee display for Home Assistant that shows what is
-currently playing on Plex, Jellyfin, Emby, Kodi, Apple TV, or Kaleidescape.
+currently playing on Plex, Jellyfin, Emby, Kodi, Apple TV, generic streaming
+devices, or Kaleidescape.
 It is designed for wall-mounted tablets running Fully Kiosk Browser, but it
 also works in any modern browser.
 
@@ -58,7 +59,8 @@ not exposed to the tablet browser.
 | Home Assistant add-on | `addons/plex-now-showing` wraps the server as a Supervisor add-on with Ingress, a config form, logs, multi-arch GHCR images, and optional direct port `8099`. |
 | Docker Compose | `docker/docker-compose.example.yml` and `.env.example` run the same image for HA Container users. |
 | Unified server | `server/` serves the kiosk and exposes `/api/state`, `/api/config`, `/api/media-info/:ratingKey`, `/api/artwork`, `/api/night-mode`, and `/healthz`. |
-| Multi-backend support | `backend` selects `plex`, `jellyfin`, `emby`, `kodi`, `apple_tv`, or `kaleidescape`; `player` can pin any exact `media_player` entity. Plex-specific `plex_player` is still accepted for compatibility. |
+| Multi-backend support | `backend` selects `plex`, `jellyfin`, `emby`, `kodi`, `apple_tv`, `streaming`, or `kaleidescape`; `player` can pin any exact `media_player` entity. Plex-specific `plex_player` is still accepted for compatibility. |
+| Coming Soon mode | `display_mode: coming_soon` turns the kiosk into a Radarr/Sonarr upcoming-release screensaver with a `COMING SOON` marquee. |
 | Fully Kiosk switching | Use either the bundled HA Blueprint or the add-on/server's built-in Fully Kiosk REST switcher. |
 | Visual toggles | Progress bar, ratings badges, genre chips, info-panel display modes, pause backdrops, burn-in mitigation, night dimming, frame styles, marquee font picker, theme presets, and accent color overrides. |
 | CI / release plumbing | Multi-arch add-on builds, config linting, Docker image publishing, server tests, add-on docs, and examples. |
@@ -67,10 +69,12 @@ not exposed to the tablet browser.
 
 - Cinema marquee display with animated bulb frame, title overlays, idle state,
   and portrait or landscape layouts.
-- Playback support for Plex, Jellyfin, Emby, Kodi, Apple TV, and
-  Kaleidescape Home Assistant `media_player` entities.
-- Apple TV app-name badges with app icons when Home Assistant exposes
-  `app_name`.
+- Playback support for Plex, Jellyfin, Emby, Kodi, Apple TV, generic
+  streaming devices, and Kaleidescape Home Assistant `media_player` entities.
+- Streaming app-name badges with app icons when Home Assistant exposes
+  `app_name`, including Disney+, YouTube, Netflix, Plex, and similar apps.
+- Coming Soon mode for Radarr/Sonarr upcoming movies and episodes, with
+  rotating poster or fanart art for Fully Kiosk screensavers and automations.
 - Optional exact player pinning via `player`.
 - Plex username filtering so shared Plex servers can show only your sessions.
 - Tap-for-info panel with synopsis, player, rating, duration, progress, and
@@ -97,8 +101,10 @@ not exposed to the tablet browser.
 ## Requirements
 
 - Home Assistant with at least one supported media integration configured:
-  Plex, Jellyfin, Emby, Kodi, Apple TV, or Kaleidescape.
+  Plex, Jellyfin, Emby, Kodi, Apple TV, a streaming device exposing
+  `app_name`, or Kaleidescape.
 - One or more active `media_player` entities from that integration.
+- Radarr or Sonarr URL + API key if you want `display_mode: coming_soon`.
 - Fully Kiosk Browser if you want automatic wall-tablet switching.
 - Plex URL + Plex token only if you want Plex-only enhanced metadata such as
   codec/HDR details, ratings, genre chips, or Plex backdrop art.
@@ -129,7 +135,7 @@ because Home Assistant Supervisor supplies the API token automatically.
 
 4. Install **Plex Now Showing**.
 5. Configure the add-on:
-   - `backend`: `plex`, `jellyfin`, `emby`, `kodi`, `apple_tv`, or
+   - `backend`: `plex`, `jellyfin`, `emby`, `kodi`, `apple_tv`, `streaming`, or
      `kaleidescape`
    - `player`: optional exact entity ID, for example `media_player.kodi`
    - `plex_url` and `plex_token`: optional, Plex enhanced metadata only
@@ -223,8 +229,8 @@ tablet browser must hold the HA token.
    ```
 
 3. If no token is configured, the page opens `#setup`. Fill:
-   - **Connection**: Home Assistant URL, HA token, backend, optional player,
-     optional Plex URL/token, and landscape mode
+   - **Connection**: display mode, Home Assistant URL/token, backend, optional
+     player, optional Plex URL/token, Coming Soon sources, and landscape mode
    - **Display**: theme preset, accent color, frame style, marquee font,
      progress bar, ratings badges, genre chips, info-panel mode, backdrops,
      burn-in mitigation, pixel nudge, and night dimming
@@ -251,8 +257,14 @@ Then edit `now_showing.config.js` before copying it to Home Assistant:
 window.NOW_SHOWING_CONFIG = {
   haUrl: 'http://homeassistant.local:8123',
   haToken: 'YOUR_LONG_LIVED_ACCESS_TOKEN',
-  backend: 'plex', // plex | jellyfin | emby | kodi | apple_tv | kaleidescape
+  displayMode: 'now_showing',
+  backend: 'plex', // plex | jellyfin | emby | kodi | apple_tv | streaming | kaleidescape
   player: '',
+  comingSoonTitle: 'Coming Soon',
+  comingSoonMoviesCount: 5,
+  comingSoonShowsCount: 5,
+  comingSoonCycleInterval: 8,
+  comingSoonImageType: 'poster',
   plexUsername: '',
   plexUrl: '',
   plexToken: '',
@@ -294,7 +306,8 @@ Equivalent URL hash example:
 
 | Purpose | Add-on option | Docker env | Frontend key | Values |
 |---------|---------------|------------|--------------|--------|
-| Media backend | `backend` | `BACKEND` | `backend` | `plex`, `jellyfin`, `emby`, `kodi`, `apple_tv`, `kaleidescape` |
+| Display mode | `display_mode` | `DISPLAY_MODE` | `displayMode` | `now_showing`, `coming_soon` |
+| Media backend | `backend` | `BACKEND` | `backend` | `plex`, `jellyfin`, `emby`, `kodi`, `apple_tv`, `streaming`, `kaleidescape` |
 | Exact player pin | `player` | `PLAYER` | `player` | Any `media_player.*` entity ID |
 | Plex username filter | `plex_username` | `PLEX_USERNAME` | `plexUsername` | Optional Plex username; blank shows the first active Plex player |
 | Legacy Plex player pin | `plex_player` | `PLEX_PLAYER` | `plexPlayer` | Prefer `player` for new installs |
@@ -306,6 +319,25 @@ Equivalent URL hash example:
 | Media-info cache | `media_info_ttl_ms` | `MEDIA_INFO_TTL_MS` | Server only | Default `600000` |
 | API shared secret | `proxy_secret` | `PROXY_SECRET` | Server only | Optional `X-Proxy-Secret` hardening |
 | Origin allowlist | `allowed_origins` | `ALLOWED_ORIGINS` | Server only | Comma-separated origins |
+
+## Coming Soon Configuration
+
+Set `display_mode` / `DISPLAY_MODE` / `displayMode` to `coming_soon` to make
+the kiosk rotate upcoming Radarr/Sonarr items instead of live playback. This is
+useful as a Fully Kiosk screensaver URL or as a target for HA automations.
+
+| Purpose | Add-on option | Docker env | Frontend key | Values |
+|---------|---------------|------------|--------------|--------|
+| Marquee text | `coming_soon_title` | `COMING_SOON_TITLE` | `comingSoonTitle` | Default `Coming Soon` |
+| Radarr URL | `radarr_url` | `RADARR_URL` | `radarrUrl` | Optional source |
+| Radarr API key | `radarr_api_key` | `RADARR_API_KEY` | `radarrApiKey` | Required with Radarr URL |
+| Sonarr URL | `sonarr_url` | `SONARR_URL` | `sonarrUrl` | Optional source |
+| Sonarr API key | `sonarr_api_key` | `SONARR_API_KEY` | `sonarrApiKey` | Required with Sonarr URL |
+| Movie count | `coming_soon_movies_count` | `COMING_SOON_MOVIES_COUNT` | `comingSoonMoviesCount` | `0` to `50` |
+| Show count | `coming_soon_shows_count` | `COMING_SOON_SHOWS_COUNT` | `comingSoonShowsCount` | `0` to `50` |
+| Cycle interval | `coming_soon_cycle_interval` | `COMING_SOON_CYCLE_INTERVAL` | `comingSoonCycleInterval` | Seconds, `2` to `300` |
+| Days offset | `coming_soon_days_offset` | `COMING_SOON_DAYS_OFFSET` | `comingSoonDaysOffset` | Include recent past releases |
+| Image type | `coming_soon_image_type` | `COMING_SOON_IMAGE_TYPE` | `comingSoonImageType` | `poster`, `fanart` |
 
 ## Visual Configuration
 
@@ -344,6 +376,7 @@ for the selected backend:
 | Emby | `media_player.emby_*` or `media_player.emby` |
 | Kodi | `media_player.kodi_*` or `media_player.kodi` |
 | Apple TV | `media_player.apple_tv`, `media_player.apple_tv*`, or entity IDs containing `_apple_tv` / `appletv` |
+| Streaming Device | Any active `media_player.*` entity with an `app_name` attribute, useful for Roku, Google TV, Android TV, Apple TV, and similar providers |
 | Kaleidescape | `media_player.kaleidescape`, `media_player.kaleidescape_*`, or entity IDs containing `kaleidescape` |
 
 If `player` is set, that exact entity is used regardless of backend prefix.

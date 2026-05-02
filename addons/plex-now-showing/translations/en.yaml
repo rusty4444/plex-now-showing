@@ -2,17 +2,23 @@
 # Translations for the Options tab in the HA add-on UI.
 # Keys match fields in config.yaml's `options:` / `schema:` blocks.
 configuration:
+  display_mode:
+    name: Display mode
+    description: >-
+      Choose "now_showing" for live media playback or "coming_soon" for a
+      Radarr/Sonarr upcoming-release screensaver.
   backend:
     name: Backend
     description: >-
       Media backend to watch in Home Assistant: Plex, Jellyfin, Emby, Kodi,
-      Apple TV, or Kaleidescape.
+      Apple TV, generic streaming device, or Kaleidescape.
   player:
     name: Player entity
     description: >-
       Optional media_player entity id to pin, e.g. media_player.kodi,
-      media_player.living_room_apple_tv, or media_player.kaleidescape_theater.
-      Leave empty to auto-detect active players for the selected backend.
+      media_player.living_room_apple_tv, media_player.living_room_roku, or
+      media_player.kaleidescape_theater. Leave empty to auto-detect active
+      players for the selected backend.
   plex_url:
     name: Plex URL
     description: >-
@@ -49,6 +55,39 @@ configuration:
   media_info_ttl_ms:
     name: Media-info cache TTL (ms)
     description: Server-side cache window for /api/media-info/:ratingKey.
+  coming_soon_ttl_ms:
+    name: Coming Soon cache TTL (ms)
+    description: Server-side cache window for /api/coming-soon.
+  coming_soon_title:
+    name: Coming Soon title
+    description: Marquee text shown when Display mode is coming_soon.
+  radarr_url:
+    name: Radarr URL
+    description: Base URL of your Radarr server, e.g. http://radarr.local:7878.
+  radarr_api_key:
+    name: Radarr API key
+    description: Radarr API key from Settings > General.
+  sonarr_url:
+    name: Sonarr URL
+    description: Base URL of your Sonarr server, e.g. http://sonarr.local:8989.
+  sonarr_api_key:
+    name: Sonarr API key
+    description: Sonarr API key from Settings > General.
+  coming_soon_movies_count:
+    name: Coming Soon movies
+    description: Number of upcoming Radarr movies to include.
+  coming_soon_shows_count:
+    name: Coming Soon shows
+    description: Number of upcoming Sonarr series to include.
+  coming_soon_cycle_interval:
+    name: Coming Soon cycle interval (s)
+    description: Seconds each upcoming title stays on screen before cycling.
+  coming_soon_days_offset:
+    name: Coming Soon days offset
+    description: Include releases from this many days in the past.
+  coming_soon_image_type:
+    name: Coming Soon image type
+    description: Use portrait poster art or landscape fanart/backdrop art.
   proxy_secret:
     name: Proxy secret (optional)
     description: >-

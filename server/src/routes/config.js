@@ -14,8 +14,19 @@ export function configRoute({ config }) {
     // browsers on the wall might live for days. Let them re-read on reload.
     res.set('Cache-Control', 'no-store');
     res.json({
+      displayMode: config.displayMode || 'now_showing',
       backend: config.backend || 'plex',
       player: config.player || '',
+      comingSoon: {
+        title: config.comingSoon?.title || 'Coming Soon',
+        enabled: !!((config.comingSoon?.radarrUrl && config.comingSoon?.radarrApiKey)
+          || (config.comingSoon?.sonarrUrl && config.comingSoon?.sonarrApiKey)),
+        moviesCount: config.comingSoon?.moviesCount ?? 5,
+        showsCount: config.comingSoon?.showsCount ?? 5,
+        cycleInterval: config.comingSoon?.cycleInterval ?? 8,
+        daysOffset: config.comingSoon?.daysOffset ?? 0,
+        imageType: config.comingSoon?.imageType || 'poster',
+      },
       visual: {
         progressBar: !!config.visual?.progressBar,
         ratingsBadges: !!config.visual?.ratingsBadges,

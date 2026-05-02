@@ -21,7 +21,8 @@ probe of `/api`) and switches to `/api/state`. Plex-only metadata calls use
 
 | Option | Default | Purpose |
 |--------|---------|---------|
-| `backend` | `plex` | Media backend to watch: `plex`, `jellyfin`, `emby`, `kodi`, `apple_tv`, or `kaleidescape`. |
+| `display_mode` | `now_showing` | `now_showing` for live playback, `coming_soon` for a Radarr/Sonarr upcoming-release screensaver. |
+| `backend` | `plex` | Media backend to watch: `plex`, `jellyfin`, `emby`, `kodi`, `apple_tv`, `streaming`, or `kaleidescape`. Use `streaming` for Roku, Google TV, Android TV, Apple TV, or any `media_player` exposing `app_name`. |
 | `player` | _empty_ | Optional exact `media_player` entity id. Leave empty to auto-detect active players for `backend`. |
 | `plex_url` | _empty_ | e.g. `https://plex.example.com:32400`. Needed for the info panel. |
 | `plex_token` | _empty_ | Plex `X-Plex-Token`. Required together with `plex_url`. |
@@ -32,6 +33,17 @@ probe of `/api`) and switches to `/api/state`. Plex-only metadata calls use
 | `poll_interval` | `5000` | Kiosk poll interval (ms). |
 | `state_ttl_ms` | `3000` | Server-side cache for `/api/state`. Smooths multi-tablet polls. |
 | `media_info_ttl_ms` | `600000` | Server-side cache for `/api/media-info/:ratingKey`. |
+| `coming_soon_ttl_ms` | `900000` | Server-side cache for `/api/coming-soon`. |
+| `coming_soon_title` | `Coming Soon` | Marquee text in Coming Soon mode. |
+| `radarr_url` | _empty_ | Optional Radarr URL for upcoming movies. |
+| `radarr_api_key` | _empty_ | Required with `radarr_url`. |
+| `sonarr_url` | _empty_ | Optional Sonarr URL for upcoming episodes. |
+| `sonarr_api_key` | _empty_ | Required with `sonarr_url`. |
+| `coming_soon_movies_count` | `5` | Number of Radarr movies to include. |
+| `coming_soon_shows_count` | `5` | Number of Sonarr series to include. |
+| `coming_soon_cycle_interval` | `8` | Seconds each upcoming title stays on screen. |
+| `coming_soon_days_offset` | `0` | Include releases from this many days in the past. |
+| `coming_soon_image_type` | `poster` | `poster` or `fanart`. |
 | `proxy_secret` | _empty_ | If set, requests to `/api/*` must carry `X-Proxy-Secret`. |
 | `allowed_origins` | `[]` | Comma-joined allowlist for the `Origin` header on `/api/*`. Leave empty for Ingress-only. |
 | `switcher_enabled` | `false` | Turn on the built-in Fully Kiosk auto-switcher. Use **this or the Blueprint (#47)** — not both. |
