@@ -93,6 +93,12 @@ The project follows [Semantic Versioning](https://semver.org/).
 - Setup Automation tab links to the tablet-switching Blueprint import/download
   flow and generates add-on/Docker config for the built-in Fully Kiosk
   switcher.
+- Apple TV backend support (closes #77). `backend: apple_tv` auto-detects
+  active Apple TV media players, carries HA `app_name` through to the kiosk,
+  and shows a compact app badge/icon when available.
+- Kaleidescape backend support (closes #78). `backend: kaleidescape`
+  auto-detects active Kaleidescape `media_player` entities exposed by Home
+  Assistant and renders their now-playing artwork and metadata.
 
 ### Fixed
 - Dev add-on installs now use a matching pre-release image tag and the build

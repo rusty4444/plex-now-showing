@@ -25,11 +25,11 @@ test('standalone mode strips trailing slash on HA_URL', () => {
   assert.equal(config.haUrl, 'https://ha.example.com:8123');
 });
 
-test('backend defaults to plex and accepts Jellyfin, Emby, and Kodi', () => {
+test('backend defaults to plex and accepts supported HA media backends', () => {
   const def = loadConfig({ SUPERVISOR_TOKEN: 'x' });
   assert.equal(def.config.backend, 'plex');
 
-  for (const backend of ['plex', 'jellyfin', 'emby', 'kodi']) {
+  for (const backend of ['plex', 'jellyfin', 'emby', 'kodi', 'apple_tv', 'kaleidescape']) {
     const { config } = loadConfig({ SUPERVISOR_TOKEN: 'x', BACKEND: backend });
     assert.equal(config.backend, backend);
   }

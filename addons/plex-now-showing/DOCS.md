@@ -21,7 +21,7 @@ probe of `/api`) and switches to `/api/state`. Plex-only metadata calls use
 
 | Option | Default | Purpose |
 |--------|---------|---------|
-| `backend` | `plex` | Media backend to watch: `plex`, `jellyfin`, `emby`, or `kodi`. |
+| `backend` | `plex` | Media backend to watch: `plex`, `jellyfin`, `emby`, `kodi`, `apple_tv`, or `kaleidescape`. |
 | `player` | _empty_ | Optional exact `media_player` entity id. Leave empty to auto-detect active players for `backend`. |
 | `plex_url` | _empty_ | e.g. `https://plex.example.com:32400`. Needed for the info panel. |
 | `plex_token` | _empty_ | Plex `X-Plex-Token`. Required together with `plex_url`. |

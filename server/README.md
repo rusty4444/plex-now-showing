@@ -48,7 +48,7 @@ For HA Container users running via Docker Compose. Set:
 | `PORT` | `8099` | Listen port |
 | `SUPERVISOR_TOKEN` | – | Set by Supervisor; switches to add-on mode |
 | `HA_URL` / `HA_TOKEN` | – | Standalone mode |
-| `BACKEND` | `plex` | Media backend to watch: `plex`, `jellyfin`, `emby`, or `kodi` |
+| `BACKEND` | `plex` | Media backend to watch: `plex`, `jellyfin`, `emby`, `kodi`, `apple_tv`, or `kaleidescape` |
 | `PLAYER` | – | Optional exact `media_player` entity id. Leave empty to auto-detect active players for `BACKEND` |
 | `PLEX_URL` / `PLEX_TOKEN` | – | Required together if you want `/api/media-info/:ratingKey` |
 | `PLEX_USERNAME` | – | Filters which `media_player.plex_*` entities count as "yours" |

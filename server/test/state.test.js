@@ -78,7 +78,7 @@ test('generic player pins work for non-Plex backends', () => {
   assert.ok(r.artwork.startsWith('/api/artwork?path='));
 });
 
-test('Jellyfin, Emby, and Kodi scan their matching media_player entities', () => {
+test('Jellyfin, Emby, Kodi, Apple TV, and Kaleidescape scan matching media players', () => {
   const providerStates = [
     {
       entity_id: 'media_player.jellyfin_living_room',
@@ -95,11 +95,30 @@ test('Jellyfin, Emby, and Kodi scan their matching media_player entities', () =>
       state: 'playing',
       attributes: { media_title: 'Kodi Clip', friendly_name: 'Kodi' },
     },
+    {
+      entity_id: 'media_player.living_room_apple_tv',
+      state: 'playing',
+      attributes: {
+        media_title: 'Silo',
+        friendly_name: 'Living Room Apple TV',
+        app_name: 'Apple TV',
+        entity_picture: '/api/media_player_proxy/media_player.living_room_apple_tv',
+      },
+    },
+    {
+      entity_id: 'media_player.kaleidescape_theater',
+      state: 'paused',
+      attributes: { media_title: 'Blade Runner 2049', friendly_name: 'Kaleidescape Theater' },
+    },
   ];
 
   assert.equal(normalise(providerStates, { backend: 'jellyfin' }).title, 'Jellyfin Movie');
   assert.equal(normalise(providerStates, { backend: 'emby' }).title, 'Emby Show');
   assert.equal(normalise(providerStates, { backend: 'kodi' }).title, 'Kodi Clip');
+  const appleTv = normalise(providerStates, { backend: 'apple_tv' });
+  assert.equal(appleTv.title, 'Silo');
+  assert.equal(appleTv.appName, 'Apple TV');
+  assert.equal(normalise(providerStates, { backend: 'kaleidescape' }).title, 'Blade Runner 2049');
 });
 
 test('backend falls back to plex on unknown values', () => {
