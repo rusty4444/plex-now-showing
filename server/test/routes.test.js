@@ -150,6 +150,7 @@ test('GET /api/config defaults every visual toggle off', async () => {
         nightModeOpacity: 0.4,
         theme: 'classic-gold',
         accentColor: '',
+        cornerRadiusPx: 0,
       },
     });
   } finally { server.close(); }
@@ -271,6 +272,25 @@ test('GET /api/config surfaces theme + accentColor when configured', async () =>
     const body = await fetch(`${url}/api/config`).then(r => r.json());
     assert.equal(body.visual.theme, 'neon-80s');
     assert.equal(body.visual.accentColor, '#ff00aa');
+  } finally { server.close(); }
+});
+
+test('GET /api/config surfaces cornerRadiusPx when configured', async () => {
+  const haClient = { getStates: async () => haStates };
+  const { server, url } = await startApp(
+    baseConfig({
+      visual: {
+        progressBar: false,
+        ratingsBadges: false,
+        infoPanelMode: 'on_tap',
+        cornerRadiusPx: 24,
+      },
+    }),
+    haClient,
+  );
+  try {
+    const body = await fetch(`${url}/api/config`).then(r => r.json());
+    assert.equal(body.visual.cornerRadiusPx, 24);
   } finally { server.close(); }
 });
 

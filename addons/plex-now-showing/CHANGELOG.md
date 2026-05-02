@@ -74,6 +74,11 @@ The project follows [Semantic Versioning](https://semver.org/).
   CSS `color-mix(in srgb, ...)`. Empty value (the default) leaves the
   theme's ramp untouched. Short form (`#abc`) and named colours are
   rejected at both server and client validation layers.
+- Corner / frame radius slider (closes #68). New
+  `visual_corner_radius_px` option, `VISUAL_CORNER_RADIUS_PX` env, and
+  setup slider round the inner marquee, poster, and info panel from
+  `0`-`48` px while leaving the outer bulb frame square. Default `0`
+  preserves the original sharp cinema look.
 - Frame style picker (closes #65). New `visual_frame_style` option with
   `bulbs` (default, current animated bulb string), `gold-line` (thin
   accent-coloured double border with no bulb glow), and `none` (no

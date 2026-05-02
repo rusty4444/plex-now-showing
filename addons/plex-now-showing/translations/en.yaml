@@ -212,6 +212,11 @@ configuration:
       accent ramp — bulbs, marquee text glow, progress bar, and ratings
       badges all derive from it. Leave blank to use the theme's default
       ramp. Short form (#abc) and named colours are rejected.
+  visual_corner_radius_px:
+    name: Corner radius (px)
+    description: >-
+      Rounds the inner marquee, poster, and info panel. Range 0-48. Default
+      0 keeps the sharp cinema look and leaves the outer bulb frame square.
   log_level:
     name: Log level
     description: Verbosity of the add-on log.

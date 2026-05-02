@@ -52,6 +52,7 @@ export function configRoute({ config }) {
         // + a single CSS custom property override.
         theme: config.visual?.theme || 'classic-gold',
         accentColor: config.visual?.accentColor || '',
+        cornerRadiusPx: config.visual?.cornerRadiusPx ?? 0,
       },
     });
   });

@@ -90,6 +90,7 @@ not exposed to the tablet browser.
 - Theme presets: `classic-gold`, `art-deco-silver`, `neon-80s`, and
   `minimalist-dark`.
 - Strict `#RRGGBB` accent color override that reskins the active theme.
+- Optional corner-radius slider for the inner marquee, poster, and info panel.
 - Frame style picker: animated `bulbs`, quiet `gold-line`, or `none`.
 - Marquee font picker: `bebas-neue`, `anton`, `oswald`, `monoton`, or
   `playfair-display`.
@@ -197,6 +198,7 @@ LANDSCAPE=false
 VISUAL_THEME=classic-gold
 VISUAL_FRAME_STYLE=bulbs
 VISUAL_MARQUEE_FONT=bebas-neue
+VISUAL_CORNER_RADIUS_PX=0
 VISUAL_PROGRESS_BAR=false
 ```
 
@@ -294,12 +296,13 @@ localStorage.setItem('pns.visualFrameStyle', 'gold-line');
 localStorage.setItem('pns.visualMarqueeFont', 'anton');
 localStorage.setItem('pns.visualProgressBar', 'true');
 localStorage.setItem('pns.visualAccentColor', '#ff5500');
+localStorage.setItem('pns.visualCornerRadiusPx', '16');
 ```
 
 Equivalent URL hash example:
 
 ```text
-#visualTheme=minimalist-dark&visualFrameStyle=none&visualMarqueeFont=monoton&visualProgressBar=true&visualAccentColor=%23ff5500
+#visualTheme=minimalist-dark&visualFrameStyle=none&visualMarqueeFont=monoton&visualProgressBar=true&visualAccentColor=%23ff5500&visualCornerRadiusPx=16
 ```
 
 ## Core Configuration
@@ -363,6 +366,7 @@ something.
 | Night opacity | `visual_night_mode_opacity` | `VISUAL_NIGHT_MODE_OPACITY` | `visualNightModeOpacity` | `0` to `0.95` |
 | Theme preset | `visual_theme` | `VISUAL_THEME` | `visualTheme` | `classic-gold`, `art-deco-silver`, `neon-80s`, `minimalist-dark` |
 | Accent color | `visual_accent_color` | `VISUAL_ACCENT_COLOR` | `visualAccentColor` | Strict `#RRGGBB`, empty for theme default |
+| Corner radius | `visual_corner_radius_px` | `VISUAL_CORNER_RADIUS_PX` | `visualCornerRadiusPx` | `0` to `48` px, default `0` |
 
 ## Backend Behavior
 

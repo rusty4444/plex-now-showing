@@ -45,6 +45,7 @@
       --marquee-font-family: 'Bebas Neue', sans-serif;
       --marquee-font-weight: 400;
       --marquee-letter-spacing: 0.35em;
+      --pns-corner-radius: 0px;
     }
 
     body[data-theme="classic-gold"] {
@@ -288,6 +289,7 @@
       border-image: linear-gradient(135deg, var(--accent-light), var(--accent-dark), var(--accent-light), var(--accent-dark)) 1;
       overflow: hidden;
       z-index: 2;
+      border-radius: var(--pns-corner-radius) var(--pns-corner-radius) 0 0;
     }
 
     /* Red curtain background */
@@ -367,6 +369,7 @@
       border-image: linear-gradient(135deg, var(--accent-light), var(--accent-dark), var(--accent-light), var(--accent-dark)) 1;
       overflow: hidden;
       background: var(--bg-marquee);
+      border-radius: 0 0 var(--pns-corner-radius) var(--pns-corner-radius);
     }
 
     /* ===== BURN-IN MITIGATION (#28) =====
@@ -475,6 +478,7 @@
       border-top: none;
       pointer-events: none;
       z-index: 5;
+      border-radius: 0 0 max(0px, calc(var(--pns-corner-radius) - 6px)) max(0px, calc(var(--pns-corner-radius) - 6px));
     }
 
     /* ===== POSTER AREA ===== */
@@ -490,6 +494,7 @@
       background-color: var(--bg-marquee);
       opacity: 0;
       transition: opacity 0.8s ease;
+      border-radius: inherit;
     }
 
     .landscape-mode .poster-area {
@@ -800,6 +805,8 @@
       padding: 28px 24px 32px;
       transform: translateY(30px);
       transition: transform 0.4s ease;
+      border-radius: var(--pns-corner-radius) var(--pns-corner-radius) 0 0;
+      overflow: hidden;
     }
 
     .info-overlay.visible .info-panel {
@@ -1164,6 +1171,51 @@
       gap: 8px;
       align-items: center;
     }
+    .setup-range-row {
+      display: grid;
+      grid-template-columns: 1fr 56px;
+      gap: 10px;
+      align-items: center;
+    }
+    .setup-range-row output {
+      color: var(--text-dim);
+      font-size: 0.78rem;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    .setup-radius-preview {
+      display: grid;
+      grid-template-rows: 26px 58px;
+      gap: 4px;
+      margin-top: 8px;
+      padding: 6px;
+      border: 1px solid color-mix(in srgb, var(--accent-mid) 22%, transparent);
+      background: rgba(0, 0, 0, 0.38);
+    }
+    .setup-radius-preview-marquee,
+    .setup-radius-preview-poster,
+    .setup-radius-preview-info {
+      border: 2px solid color-mix(in srgb, var(--accent-light) 62%, transparent);
+      overflow: hidden;
+    }
+    .setup-radius-preview-marquee {
+      border-radius: var(--pns-corner-radius) var(--pns-corner-radius) 0 0;
+      background: linear-gradient(90deg, #3d0a0a, #7a1a1a, #3d0a0a);
+    }
+    .setup-radius-preview-poster {
+      position: relative;
+      border-radius: 0 0 var(--pns-corner-radius) var(--pns-corner-radius);
+      background: linear-gradient(135deg, rgba(232, 200, 74, 0.18), rgba(255, 255, 255, 0.04));
+    }
+    .setup-radius-preview-info {
+      position: absolute;
+      left: 10%;
+      right: 10%;
+      bottom: 8px;
+      height: 18px;
+      border-radius: max(0px, calc(var(--pns-corner-radius) * 0.7));
+      background: rgba(0, 0, 0, 0.72);
+    }
     .setup-copy {
       min-height: 130px;
       resize: vertical;
@@ -1449,6 +1501,21 @@
             <input id="cfgVisualAccentColorPicker" type="color" value="#c8a032" aria-label="Pick accent color">
           </div>
           <div class="hint">Leave blank for the theme default. Strict #RRGGBB only.</div>
+        </div>
+
+        <div class="setup-field">
+          <label for="cfgVisualCornerRadiusPx">Corner Radius</label>
+          <div class="setup-range-row">
+            <input id="cfgVisualCornerRadiusPx" type="range" min="0" max="48" step="1" autocomplete="off">
+            <output id="cfgVisualCornerRadiusPxValue" for="cfgVisualCornerRadiusPx">0px</output>
+          </div>
+          <div class="setup-radius-preview" aria-hidden="true">
+            <div class="setup-radius-preview-marquee"></div>
+            <div class="setup-radius-preview-poster">
+              <div class="setup-radius-preview-info"></div>
+            </div>
+          </div>
+          <div class="hint">Rounds the marquee, poster, and info panel. The outer bulb frame stays square.</div>
         </div>
 
         <div class="setup-section-title">Info Panel</div>
@@ -1869,6 +1936,7 @@
       // the active theme's default".
       theme: 'classic-gold',
       accentColor: '',
+      cornerRadiusPx: 0,
       marqueeFont: 'bebas-neue',
     };
 
@@ -1956,6 +2024,7 @@
       // below if /api/config responds with non-empty values.
       VISUAL.theme = readVisualTheme('classic-gold');
       VISUAL.accentColor = readAccentColor('');
+      VISUAL.cornerRadiusPx = readIntClamped('visualCornerRadiusPx', 0, 0, 48);
 
       await serverModeReady;
       if (!SERVER_MODE) return;
@@ -2008,6 +2077,9 @@
         if (v && typeof v.accentColor === 'string') {
           const c = v.accentColor.trim().toLowerCase();
           VISUAL.accentColor = (c === '' || HEX_RE.test(c)) ? c : '';
+        }
+        if (v && Number.isFinite(v.cornerRadiusPx)) {
+          VISUAL.cornerRadiusPx = Math.max(0, Math.min(48, v.cornerRadiusPx));
         }
       } catch (err) {
         console.warn('[plex-now-showing] /api/config fetch failed — using local defaults.', err);
@@ -2166,6 +2238,10 @@
       } else {
         document.body.style.removeProperty('--accent-override');
       }
+
+      // #68 corner radius. Applies only to inner panels through CSS custom
+      // property consumers; the outer bulb frame remains square.
+      document.documentElement.style.setProperty('--pns-corner-radius', `${VISUAL.cornerRadiusPx || 0}px`);
     }
 
     // ===== SETUP PAGE CONTROLLER (#setup) =====
@@ -2198,6 +2274,7 @@
       ['visualFrameStyle', 'cfgVisualFrameStyle', 'bulbs'],
       ['visualMarqueeFont', 'cfgVisualMarqueeFont', 'bebas-neue'],
       ['visualAccentColor', 'cfgVisualAccentColor', ''],
+      ['visualCornerRadiusPx', 'cfgVisualCornerRadiusPx', '0'],
       ['visualInfoPanelMode', 'cfgVisualInfoPanelMode', 'on_tap'],
       ['visualBackdropStyle', 'cfgVisualBackdropStyle', 'fullscreen'],
       ['visualBackdropDelayMs', 'cfgVisualBackdropDelayMs', '10000'],
@@ -2230,6 +2307,7 @@
       comingSoonShowsCount: { min: 0, max: 50, fallback: 5, float: false },
       comingSoonCycleInterval: { min: 2, max: 300, fallback: 8, float: false },
       comingSoonDaysOffset: { min: 0, max: 365, fallback: 0, float: false },
+      visualCornerRadiusPx: { min: 0, max: 48, fallback: 0, float: false },
     };
     const ACCENT_PICKER_DEFAULT = '#c8a032';
     const BLUEPRINT_URL = 'https://raw.githubusercontent.com/rusty4444/plex-now-showing/dev/blueprints/automation/rusty4444/plex_now_showing_display.yaml';
@@ -2280,6 +2358,7 @@
         syncSetupVisualFields();
         syncSetupAutomationFields();
         syncAccentPickerFromText();
+        syncCornerRadiusField();
         initSetupAutomationLinks();
       } catch (_) { /* storage unavailable */ }
     }
@@ -2495,6 +2574,16 @@
       text.value = picker.value.toLowerCase();
     }
 
+    function syncCornerRadiusField() {
+      const input = document.getElementById('cfgVisualCornerRadiusPx');
+      const output = document.getElementById('cfgVisualCornerRadiusPxValue');
+      if (!input) return;
+      const n = Math.max(0, Math.min(48, parseInt(input.value || '0', 10) || 0));
+      input.value = String(n);
+      if (output) output.textContent = `${n}px`;
+      document.documentElement.style.setProperty('--pns-corner-radius', `${n}px`);
+    }
+
     function normalizeSetupNumber(key, id) {
       const rule = SETUP_NUMBER_RULES[key];
       if (!rule) return document.getElementById(id)?.value.trim() || '';
@@ -2651,6 +2740,7 @@
       const loadPlayers = document.getElementById('setupLoadPlayersBtn');
       const accent = document.getElementById('cfgVisualAccentColor');
       const accentPicker = document.getElementById('cfgVisualAccentColorPicker');
+      const cornerRadius = document.getElementById('cfgVisualCornerRadiusPx');
       const copyBlueprint = document.getElementById('setupCopyBlueprintBtn');
       const copySwitcher = document.getElementById('setupCopySwitcherBtn');
       if (form)  form.addEventListener('submit', (e) => { e.preventDefault(); setupSave(); });
@@ -2682,6 +2772,7 @@
       }
       if (accent) accent.addEventListener('input', syncAccentPickerFromText);
       if (accentPicker) accentPicker.addEventListener('input', syncAccentTextFromPicker);
+      if (cornerRadius) cornerRadius.addEventListener('input', syncCornerRadiusField);
       if (copyBlueprint) copyBlueprint.addEventListener('click', () => copySetupText(BLUEPRINT_URL, 'Blueprint URL'));
       if (copySwitcher) copySwitcher.addEventListener('click', () => copySetupText(buildSwitcherConfigText(), 'Switcher config'));
       if (gear)  gear.addEventListener('click', () => {
