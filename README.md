@@ -233,9 +233,10 @@ tablet browser must hold the HA token.
 3. If no token is configured, the page opens `#setup`. Fill:
    - **Connection**: display mode, Home Assistant URL/token, backend, optional
      player, optional Plex URL/token, Coming Soon sources, and landscape mode
-   - **Display**: theme preset, accent color, frame style, marquee font,
-     progress bar, ratings badges, genre chips, info-panel mode, backdrops,
-     burn-in mitigation, pixel nudge, and night dimming
+   - **Display**: live visual preview, theme preset, accent color, frame
+     style, marquee font, progress bar, ratings badges, genre chips,
+     info-panel mode, backdrops, burn-in mitigation, pixel nudge, and night
+     dimming
    - **Automation**: import/download the tablet-switching Blueprint, or prepare
      built-in Fully Kiosk switcher settings for the add-on or Docker
 

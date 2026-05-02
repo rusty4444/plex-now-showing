@@ -91,7 +91,8 @@ The project follows [Semantic Versioning](https://semver.org/).
 - Frontend-only setup now has a Display tab with controls for every visual
   option: theme, accent colour, frame style, progress bar, ratings badges,
   genre chips, info panel mode, backdrops, burn-in mitigation, pixel nudge,
-  and night dimming.
+  and night dimming. The Display tab includes a wide live preview so visual
+  changes can be tested before saving.
 - Marquee font picker (`visual_marquee_font`) adds Bebas Neue, Anton, Oswald,
   Monoton, and Playfair Display choices to the add-on, Docker, server, and
   frontend-only setup paths.

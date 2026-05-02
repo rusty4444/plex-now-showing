@@ -90,7 +90,8 @@ through to the browser automatically — no rebuild, no per-tablet config.
 
 HACS-only users (no add-on / server) can open `#setup`, switch to the
 **Display** tab, and configure every visual toggle without editing code. The
-form writes the same per-tablet `pns.*` keys the kiosk reads at runtime.
+wide preview at the top of the tab updates as controls change, and the form
+writes the same per-tablet `pns.*` keys the kiosk reads at runtime.
 Advanced users can still set `pns.visualProgressBar=true` /
 `pns.visualRatingsBadges=true` / `pns.visualGenreChips=true` /
 `pns.visualInfoPanelMode=on_pause` / `pns.visualFrameStyle=gold-line` /
