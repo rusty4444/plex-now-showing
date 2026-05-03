@@ -1,4 +1,4 @@
-# "Now Showing" A Home Assistant Addon
+# "Now Showing" Home Assistant Addon
 
 <p align="center">
   <a href="https://buymeacoffee.com/rusty4" target="_blank">
