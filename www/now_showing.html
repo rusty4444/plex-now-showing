@@ -2733,6 +2733,13 @@
       const el = document.getElementById('setupOverlay');
       if (!el) return;
       el.classList.toggle('visible', !!show);
+      if (show) {
+        el.scrollTop = 0;
+        requestAnimationFrame(() => {
+          el.scrollTop = 0;
+          document.getElementById('setupForm')?.scrollIntoView({ block: 'start', inline: 'nearest' });
+        });
+      }
     }
 
     function populateSetupForm() {
