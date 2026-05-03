@@ -1,5 +1,5 @@
 ---
-# Home Assistant add-on manifest for Plex Now Showing (V2).
+# Home Assistant add-on manifest for Now Showing (V2).
 #
 # Wraps the unified Node 20 server (../server/) so HA OS / Supervised users
 # install this with one click from the add-on store. No user-created long-
@@ -8,11 +8,11 @@
 #
 # Docs on each field: https://developers.home-assistant.io/docs/add-ons/configuration
 
-name: Plex Now Showing
+name: Now Showing
 version: "2.1.0"
 slug: plex_now_showing
-description: Cinema-style now-playing kiosk for Plex, Jellyfin, Emby, Kodi, Apple TV, streaming devices, and Kaleidescape.
-url: https://github.com/rusty4444/plex-now-showing
+description: Cinema-style now-playing and coming-soon kiosk for Home Assistant.
+url: https://github.com/rusty4444/now-showing-ha
 arch:
   - amd64
   - aarch64

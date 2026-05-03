@@ -1,5 +1,5 @@
 ---
-# Build & publish the Plex Now Showing add-on images to GHCR.
+# Build & publish the Now Showing add-on images to GHCR.
 #
 # HA add-ons use one OCI image per arch (config.yaml has
 # `image: ghcr.io/rusty4444/plex-now-showing-{arch}`). Supervisor fills in
@@ -167,8 +167,8 @@ jobs:
             type=raw,value=dev,enable=${{ steps.ver.outputs.rolling_tag == 'dev' }}
             type=raw,value=main,enable=${{ steps.ver.outputs.rolling_tag == 'main' }}
           labels: |
-            org.opencontainers.image.title=Plex Now Showing (${{ matrix.arch }})
-            org.opencontainers.image.description=HA add-on image for Plex Now Showing
+            org.opencontainers.image.title=Now Showing (${{ matrix.arch }})
+            org.opencontainers.image.description=HA add-on image for Now Showing
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.licenses=MIT
 

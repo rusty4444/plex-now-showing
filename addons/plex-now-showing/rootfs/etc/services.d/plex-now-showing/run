@@ -1,7 +1,7 @@
 #!/usr/bin/with-contenv bashio
 # shellcheck shell=bash
 # ==============================================================================
-# Plex Now Showing add-on — service runner.
+# Now Showing add-on — service runner.
 #
 # Reads /data/options.json via bashio and forwards each option into the
 # environment the Node server expects (see server/src/config.js for the
@@ -10,7 +10,7 @@
 
 set -e
 
-bashio::log.info "Starting Plex Now Showing server..."
+bashio::log.info "Starting Now Showing server..."
 
 # ---- Home Assistant API (add-on mode) ----
 # SUPERVISOR_TOKEN is injected by Supervisor when hassio_api / homeassistant_api

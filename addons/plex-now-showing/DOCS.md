@@ -1,4 +1,4 @@
-# Plex Now Showing — Add-on Documentation
+# Now Showing - Add-on Documentation
 
 ## How it runs
 

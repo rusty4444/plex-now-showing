@@ -122,21 +122,21 @@ because Home Assistant Supervisor supplies the API token automatically.
 3. Add this repository URL:
 
    ```text
-   https://github.com/rusty4444/plex-now-showing
+   https://github.com/rusty4444/now-showing-ha
    ```
 
    While testing the `dev` branch before it is promoted to `main`, use the
    branch-suffixed repository URL:
 
    ```text
-   https://github.com/rusty4444/plex-now-showing#dev
+   https://github.com/rusty4444/now-showing-ha#dev
    ```
 
    Home Assistant supports the `#branch` suffix for stable/canary add-on
    repositories:
    https://developers.home-assistant.io/docs/add-ons/presentation/#offering-stable-and-canary-version
 
-4. Install **Plex Now Showing**.
+4. Install **Now Showing**.
 5. Configure the add-on:
    - `backend`: `plex`, `jellyfin`, `emby`, `kodi`, `apple_tv`, `streaming`, or
      `kaleidescape`

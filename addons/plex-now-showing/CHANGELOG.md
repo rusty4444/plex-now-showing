@@ -1,11 +1,14 @@
 # Changelog
 
-All notable changes to the Plex Now Showing add-on will be documented here.
+All notable changes to the Now Showing add-on will be documented here.
 The project follows [Semantic Versioning](https://semver.org/).
 
 ## 2.1.0 - 2026-05-03
 
 ### Added
+- The Home Assistant add-on is now presented as **Now Showing** in the add-on
+  store, Ingress labels, container metadata, and add-on documentation. The
+  internal slug/image path remains unchanged for existing installs.
 - Apple TV, generic streaming-device, and Kaleidescape backends are now part
   of the documented v2.1.0 release path.
 - Coming Soon mode can use Radarr/Sonarr as a Fully Kiosk screensaver, with
