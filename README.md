@@ -60,8 +60,8 @@ real-world kiosk features:
 |------|---------------|
 | More playback sources | Apple TV, generic streaming-device, and Kaleidescape backends join Plex, Jellyfin, Emby, and Kodi. Apple TV / streaming mode can use Home Assistant `app_name`, `media_title`, `entity_picture`, and dashboard-icons app badges for Disney+, YouTube, Netflix, Plex, Hulu, Prime Video, and similar apps. |
 | Coming Soon screensaver | New `coming_soon` display mode rotates upcoming Radarr/Sonarr movies and episodes with configurable marquee text, movie/show counts, cycle interval, days offset, and poster/fanart artwork. |
-| Setup UI | The setup flow now has player loading/picking, backend-specific player hints, Coming Soon source fields, Fully Kiosk automation helpers, a wider live visual preview in the Display tab, and fixed scrolling inside Home Assistant add-on Ingress views. |
-| Visual controls | Frame style, marquee font, theme preset, accent color, marquee background color, corner radius, progress bar, ratings badges, genre chips, info-panel mode, backdrops, burn-in nudge, and night dimming are configurable from setup without editing the HTML. |
+| Setup UI | The setup flow now has player loading/picking, backend-specific player hints, Coming Soon source fields, Fully Kiosk automation helpers, a wider live visual preview in the Display tab, a corrected bulb-frame preview, and fixed scrolling inside Home Assistant add-on Ingress views. |
+| Visual controls | Frame style, bulb size, marquee font, theme preset, accent color, marquee background color, corner radius, progress bar, ratings badges, genre chips, info-panel mode, backdrops, burn-in nudge, and night dimming are configurable from setup without editing the HTML. |
 | Now Showing + Coming Soon together | The docs now cover running two display URLs/instances so Fully Kiosk can show Now Showing during playback and Coming Soon as the idle/screensaver view. |
 | Release package | The Home Assistant add-on package and Node server package are versioned at `2.1.0`, with Docker/add-on release docs updated for the `addon-v2.1.0` package flow. |
 
@@ -94,6 +94,7 @@ real-world kiosk features:
   black, deep red, navy, forest green, midnight purple, and charcoal.
 - Optional corner-radius slider for the inner marquee, poster, and info panel.
 - Frame style picker: animated `bulbs`, quiet `gold-line`, or `none`.
+- Bulb size slider for the animated bulb frame.
 - Marquee font picker: `bebas-neue`, `anton`, `oswald`, `monoton`, or
   `playfair-display`.
 - Optional Fully Kiosk Browser auto-switching between your dashboard and the
@@ -145,8 +146,8 @@ because Home Assistant Supervisor supplies the API token automatically.
    - `player`: optional exact entity ID, for example `media_player.kodi`
    - `plex_url` and `plex_token`: optional, Plex enhanced metadata only
    - visual options such as `visual_theme`, `visual_frame_style`,
-     `visual_marquee_font`, `visual_marquee_bg_color`, and
-     `visual_progress_bar`
+     `visual_bulb_size_px`, `visual_marquee_font`,
+     `visual_marquee_bg_color`, and `visual_progress_bar`
 6. Start the add-on.
 7. Click **Open Web UI** for Ingress, or open:
 
@@ -202,6 +203,7 @@ PLEX_USERNAME=
 LANDSCAPE=false
 VISUAL_THEME=classic-gold
 VISUAL_FRAME_STYLE=bulbs
+VISUAL_BULB_SIZE_PX=28
 VISUAL_MARQUEE_FONT=bebas-neue
 VISUAL_MARQUEE_BG_COLOR=
 VISUAL_CORNER_RADIUS_PX=0
@@ -401,6 +403,7 @@ something new.
 | Genre chips | `visual_genre_chips` | `VISUAL_GENRE_CHIPS` | `visualGenreChips` | Plex metadata required |
 | Info panel mode | `visual_info_panel_mode` | `VISUAL_INFO_PANEL_MODE` | `visualInfoPanelMode` | `on_tap`, `on_pause`, `always` |
 | Frame style | `visual_frame_style` | `VISUAL_FRAME_STYLE` | `visualFrameStyle` | `bulbs`, `gold-line`, `none` |
+| Bulb size | `visual_bulb_size_px` | `VISUAL_BULB_SIZE_PX` | `visualBulbSizePx` | `12` to `48` px, default `28` |
 | Marquee font | `visual_marquee_font` | `VISUAL_MARQUEE_FONT` | `visualMarqueeFont` | `bebas-neue`, `anton`, `oswald`, `monoton`, `playfair-display` |
 | Backdrops | `visual_use_backdrops` | `VISUAL_USE_BACKDROPS` | `visualUseBackdrops` | Plex metadata required |
 | Backdrop style | `visual_backdrop_style` | `VISUAL_BACKDROP_STYLE` | `visualBackdropStyle` | `fullscreen`, `ambient` |

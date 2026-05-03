@@ -33,8 +33,8 @@ docker compose -f docker-compose.example.yml up -d
 Pin `TAG=2.1.0` in `.env` to stay on this release instead of `latest`.
 
 Display settings are configured in `.env` with the `VISUAL_*` variables, for
-example `VISUAL_THEME`, `VISUAL_FRAME_STYLE`, `VISUAL_MARQUEE_FONT`,
-`VISUAL_MARQUEE_BG_COLOR`, `VISUAL_PROGRESS_BAR`, and the backdrop /
+example `VISUAL_THEME`, `VISUAL_FRAME_STYLE`, `VISUAL_BULB_SIZE_PX`,
+`VISUAL_MARQUEE_FONT`, `VISUAL_MARQUEE_BG_COLOR`, `VISUAL_PROGRESS_BAR`, and the backdrop /
 burn-in toggles.
 
 ## Colocating with Home Assistant Container

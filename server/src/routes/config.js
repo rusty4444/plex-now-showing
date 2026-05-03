@@ -36,6 +36,7 @@ export function configRoute({ config }) {
         // #65 frame style. Presentation-only; frontend maps this to body
         // data-frame-style and starts/stops the bulb timer as needed.
         frameStyle: config.visual?.frameStyle || 'bulbs',
+        bulbSizePx: config.visual?.bulbSizePx ?? 28,
         marqueeFont: config.visual?.marqueeFont || 'bebas-neue',
         backdropStyle: config.visual?.backdropStyle || 'fullscreen',
         backdropDelayMs: Number.isFinite(config.visual?.backdropDelayMs)

@@ -146,6 +146,11 @@ configuration:
       Decorative screen-edge frame. "bulbs" (default) keeps the animated
       marquee bulbs. "gold-line" replaces them with a thin double border
       using the active accent colour. "none" removes the frame entirely.
+  visual_bulb_size_px:
+    name: Bulb size (px)
+    description: >-
+      Diameter of each animated bulb when Frame style is "bulbs". Range
+      12-48. Default 28 keeps the original marquee frame size.
   visual_marquee_font:
     name: Marquee font
     description: >-

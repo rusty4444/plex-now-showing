@@ -140,6 +140,7 @@ test('GET /api/config defaults every visual toggle off', async () => {
         infoPanelMode: 'on_tap',
         useBackdrops: false,
         frameStyle: 'bulbs',
+        bulbSizePx: 28,
         marqueeFont: 'bebas-neue',
         backdropStyle: 'fullscreen',
         backdropDelayMs: 10000,
@@ -230,6 +231,7 @@ test('GET /api/config surfaces frameStyle when configured', async () => {
       visual: {
         progressBar: false, ratingsBadges: false, infoPanelMode: 'on_tap',
         frameStyle: 'gold-line',
+        bulbSizePx: 36,
       },
     }),
     haClient,
@@ -237,6 +239,7 @@ test('GET /api/config surfaces frameStyle when configured', async () => {
   try {
     const body = await fetch(`${url}/api/config`).then(r => r.json());
     assert.equal(body.visual.frameStyle, 'gold-line');
+    assert.equal(body.visual.bulbSizePx, 36);
   } finally { server.close(); }
 });
 

@@ -16,15 +16,20 @@ The project follows [Semantic Versioning](https://semver.org/).
   and poster/fanart artwork.
 - The setup UI can load/pick compatible media players, configure Coming Soon
   sources, generate automation/switcher config, and preview visual changes in
-  a wider Display-tab preview.
+  a wider Display-tab preview with a generated bulb frame that matches the
+  live display.
 - Marquee background colour picker (closes #62/#viz-13). Add-on option
   `visual_marquee_bg_color`, Docker env `VISUAL_MARQUEE_BG_COLOR`, and
   frontend key `visualMarqueeBgColor` accept strict `#RRGGBB` values or empty
   theme default. Setup includes black, deep red, navy, forest green,
   midnight purple, charcoal, and arbitrary picker options.
-- Corner radius, frame style, marquee font, theme, accent colour, progress
-  bar, ratings, genre chips, info panel, backdrops, burn-in nudge, and night
-  dimming are all documented as Display setup controls.
+- Corner radius, frame style, bulb size, marquee font, theme, accent colour,
+  progress bar, ratings, genre chips, info panel, backdrops, burn-in nudge,
+  and night dimming are all documented as Display setup controls.
+- Bulb size slider. Add-on option `visual_bulb_size_px`, Docker env
+  `VISUAL_BULB_SIZE_PX`, and frontend key `visualBulbSizePx` resize the
+  animated bulb frame from `12` to `48` px. Default `28` preserves the
+  original look.
 
 ### Documentation
 - README and add-on docs now explain how to use Now Showing and Coming Soon at
@@ -35,6 +40,8 @@ The project follows [Semantic Versioning](https://semver.org/).
 - Setup now opens at the top and scrolls inside Home Assistant add-on Ingress,
   so tall setup tabs no longer have unreachable controls unless the browser is
   zoomed out.
+- The Display-tab preview now generates bulbs around the preview frame and
+  marquee divider instead of showing a sparse fixed set of sample dots.
 
 ## 2.0.0 - 2026-04-27
 

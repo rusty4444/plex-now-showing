@@ -35,6 +35,7 @@
       --accent-glow: #ffd75e;
       --bulb-on: #ffe69c;
       --bulb-off: #665522;
+      --pns-bulb-size: 28px;
       --frame-border: #a0842e;
       --bg-dark: #0a0a0a;
       --bg-marquee: #111111;
@@ -259,8 +260,8 @@
 
     .bulb {
       position: absolute;
-      width: 28px;
-      height: 28px;
+      width: var(--pns-bulb-size, 28px);
+      height: var(--pns-bulb-size, 28px);
       border-radius: 50%;
       /* Three-stop bulb gradient: hot core (--bulb-on lightened) → main
        * bulb colour → dark rim (--accent-mid). Now reads from the accent
@@ -1232,6 +1233,7 @@
       --preview-text-dim: var(--text-dim);
       --preview-red-curtain: var(--red-curtain);
       --preview-radius: 0px;
+      --preview-bulb-size: 9px;
       --preview-nudge-x: 0px;
       --preview-nudge-y: 0px;
       position: relative;
@@ -1267,22 +1269,25 @@
     }
     .setup-preview-bulbs span {
       position: absolute;
-      width: 9px;
-      height: 9px;
+      width: var(--preview-bulb-size);
+      height: var(--preview-bulb-size);
       border-radius: 999px;
-      background: var(--preview-accent-light);
-      box-shadow: 0 0 10px color-mix(in srgb, var(--preview-accent-glow) 70%, transparent);
+      transform: translate(-50%, -50%);
+      background: radial-gradient(circle at 40% 35%,
+        color-mix(in srgb, var(--preview-accent-light) 82%, #ffffff 18%),
+        var(--preview-accent-light) 42%,
+        var(--preview-accent-mid) 100%);
+      box-shadow:
+        0 0 calc(var(--preview-bulb-size) * 1.2) color-mix(in srgb, var(--preview-accent-glow) 70%, transparent),
+        0 0 calc(var(--preview-bulb-size) * 2.2) color-mix(in srgb, var(--preview-accent-glow) 28%, transparent);
     }
-    .setup-preview-bulbs span:nth-child(1) { left: 4%; top: 0; }
-    .setup-preview-bulbs span:nth-child(2) { left: 22%; top: 0; opacity: 0.45; }
-    .setup-preview-bulbs span:nth-child(3) { left: 40%; top: 0; }
-    .setup-preview-bulbs span:nth-child(4) { left: 58%; top: 0; opacity: 0.45; }
-    .setup-preview-bulbs span:nth-child(5) { left: 76%; top: 0; }
-    .setup-preview-bulbs span:nth-child(6) { right: 4%; top: 0; opacity: 0.45; }
-    .setup-preview-bulbs span:nth-child(7) { left: 0; top: 28%; }
-    .setup-preview-bulbs span:nth-child(8) { right: 0; top: 28%; opacity: 0.45; }
-    .setup-preview-bulbs span:nth-child(9) { left: 0; bottom: 8%; opacity: 0.45; }
-    .setup-preview-bulbs span:nth-child(10) { right: 0; bottom: 8%; }
+    .setup-preview-bulbs span.off {
+      opacity: 0.45;
+      background: radial-gradient(circle at 40% 35%,
+        color-mix(in srgb, var(--preview-accent-mid) 54%, #ffffff 12%),
+        color-mix(in srgb, var(--preview-accent-dark) 62%, #000000 38%) 72%);
+      box-shadow: 0 0 calc(var(--preview-bulb-size) * 0.7) color-mix(in srgb, var(--preview-accent-dark) 54%, transparent);
+    }
     .setup-preview-stage {
       position: relative;
       overflow: hidden;
@@ -1712,10 +1717,7 @@
       <div class="setup-tab-panel" id="setupPanelDisplay" role="tabpanel" aria-labelledby="setupTabDisplay" data-setup-panel="display">
         <div class="setup-section-title">Theme</div>
         <div class="setup-visual-preview" id="setupVisualPreview" data-frame-style="bulbs" aria-live="polite">
-          <div class="setup-preview-bulbs" aria-hidden="true">
-            <span></span><span></span><span></span><span></span><span></span>
-            <span></span><span></span><span></span><span></span><span></span>
-          </div>
+          <div class="setup-preview-bulbs" aria-hidden="true"></div>
           <div class="setup-preview-stage">
             <div class="setup-preview-marquee"><span id="setupPreviewMarquee">NOW SHOWING</span></div>
             <div class="setup-preview-poster">
@@ -1759,6 +1761,14 @@
               <option value="gold-line">Gold Line</option>
               <option value="none">None</option>
             </select>
+          </div>
+          <div class="setup-field">
+            <label for="cfgVisualBulbSizePx">Bulb Size</label>
+            <div class="setup-range-row">
+              <input id="cfgVisualBulbSizePx" type="range" min="12" max="48" step="1" autocomplete="off">
+              <output id="cfgVisualBulbSizePxValue" for="cfgVisualBulbSizePx">28px</output>
+            </div>
+            <div class="hint">Changes the animated bulb frame. Only applies when Frame Style is Bulbs.</div>
           </div>
           <div class="setup-field">
             <label for="cfgVisualMarqueeFont">Marquee Font</label>
@@ -2211,6 +2221,7 @@
       genreChips: false,
       infoPanelMode: 'on_tap',
       frameStyle: 'bulbs',
+      bulbSizePx: 28,
       // #21 backdrop art on pause.
       useBackdrops: false,
       backdropStyle: 'fullscreen', // 'fullscreen' | 'ambient'
@@ -2308,6 +2319,7 @@
       VISUAL.genreChips = readBool('visualGenreChips', false);
       VISUAL.infoPanelMode = readInfoPanelMode('on_tap');
       VISUAL.frameStyle = readFrameStyle('bulbs');
+      VISUAL.bulbSizePx = readIntClamped('visualBulbSizePx', 28, 12, 48);
       VISUAL.marqueeFont = readMarqueeFont('bebas-neue');
       VISUAL.useBackdrops = readBool('visualUseBackdrops', false);
       VISUAL.backdropStyle = readBackdropStyle('fullscreen');
@@ -2351,6 +2363,9 @@
         }
         if (v && typeof v.frameStyle === 'string' && FRAME_STYLES.includes(v.frameStyle)) {
           VISUAL.frameStyle = v.frameStyle;
+        }
+        if (v && Number.isFinite(v.bulbSizePx)) {
+          VISUAL.bulbSizePx = Math.max(12, Math.min(48, v.bulbSizePx));
         }
         if (v && typeof v.marqueeFont === 'string' && MARQUEE_FONTS.includes(v.marqueeFont)) {
           VISUAL.marqueeFont = v.marqueeFont;
@@ -2508,6 +2523,7 @@
       // owns the bulb DOM and chase timer so non-bulb modes do no extra work.
       document.body.dataset.frameStyle = VISUAL.frameStyle;
       document.body.dataset.marqueeFont = VISUAL.marqueeFont;
+      document.documentElement.style.setProperty('--pns-bulb-size', `${VISUAL.bulbSizePx || 28}px`);
       syncFrameStyle();
       // #21 backdrop art. Two body classes:
       //   backdrop-ambient-mode  — flag for CSS to reveal the blurred layer
@@ -2589,6 +2605,7 @@
       ['comingSoonImageType', 'cfgComingSoonImageType', 'poster'],
       ['visualTheme', 'cfgVisualTheme', 'classic-gold'],
       ['visualFrameStyle', 'cfgVisualFrameStyle', 'bulbs'],
+      ['visualBulbSizePx', 'cfgVisualBulbSizePx', '28'],
       ['visualMarqueeFont', 'cfgVisualMarqueeFont', 'bebas-neue'],
       ['visualAccentColor', 'cfgVisualAccentColor', ''],
       ['visualMarqueeBgColor', 'cfgVisualMarqueeBgColor', ''],
@@ -2620,6 +2637,7 @@
       visualNudgeIntervalMs: { min: 5000, max: 600000, fallback: 60000, float: false },
       visualNudgeAmplitudePx: { min: 1, max: 16, fallback: 4, float: false },
       visualNightModeOpacity: { min: 0, max: 0.95, fallback: 0.4, float: true },
+      visualBulbSizePx: { min: 12, max: 48, fallback: 28, float: false },
       switcherIntervalMs: { min: 1000, max: 60000, fallback: 5000, float: false },
       comingSoonMoviesCount: { min: 0, max: 50, fallback: 5, float: false },
       comingSoonShowsCount: { min: 0, max: 50, fallback: 5, float: false },
@@ -2709,6 +2727,7 @@
     const SETUP_VISUAL_FIELD_IDS = [
       'cfgVisualTheme',
       'cfgVisualFrameStyle',
+      'cfgVisualBulbSizePx',
       'cfgVisualMarqueeFont',
       'cfgVisualAccentColor',
       'cfgVisualAccentColorPicker',
@@ -2764,6 +2783,7 @@
         syncSetupAutomationFields();
         syncAccentPickerFromText();
         syncMarqueeBgPickerFromText();
+        syncBulbSizeField();
         syncCornerRadiusField();
         initSetupAutomationLinks();
       } catch (_) { /* storage unavailable */ }
@@ -2876,6 +2896,7 @@
       for (const panel of document.querySelectorAll('[data-setup-panel]')) {
         panel.classList.toggle('active', panel.dataset.setupPanel === tabName);
       }
+      if (tabName === 'display') requestAnimationFrame(syncSetupVisualPreview);
     }
 
     function setupQuote(value) {
@@ -2954,6 +2975,9 @@
     }
 
     function syncSetupVisualFields() {
+      const frameStyle = document.getElementById('cfgVisualFrameStyle')?.value || 'bulbs';
+      setSetupDependents(['cfgVisualBulbSizePx'], frameStyle === 'bulbs');
+
       const useBackdrops = !!document.getElementById('cfgVisualUseBackdrops')?.checked;
       setSetupDependents(['cfgVisualBackdropStyle', 'cfgVisualBackdropDelayMs'], useBackdrops);
 
@@ -3038,6 +3062,52 @@
       });
     }
 
+    function createBulbLine(count, start, spacing, fixed, axis, out) {
+      for (let i = 0; i < count; i++) {
+        out.push(axis === 'x'
+          ? { x: start + i * spacing, y: fixed }
+          : { x: fixed, y: start + i * spacing });
+      }
+    }
+
+    function renderSetupPreviewBulbs(preview, bulbSize) {
+      const bulbs = preview.querySelector('.setup-preview-bulbs');
+      if (!bulbs) return;
+      const w = bulbs.clientWidth;
+      const h = bulbs.clientHeight;
+      if (!w || !h) return;
+
+      const spacing = Math.max(18, Math.round(bulbSize * 1.5));
+      const positions = [];
+      const horizontalCount = Math.max(2, Math.floor(w / spacing));
+      const horizontalStart = (w - (horizontalCount - 1) * spacing) / 2;
+      createBulbLine(horizontalCount, horizontalStart, spacing, 0, 'x', positions);
+      createBulbLine(horizontalCount, horizontalStart, spacing, h, 'x', positions);
+
+      const verticalCount = Math.max(2, Math.floor(h / spacing));
+      const verticalStart = (h - (verticalCount - 1) * spacing) / 2;
+      createBulbLine(verticalCount, verticalStart, spacing, 0, 'y', positions);
+      createBulbLine(verticalCount, verticalStart, spacing, w, 'y', positions);
+
+      const marquee = preview.querySelector('.setup-preview-marquee');
+      if (marquee) {
+        const bulbsRect = bulbs.getBoundingClientRect();
+        const marqueeBottom = marquee.getBoundingClientRect().bottom - bulbsRect.top;
+        if (Number.isFinite(marqueeBottom) && marqueeBottom > 0 && marqueeBottom < h) {
+          createBulbLine(horizontalCount, horizontalStart, spacing, marqueeBottom, 'x', positions);
+        }
+      }
+
+      bulbs.innerHTML = '';
+      positions.forEach((pos, idx) => {
+        const el = document.createElement('span');
+        el.style.left = `${pos.x}px`;
+        el.style.top = `${pos.y}px`;
+        el.classList.toggle('off', idx % 3 !== 0);
+        bulbs.appendChild(el);
+      });
+    }
+
     function syncSetupVisualPreview() {
       const preview = document.getElementById('setupVisualPreview');
       if (!preview) return;
@@ -3049,6 +3119,7 @@
       const marqueeBgRaw = (document.getElementById('cfgVisualMarqueeBgColor')?.value || '').trim().toLowerCase();
       const marqueeBg = HEX_RE.test(marqueeBgRaw) ? marqueeBgRaw : '';
       const radius = Math.max(0, Math.min(48, parseInt(document.getElementById('cfgVisualCornerRadiusPx')?.value || '0', 10) || 0));
+      const bulbSize = Math.max(12, Math.min(48, parseInt(document.getElementById('cfgVisualBulbSizePx')?.value || '28', 10) || 28));
       const fontKey = document.getElementById('cfgVisualMarqueeFont')?.value || 'bebas-neue';
       const font = SETUP_FONT_PREVIEW[fontKey] || SETUP_FONT_PREVIEW['bebas-neue'];
       const frameStyle = document.getElementById('cfgVisualFrameStyle')?.value || 'bulbs';
@@ -3081,6 +3152,7 @@
         '--preview-text-dim': palette.textDim,
         '--preview-red-curtain': palette.redCurtain,
         '--preview-radius': `${radius}px`,
+        '--preview-bulb-size': `${Math.max(5, Math.round(bulbSize * 0.32))}px`,
         '--preview-marquee-font': font.family,
         '--preview-marquee-weight': font.weight,
         '--preview-marquee-spacing': font.spacing,
@@ -3091,6 +3163,7 @@
       for (const [key, value] of Object.entries(vars)) preview.style.setProperty(key, value);
 
       preview.dataset.frameStyle = FRAME_STYLES.includes(frameStyle) ? frameStyle : 'bulbs';
+      renderSetupPreviewBulbs(preview, bulbSize);
       preview.classList.toggle('progress-on', !!document.getElementById('cfgVisualProgressBar')?.checked);
       preview.classList.toggle('ratings-on', !!document.getElementById('cfgVisualRatingsBadges')?.checked);
       preview.classList.toggle('genres-on', !!document.getElementById('cfgVisualGenreChips')?.checked);
@@ -3108,6 +3181,7 @@
           accent ? `Accent ${accent}` : 'Theme accent',
           marqueeBg ? `Marquee bg ${marqueeBg}` : 'Theme marquee',
           frameStyle,
+          frameStyle === 'bulbs' ? `${bulbSize}px bulbs` : '',
           font.label,
           `${radius}px radius`,
           infoMode === 'on_tap' ? 'Info hidden until tap' : `Info ${infoMode.replace('_', ' ')}`,
@@ -3126,6 +3200,17 @@
       input.value = String(n);
       if (output) output.textContent = `${n}px`;
       document.documentElement.style.setProperty('--pns-corner-radius', `${n}px`);
+      syncSetupVisualPreview();
+    }
+
+    function syncBulbSizeField() {
+      const input = document.getElementById('cfgVisualBulbSizePx');
+      const output = document.getElementById('cfgVisualBulbSizePxValue');
+      if (!input) return;
+      const n = Math.max(12, Math.min(48, parseInt(input.value || '28', 10) || 28));
+      input.value = String(n);
+      if (output) output.textContent = `${n}px`;
+      document.documentElement.style.setProperty('--pns-bulb-size', `${n}px`);
       syncSetupVisualPreview();
     }
 
@@ -3297,6 +3382,7 @@
       const marqueeBg = document.getElementById('cfgVisualMarqueeBgColor');
       const marqueeBgPicker = document.getElementById('cfgVisualMarqueeBgColorPicker');
       const marqueeBgClear = document.getElementById('cfgVisualMarqueeBgClear');
+      const bulbSize = document.getElementById('cfgVisualBulbSizePx');
       const cornerRadius = document.getElementById('cfgVisualCornerRadiusPx');
       const copyBlueprint = document.getElementById('setupCopyBlueprintBtn');
       const copySwitcher = document.getElementById('setupCopySwitcherBtn');
@@ -3347,6 +3433,7 @@
       for (const swatch of document.querySelectorAll('[data-marquee-bg-preset]')) {
         swatch.addEventListener('click', () => setMarqueeBgPreset(swatch.dataset.marqueeBgPreset));
       }
+      if (bulbSize) bulbSize.addEventListener('input', syncBulbSizeField);
       if (cornerRadius) cornerRadius.addEventListener('input', syncCornerRadiusField);
       if (copyBlueprint) copyBlueprint.addEventListener('click', () => copySetupText(BLUEPRINT_URL, 'Blueprint URL'));
       if (copySwitcher) copySwitcher.addEventListener('click', () => copySetupText(buildSwitcherConfigText(), 'Switcher config'));
@@ -3806,10 +3893,11 @@
       }
       const w = window.innerWidth;
       const h = window.innerHeight;
-      const spacing = 42;
+      const bulbSize = Math.max(12, Math.min(48, VISUAL.bulbSizePx || 28));
+      const spacing = Math.max(18, Math.round(bulbSize * 1.5));
       const bulbs = [];
       const pad = 4;
-      const bulbR = 14;
+      const bulbR = bulbSize / 2;
 
       // Top edge
       const topY = pad - bulbR + 2;
@@ -4589,6 +4677,9 @@
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
         if (VISUAL.frameStyle === 'bulbs') createOuterBulbs();
+        if (document.getElementById('setupOverlay')?.classList.contains('visible')) {
+          syncSetupVisualPreview();
+        }
       }, 200);
     });
 

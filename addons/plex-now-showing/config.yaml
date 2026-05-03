@@ -77,6 +77,7 @@ options:
   visual_genre_chips: false
   visual_info_panel_mode: on_tap
   visual_frame_style: bulbs
+  visual_bulb_size_px: 28
   visual_marquee_font: bebas-neue
   # Backdrop art on pause (#21). Master switch is off; backdrop_style picks
   # fullscreen (landscape-only crossfade, default) vs ambient (blurred
@@ -139,6 +140,7 @@ schema:
   visual_genre_chips: "bool"
   visual_info_panel_mode: "list(on_tap|on_pause|always)"
   visual_frame_style: "list(bulbs|gold-line|none)"
+  visual_bulb_size_px: "int(12,48)"
   visual_marquee_font: "list(bebas-neue|anton|oswald|monoton|playfair-display)"
   visual_use_backdrops: "bool"
   visual_backdrop_style: "list(fullscreen|ambient)"

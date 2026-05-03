@@ -208,6 +208,23 @@ test('VISUAL_FRAME_STYLE defaults to bulbs and accepts the three frame modes', (
   assert.equal(bogus.config.visual.frameStyle, 'bulbs');
 });
 
+test('VISUAL_BULB_SIZE_PX defaults to 28 and is clamped to [12, 48]', () => {
+  const def = loadConfig({ SUPERVISOR_TOKEN: 'x' });
+  assert.equal(def.config.visual.bulbSizePx, 28);
+
+  const ok = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_BULB_SIZE_PX: '36' });
+  assert.equal(ok.config.visual.bulbSizePx, 36);
+
+  const tooSmall = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_BULB_SIZE_PX: '4' });
+  assert.equal(tooSmall.config.visual.bulbSizePx, 12);
+
+  const tooLarge = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_BULB_SIZE_PX: '72' });
+  assert.equal(tooLarge.config.visual.bulbSizePx, 48);
+
+  const bogus = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_BULB_SIZE_PX: 'huge' });
+  assert.equal(bogus.config.visual.bulbSizePx, 28);
+});
+
 test('VISUAL_MARQUEE_FONT defaults to Bebas Neue and accepts supported fonts', () => {
   const def = loadConfig({ SUPERVISOR_TOKEN: 'x' });
   assert.equal(def.config.visual.marqueeFont, 'bebas-neue');

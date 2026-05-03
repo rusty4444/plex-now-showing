@@ -89,6 +89,9 @@ export function loadConfig(env = process.env) {
       // decorative screen-edge frame for OLED / minimalist installs.
       frameStyle: parseEnum(env.VISUAL_FRAME_STYLE,
         ['bulbs', 'gold-line', 'none'], 'bulbs'),
+      // Bulb diameter for the animated frame. 28px preserves the original
+      // look; smaller/larger values keep proportional spacing in the client.
+      bulbSizePx: parseIntClamped(env.VISUAL_BULB_SIZE_PX, 28, 12, 48),
       // Marquee font picker (#62/#63). Defaults to Bebas Neue, which is the
       // original v1 headline font.
       marqueeFont: parseEnum(env.VISUAL_MARQUEE_FONT,

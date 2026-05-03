@@ -12,12 +12,13 @@ token, no Docker command line.
 - `coming_soon` mode turns Radarr/Sonarr upcoming movies and episodes into a
   Fully Kiosk-friendly screensaver.
 - The setup UI can load compatible players, configure Coming Soon sources, and
-  preview display changes before saving.
+  preview display changes before saving, with a corrected bulb-frame preview.
 - Setup now opens at the top and scrolls correctly inside Home Assistant
   Ingress, so tall setup tabs no longer require browser zoom.
-- New visual controls include frame style, marquee font, theme preset, accent
-  color, marquee background color, corner radius, progress bar, ratings,
-  genre chips, info-panel mode, backdrops, burn-in nudge, and night dimming.
+- New visual controls include frame style, bulb size, marquee font, theme
+  preset, accent color, marquee background color, corner radius, progress bar,
+  ratings, genre chips, info-panel mode, backdrops, burn-in nudge, and night
+  dimming.
 - The docs cover using Now Showing and Coming Soon at the same time with two
   display URLs or instances.
 

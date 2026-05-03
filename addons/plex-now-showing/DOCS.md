@@ -54,6 +54,7 @@ probe of `/api`) and switches to `/api/state`. Plex-only metadata calls use
 | `visual_genre_chips` | `false` | Genre pills (Action, Sci-Fi, …) next to the content rating in the info panel. Needs `plex_url` + `plex_token`. |
 | `visual_info_panel_mode` | `on_tap` | When to show the info panel. `on_tap` (default), `on_pause` (pinned while paused), `always` (pinned whenever media is active). |
 | `visual_frame_style` | `bulbs` | Screen-edge frame style: `bulbs` (animated marquee bulbs), `gold-line` (thin accent double border), or `none`. |
+| `visual_bulb_size_px` | `28` | Animated bulb diameter in pixels. Clamped `12`-`48`; only visible when `visual_frame_style` is `bulbs`. |
 | `visual_marquee_font` | `bebas-neue` | NOW SHOWING banner font: `bebas-neue`, `anton`, `oswald`, `monoton`, or `playfair-display`. |
 | `visual_use_backdrops` | `false` | Master switch for the backdrop-art feature. Needs `plex_url` + `plex_token`. |
 | `visual_backdrop_style` | `fullscreen` | `fullscreen` (landscape-only crossfade after `visual_backdrop_delay_ms`) or `ambient` (blurred fanart behind the poster, both orientations). |
@@ -82,6 +83,7 @@ through to the browser automatically — no rebuild, no per-tablet config.
 | `visual_genre_chips` | Adds genre pills (Action, Sci-Fi, …) next to the content rating in the info panel. Tags are pulled from Plex metadata (`item.Genre[]`) via `/api/media-info/:ratingKey` — requires `plex_url` + `plex_token`. Personal media libraries without metadata agents will simply render nothing, which is fine. Capped at 6 chips to keep the meta row tidy. |
 | `visual_info_panel_mode` | Controls **when** the whole info panel appears. `on_tap` (default) matches v1 behaviour — hidden until you tap the poster, auto-hides after 8 s. `on_pause` pins the panel open whenever the player is paused (tap-to-peek still works during playback). `always` keeps the panel open the entire time media is active; tap is suppressed. Combine with `visual_ratings_badges` if you want ratings visible on pause or always. |
 | `visual_frame_style` | Frame style picker (#65). `bulbs` keeps the existing animated outer bulb string. `gold-line` hides the bulbs and draws a quiet double border around the screen edge using the active accent colour, including `visual_accent_color` overrides. `none` removes the decorative frame entirely and stops the bulb animation timer. |
+| `visual_bulb_size_px` | Bulb size slider. `28` preserves the original marquee bulbs. Smaller values make the frame quieter; larger values make the theatre lights chunkier. The live display and setup preview both keep bulb spacing proportional to the selected size. |
 | `visual_marquee_font` | Marquee font picker (#62/#63). `bebas-neue` preserves the original v1 banner. `anton` and `oswald` are clean bold alternatives, `monoton` gives the marquee a neon sign feel, and `playfair-display` is a more editorial serif option. |
 | `visual_use_backdrops` / `visual_backdrop_style` / `visual_backdrop_delay_ms` | Backdrop art on pause (#21). **Master switch** is `visual_use_backdrops`. **Style** picks between `fullscreen` (after the item has been paused for `visual_backdrop_delay_ms`, the poster view crossfades to the Plex fanart — landscape orientations only, portrait is silently skipped because fanart crops look bad there) and `ambient` (a blurred + darkened copy of the fanart replaces the yellow bulb-lit background whenever media is active; works on both orientations because the blur makes aspect ratio moot). Images are proxied through the server at `/api/plex-art?path=…` so the Plex token never leaves the server. Requires `plex_url` + `plex_token`. |
 | `visual_burn_in_mitigation` | Master switch for long-running-kiosk protection. When on, the whole UI drifts by a few pixels every minute (configurable via `visual_nudge_interval_ms` + `visual_nudge_amplitude_px`) using a smooth 400 ms GPU transform, and a dim overlay can be triggered by an HA entity or the OS dark-mode media query. Off by default. |
@@ -100,7 +102,7 @@ iframes without zooming out.
 Advanced users can still set `pns.visualProgressBar=true` /
 `pns.visualRatingsBadges=true` / `pns.visualGenreChips=true` /
 `pns.visualInfoPanelMode=on_pause` / `pns.visualFrameStyle=gold-line` /
-`pns.visualMarqueeFont=anton` /
+`pns.visualBulbSizePx=32` / `pns.visualMarqueeFont=anton` /
 `pns.visualUseBackdrops=true` / `pns.visualBackdropStyle=ambient` /
 `pns.visualBurnInMitigation=true` (with optional
 `pns.visualNudgeIntervalMs`, `pns.visualNudgeAmplitudePx`,
@@ -111,7 +113,7 @@ Advanced users can still set `pns.visualProgressBar=true` /
 `#visualProgressBar=true` / `#visualRatingsBadges=true` /
 `#visualGenreChips=true` / `#visualInfoPanelMode=always` /
 `#visualFrameStyle=none` /
-`#visualMarqueeFont=monoton` /
+`#visualBulbSizePx=32` / `#visualMarqueeFont=monoton` /
 `#visualUseBackdrops=true` / `#visualBackdropStyle=ambient` /
 `#visualBurnInMitigation=true` /
 `#visualTheme=neon-80s` / `#visualAccentColor=%23ff5500` /
