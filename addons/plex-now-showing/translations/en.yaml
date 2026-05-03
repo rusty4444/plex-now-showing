@@ -212,6 +212,12 @@ configuration:
       accent ramp — bulbs, marquee text glow, progress bar, and ratings
       badges all derive from it. Leave blank to use the theme's default
       ramp. Short form (#abc) and named colours are rejected.
+  visual_marquee_bg_color:
+    name: Marquee background colour
+    description: >-
+      Optional #RRGGBB hex that overrides the active theme's marquee
+      background/curtain colour. Leave blank to use the selected theme.
+      Short form (#abc) and named colours are rejected.
   visual_corner_radius_px:
     name: Corner radius (px)
     description: >-

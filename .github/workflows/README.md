@@ -33,12 +33,12 @@ install time and pulls the tag named by the add-on `version`.
 ```bash
 # On dev, change the pre-release version in addons/plex-now-showing/config.yaml
 # to the release version, update CHANGELOG.md, merge to main, then:
-git tag addon-v2.0.0
-git push origin addon-v2.0.0
+git tag addon-v2.1.0
+git push origin addon-v2.1.0
 ```
 
 The workflow will build all five arches in parallel and push
-`:2.0.0` + `:latest`.
+`:2.1.0` + `:latest`.
 
 ### Publishing the HA custom repository
 

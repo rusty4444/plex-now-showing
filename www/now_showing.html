@@ -164,6 +164,11 @@
       --frame-border: color-mix(in srgb, var(--accent-override) 70%, #000 30%);
     }
 
+    body[style*="--marquee-bg-override"] {
+      --bg-marquee: var(--marquee-bg-override);
+      --red-curtain: var(--marquee-bg-override);
+    }
+
     html, body {
       width: 100%;
       height: 100%;
@@ -306,10 +311,10 @@
         ),
         linear-gradient(
           180deg,
-          #7a1a1a 0%,
-          #5c1010 30%,
-          #3d0a0a 70%,
-          #2a0808 100%
+          color-mix(in srgb, var(--red-curtain) 72%, #ffffff 28%) 0%,
+          var(--red-curtain) 30%,
+          color-mix(in srgb, var(--red-curtain) 70%, #000000 30%) 70%,
+          color-mix(in srgb, var(--red-curtain) 45%, #000000 55%) 100%
         );
     }
 
@@ -1171,6 +1176,35 @@
       gap: 8px;
       align-items: center;
     }
+    .setup-swatch-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .setup-color-swatch {
+      width: 30px;
+      height: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 6px;
+      background: var(--swatch);
+      cursor: pointer;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.24);
+    }
+    .setup-color-swatch:focus-visible {
+      outline: 2px solid var(--accent-light);
+      outline-offset: 2px;
+    }
+    .setup-color-clear {
+      min-height: 30px;
+      padding: 0 10px;
+      border: 1px solid color-mix(in srgb, var(--accent-mid) 28%, transparent);
+      border-radius: 6px;
+      background: #111111;
+      color: var(--text-dim);
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
     .setup-range-row {
       display: grid;
       grid-template-columns: 1fr 56px;
@@ -1269,7 +1303,12 @@
       border-radius: var(--preview-radius) var(--preview-radius) 0 0;
       background:
         repeating-linear-gradient(90deg, rgba(0,0,0,0.15) 0 2px, transparent 2px 16px),
-        linear-gradient(180deg, #7a1a1a, var(--preview-red-curtain), #2a0808);
+        linear-gradient(
+          180deg,
+          color-mix(in srgb, var(--preview-red-curtain) 72%, #ffffff 28%),
+          var(--preview-red-curtain),
+          color-mix(in srgb, var(--preview-red-curtain) 45%, #000000 55%)
+        );
     }
     .setup-preview-marquee span {
       font-family: var(--preview-marquee-font, var(--marquee-font-family));
@@ -1738,6 +1777,24 @@
         </div>
 
         <div class="setup-field">
+          <label for="cfgVisualMarqueeBgColor">Marquee Background Color</label>
+          <div class="setup-color-row">
+            <input id="cfgVisualMarqueeBgColor" type="text" maxlength="7" placeholder="#111111" autocomplete="off" spellcheck="false">
+            <input id="cfgVisualMarqueeBgColorPicker" type="color" value="#111111" aria-label="Pick marquee background color">
+          </div>
+          <div class="setup-swatch-row" aria-label="Marquee background presets">
+            <button class="setup-color-swatch" type="button" data-marquee-bg-preset="#111111" style="--swatch:#111111" title="Black" aria-label="Black marquee background"></button>
+            <button class="setup-color-swatch" type="button" data-marquee-bg-preset="#5c1010" style="--swatch:#5c1010" title="Deep red" aria-label="Deep red marquee background"></button>
+            <button class="setup-color-swatch" type="button" data-marquee-bg-preset="#10233d" style="--swatch:#10233d" title="Navy" aria-label="Navy marquee background"></button>
+            <button class="setup-color-swatch" type="button" data-marquee-bg-preset="#123524" style="--swatch:#123524" title="Forest green" aria-label="Forest green marquee background"></button>
+            <button class="setup-color-swatch" type="button" data-marquee-bg-preset="#1a0838" style="--swatch:#1a0838" title="Midnight purple" aria-label="Midnight purple marquee background"></button>
+            <button class="setup-color-swatch" type="button" data-marquee-bg-preset="#1f2937" style="--swatch:#1f2937" title="Charcoal" aria-label="Charcoal marquee background"></button>
+            <button class="setup-color-clear" type="button" id="cfgVisualMarqueeBgClear">Theme default</button>
+          </div>
+          <div class="hint">Leave blank for the theme default. Strict #RRGGBB only.</div>
+        </div>
+
+        <div class="setup-field">
           <label for="cfgVisualCornerRadiusPx">Corner Radius</label>
           <div class="setup-range-row">
             <input id="cfgVisualCornerRadiusPx" type="range" min="0" max="48" step="1" autocomplete="off">
@@ -2164,6 +2221,7 @@
       // the active theme's default".
       theme: 'classic-gold',
       accentColor: '',
+      marqueeBgColor: '',
       cornerRadiusPx: 0,
       marqueeFont: 'bebas-neue',
     };
@@ -2219,6 +2277,14 @@
     function readAccentColor(defaultValue) {
       const value = String(readConfig('visualAccentColor')).trim().toLowerCase();
       if (value && HEX_RE.test(value)) return value;
+      if (value) console.warn('[plex-now-showing] Ignoring invalid visualAccentColor:', value);
+      return defaultValue;
+    }
+
+    function readMarqueeBgColor(defaultValue) {
+      const value = String(readConfig('visualMarqueeBgColor')).trim().toLowerCase();
+      if (value && HEX_RE.test(value)) return value;
+      if (value) console.warn('[plex-now-showing] Ignoring invalid visualMarqueeBgColor:', value);
       return defaultValue;
     }
 
@@ -2252,6 +2318,7 @@
       // below if /api/config responds with non-empty values.
       VISUAL.theme = readVisualTheme('classic-gold');
       VISUAL.accentColor = readAccentColor('');
+      VISUAL.marqueeBgColor = readMarqueeBgColor('');
       VISUAL.cornerRadiusPx = readIntClamped('visualCornerRadiusPx', 0, 0, 48);
 
       await serverModeReady;
@@ -2304,7 +2371,19 @@
         // response.
         if (v && typeof v.accentColor === 'string') {
           const c = v.accentColor.trim().toLowerCase();
-          VISUAL.accentColor = (c === '' || HEX_RE.test(c)) ? c : '';
+          if (c === '' || HEX_RE.test(c)) VISUAL.accentColor = c;
+          else {
+            console.warn('[plex-now-showing] Ignoring invalid server accentColor:', c);
+            VISUAL.accentColor = '';
+          }
+        }
+        if (v && typeof v.marqueeBgColor === 'string') {
+          const c = v.marqueeBgColor.trim().toLowerCase();
+          if (c === '' || HEX_RE.test(c)) VISUAL.marqueeBgColor = c;
+          else {
+            console.warn('[plex-now-showing] Ignoring invalid server marqueeBgColor:', c);
+            VISUAL.marqueeBgColor = '';
+          }
         }
         if (v && Number.isFinite(v.cornerRadiusPx)) {
           VISUAL.cornerRadiusPx = Math.max(0, Math.min(48, v.cornerRadiusPx));
@@ -2467,6 +2546,12 @@
         document.body.style.removeProperty('--accent-override');
       }
 
+      if (VISUAL.marqueeBgColor) {
+        document.body.style.setProperty('--marquee-bg-override', VISUAL.marqueeBgColor);
+      } else {
+        document.body.style.removeProperty('--marquee-bg-override');
+      }
+
       // #68 corner radius. Applies only to inner panels through CSS custom
       // property consumers; the outer bulb frame remains square.
       document.documentElement.style.setProperty('--pns-corner-radius', `${VISUAL.cornerRadiusPx || 0}px`);
@@ -2502,6 +2587,7 @@
       ['visualFrameStyle', 'cfgVisualFrameStyle', 'bulbs'],
       ['visualMarqueeFont', 'cfgVisualMarqueeFont', 'bebas-neue'],
       ['visualAccentColor', 'cfgVisualAccentColor', ''],
+      ['visualMarqueeBgColor', 'cfgVisualMarqueeBgColor', ''],
       ['visualCornerRadiusPx', 'cfgVisualCornerRadiusPx', '0'],
       ['visualInfoPanelMode', 'cfgVisualInfoPanelMode', 'on_tap'],
       ['visualBackdropStyle', 'cfgVisualBackdropStyle', 'fullscreen'],
@@ -2538,6 +2624,7 @@
       visualCornerRadiusPx: { min: 0, max: 48, fallback: 0, float: false },
     };
     const ACCENT_PICKER_DEFAULT = '#c8a032';
+    const MARQUEE_BG_PICKER_DEFAULT = '#111111';
     const BLUEPRINT_URL = 'https://raw.githubusercontent.com/rusty4444/plex-now-showing/dev/blueprints/automation/rusty4444/plex_now_showing_display.yaml';
     const BLUEPRINT_IMPORT_URL = 'https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=' + encodeURIComponent(BLUEPRINT_URL);
     const SETUP_BACKEND_HINTS = {
@@ -2621,6 +2708,8 @@
       'cfgVisualMarqueeFont',
       'cfgVisualAccentColor',
       'cfgVisualAccentColorPicker',
+      'cfgVisualMarqueeBgColor',
+      'cfgVisualMarqueeBgColorPicker',
       'cfgVisualCornerRadiusPx',
       'cfgVisualProgressBar',
       'cfgVisualRatingsBadges',
@@ -2663,6 +2752,7 @@
         syncSetupVisualFields();
         syncSetupAutomationFields();
         syncAccentPickerFromText();
+        syncMarqueeBgPickerFromText();
         syncCornerRadiusField();
         initSetupAutomationLinks();
       } catch (_) { /* storage unavailable */ }
@@ -2883,6 +2973,33 @@
       syncSetupVisualPreview();
     }
 
+    function syncMarqueeBgPickerFromText() {
+      const text = document.getElementById('cfgVisualMarqueeBgColor');
+      const picker = document.getElementById('cfgVisualMarqueeBgColorPicker');
+      if (!text || !picker) return;
+      const value = text.value.trim().toLowerCase();
+      picker.value = HEX_RE.test(value) ? value : MARQUEE_BG_PICKER_DEFAULT;
+      syncSetupVisualPreview();
+    }
+
+    function syncMarqueeBgTextFromPicker() {
+      const text = document.getElementById('cfgVisualMarqueeBgColor');
+      const picker = document.getElementById('cfgVisualMarqueeBgColorPicker');
+      if (!text || !picker) return;
+      text.value = picker.value.toLowerCase();
+      syncSetupVisualPreview();
+    }
+
+    function setMarqueeBgPreset(value) {
+      const text = document.getElementById('cfgVisualMarqueeBgColor');
+      const picker = document.getElementById('cfgVisualMarqueeBgColorPicker');
+      if (!text) return;
+      const color = String(value || '').trim().toLowerCase();
+      text.value = HEX_RE.test(color) ? color : '';
+      if (picker) picker.value = text.value || MARQUEE_BG_PICKER_DEFAULT;
+      syncSetupVisualPreview();
+    }
+
     function hexToRgb(hex) {
       const value = String(hex || '').replace('#', '');
       if (!/^[0-9a-f]{6}$/i.test(value)) return null;
@@ -2918,6 +3035,8 @@
       const theme = SETUP_THEME_PREVIEW[themeKey] || SETUP_THEME_PREVIEW['classic-gold'];
       const accentRaw = (document.getElementById('cfgVisualAccentColor')?.value || '').trim().toLowerCase();
       const accent = HEX_RE.test(accentRaw) ? accentRaw : '';
+      const marqueeBgRaw = (document.getElementById('cfgVisualMarqueeBgColor')?.value || '').trim().toLowerCase();
+      const marqueeBg = HEX_RE.test(marqueeBgRaw) ? marqueeBgRaw : '';
       const radius = Math.max(0, Math.min(48, parseInt(document.getElementById('cfgVisualCornerRadiusPx')?.value || '0', 10) || 0));
       const fontKey = document.getElementById('cfgVisualMarqueeFont')?.value || 'bebas-neue';
       const font = SETUP_FONT_PREVIEW[fontKey] || SETUP_FONT_PREVIEW['bebas-neue'];
@@ -2937,6 +3056,8 @@
         accentMid: accent ? mixHex(accent, '#000000', 0.2) : theme.accentMid,
         accentDark: accent ? mixHex(accent, '#000000', 0.5) : theme.accentDark,
         accentGlow: accent ? mixHex(accent, '#ffffff', 0.3) : theme.accentGlow,
+        bgMarquee: marqueeBg || theme.bgMarquee,
+        redCurtain: marqueeBg || theme.redCurtain,
       };
       const vars = {
         '--preview-accent-light': palette.accentLight,
@@ -2974,6 +3095,7 @@
         const bits = [
           theme.label,
           accent ? `Accent ${accent}` : 'Theme accent',
+          marqueeBg ? `Marquee bg ${marqueeBg}` : 'Theme marquee',
           frameStyle,
           font.label,
           `${radius}px radius`,
@@ -3107,10 +3229,19 @@
         accentInput?.focus();
         return;
       }
+      const marqueeBgInput = document.getElementById('cfgVisualMarqueeBgColor');
+      const marqueeBgColor = (marqueeBgInput?.value || '').trim().toLowerCase();
+      if (marqueeBgColor && !HEX_RE.test(marqueeBgColor)) {
+        switchSetupTab('display');
+        setupStatus('Marquee background color must be #RRGGBB, or blank for theme default.', 'err');
+        marqueeBgInput?.focus();
+        return;
+      }
       try {
         for (const [key, id] of SETUP_VALUE_FIELDS) {
           let v = document.getElementById(id)?.value.trim() || '';
           if (key === 'visualAccentColor') v = accentColor;
+          if (key === 'visualMarqueeBgColor') v = marqueeBgColor;
           if (SETUP_NUMBER_RULES[key]) v = normalizeSetupNumber(key, id);
           if (v) window.localStorage.setItem('pns.' + key, v);
           else window.localStorage.removeItem('pns.' + key);
@@ -3152,6 +3283,9 @@
       const loadPlayers = document.getElementById('setupLoadPlayersBtn');
       const accent = document.getElementById('cfgVisualAccentColor');
       const accentPicker = document.getElementById('cfgVisualAccentColorPicker');
+      const marqueeBg = document.getElementById('cfgVisualMarqueeBgColor');
+      const marqueeBgPicker = document.getElementById('cfgVisualMarqueeBgColorPicker');
+      const marqueeBgClear = document.getElementById('cfgVisualMarqueeBgClear');
       const cornerRadius = document.getElementById('cfgVisualCornerRadiusPx');
       const copyBlueprint = document.getElementById('setupCopyBlueprintBtn');
       const copySwitcher = document.getElementById('setupCopySwitcherBtn');
@@ -3196,6 +3330,12 @@
       }
       if (accent) accent.addEventListener('input', syncAccentPickerFromText);
       if (accentPicker) accentPicker.addEventListener('input', syncAccentTextFromPicker);
+      if (marqueeBg) marqueeBg.addEventListener('input', syncMarqueeBgPickerFromText);
+      if (marqueeBgPicker) marqueeBgPicker.addEventListener('input', syncMarqueeBgTextFromPicker);
+      if (marqueeBgClear) marqueeBgClear.addEventListener('click', () => setMarqueeBgPreset(''));
+      for (const swatch of document.querySelectorAll('[data-marquee-bg-preset]')) {
+        swatch.addEventListener('click', () => setMarqueeBgPreset(swatch.dataset.marqueeBgPreset));
+      }
       if (cornerRadius) cornerRadius.addEventListener('input', syncCornerRadiusField);
       if (copyBlueprint) copyBlueprint.addEventListener('click', () => copySetupText(BLUEPRINT_URL, 'Blueprint URL'));
       if (copySwitcher) copySwitcher.addEventListener('click', () => copySetupText(buildSwitcherConfigText(), 'Switcher config'));

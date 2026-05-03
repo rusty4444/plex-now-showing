@@ -6,9 +6,9 @@
   </a>
 </p>
 
-> This README describes Plex Now Showing v2.0.0. V1.x was the original
-> Plex-only, frontend-only release; v2 adds add-on and Docker installs,
-> multi-backend playback, and no-code display controls.
+> This README describes Plex Now Showing v2.1.0. This release builds on the
+> v2.0.0 add-on/Docker foundation with Coming Soon mode, more player
+> backends, a broader setup UI, and more visual controls.
 
 A full-screen cinema marquee display for Home Assistant that shows what is
 currently playing on Plex, Jellyfin, Emby, Kodi, Apple TV, generic streaming
@@ -16,9 +16,9 @@ devices, or Kaleidescape.
 It is designed for wall-mounted tablets running Fully Kiosk Browser, but it
 also works in any modern browser.
 
-V2 keeps the original marquee feel while adding a secure server/add-on path,
-Docker support, multi-backend playback detection, tablet switching, visual
-presets, optional metadata panels, and kiosk-friendly burn-in controls.
+V2.1 keeps the cinema-marquee feel while making the display easier to run as a
+Home Assistant add-on, Docker service, frontend-only page, live Now Showing
+kiosk, or Radarr/Sonarr-powered Coming Soon screensaver.
 
 ![Platform](https://img.shields.io/badge/Platform-Home_Assistant-blue)
 
@@ -50,20 +50,20 @@ All three paths use the same kiosk UI. The add-on and Docker paths add the
 Node server that proxies Home Assistant and Plex metadata so API tokens are
 not exposed to the tablet browser.
 
-## What Changed From V1.x
+## What's Changed From V2.0.0 To V2.1.0
 
-| Area | V2.0.0 adds |
-|------|-----------------|
-| Safer config | Hard-coded tokens were removed from `now_showing.html`. Runtime config now comes from the add-on/server, `localStorage`, URL hash, or `now_showing.config.js`. |
-| First-run setup | Frontend-only installs open a `#setup` form when no HA token is found. The gear icon reopens setup later, including Connection, Display, and Automation tabs. |
-| Home Assistant add-on | `addons/plex-now-showing` wraps the server as a Supervisor add-on with Ingress, a config form, logs, multi-arch GHCR images, and optional direct port `8099`. |
-| Docker Compose | `docker/docker-compose.example.yml` and `.env.example` run the same image for HA Container users. |
-| Unified server | `server/` serves the kiosk and exposes `/api/state`, `/api/config`, `/api/media-info/:ratingKey`, `/api/artwork`, `/api/night-mode`, and `/healthz`. |
-| Multi-backend support | `backend` selects `plex`, `jellyfin`, `emby`, `kodi`, `apple_tv`, `streaming`, or `kaleidescape`; `player` can pin any exact `media_player` entity. Plex-specific `plex_player` is still accepted for compatibility. |
-| Coming Soon mode | `display_mode: coming_soon` turns the kiosk into a Radarr/Sonarr upcoming-release screensaver with a `COMING SOON` marquee. |
-| Fully Kiosk switching | Use either the bundled HA Blueprint or the add-on/server's built-in Fully Kiosk REST switcher. |
-| Visual toggles | Progress bar, ratings badges, genre chips, info-panel display modes, pause backdrops, burn-in mitigation, night dimming, frame styles, marquee font picker, theme presets, and accent color overrides. |
-| CI / release plumbing | Multi-arch add-on builds, config linting, Docker image publishing, server tests, add-on docs, and examples. |
+V2.1.0 is the "wall display polish" release. It keeps the v2.0.0 server,
+add-on, Docker, and frontend-only install paths, then adds the next layer of
+real-world kiosk features:
+
+| Area | V2.1.0 change |
+|------|---------------|
+| More playback sources | Apple TV, generic streaming-device, and Kaleidescape backends join Plex, Jellyfin, Emby, and Kodi. Apple TV / streaming mode can use Home Assistant `app_name`, `media_title`, `entity_picture`, and dashboard-icons app badges for Disney+, YouTube, Netflix, Plex, Hulu, Prime Video, and similar apps. |
+| Coming Soon screensaver | New `coming_soon` display mode rotates upcoming Radarr/Sonarr movies and episodes with configurable marquee text, movie/show counts, cycle interval, days offset, and poster/fanart artwork. |
+| Setup UI | The setup flow now has player loading/picking, backend-specific player hints, Coming Soon source fields, Fully Kiosk automation helpers, and a wider live visual preview in the Display tab. |
+| Visual controls | Frame style, marquee font, theme preset, accent color, marquee background color, corner radius, progress bar, ratings badges, genre chips, info-panel mode, backdrops, burn-in nudge, and night dimming are configurable from setup without editing the HTML. |
+| Now Showing + Coming Soon together | The docs now cover running two display URLs/instances so Fully Kiosk can show Now Showing during playback and Coming Soon as the idle/screensaver view. |
+| Release package | The Home Assistant add-on package and Node server package are versioned at `2.1.0`, with Docker/add-on release docs updated for the `addon-v2.1.0` package flow. |
 
 ## Features
 
@@ -90,6 +90,8 @@ not exposed to the tablet browser.
 - Theme presets: `classic-gold`, `art-deco-silver`, `neon-80s`, and
   `minimalist-dark`.
 - Strict `#RRGGBB` accent color override that reskins the active theme.
+- Strict `#RRGGBB` marquee background color override, with setup presets for
+  black, deep red, navy, forest green, midnight purple, and charcoal.
 - Optional corner-radius slider for the inner marquee, poster, and info panel.
 - Frame style picker: animated `bulbs`, quiet `gold-line`, or `none`.
 - Marquee font picker: `bebas-neue`, `anton`, `oswald`, `monoton`, or
@@ -141,7 +143,8 @@ because Home Assistant Supervisor supplies the API token automatically.
    - `player`: optional exact entity ID, for example `media_player.kodi`
    - `plex_url` and `plex_token`: optional, Plex enhanced metadata only
    - visual options such as `visual_theme`, `visual_frame_style`,
-     `visual_marquee_font`, and `visual_progress_bar`
+     `visual_marquee_font`, `visual_marquee_bg_color`, and
+     `visual_progress_bar`
 6. Start the add-on.
 7. Click **Open Web UI** for Ingress, or open:
 
@@ -173,7 +176,7 @@ http://<docker-host>:8099/now_showing.html
 ```
 
 For the stable v2 release, keep `TAG=latest` or pin this release with
-`TAG=2.0.0`. For the rolling `dev` branch image, set this in `docker/.env`:
+`TAG=2.1.0`. For the rolling `dev` branch image, set this in `docker/.env`:
 
 ```env
 TAG=dev
@@ -198,6 +201,7 @@ LANDSCAPE=false
 VISUAL_THEME=classic-gold
 VISUAL_FRAME_STYLE=bulbs
 VISUAL_MARQUEE_FONT=bebas-neue
+VISUAL_MARQUEE_BG_COLOR=
 VISUAL_CORNER_RADIUS_PX=0
 VISUAL_PROGRESS_BAR=false
 ```
@@ -215,8 +219,8 @@ More Docker notes live in [`docker/README.md`](docker/README.md).
 ## Setup C: Frontend-Only / Manual
 
 Use this path if you only want to copy the HTML into Home Assistant's `www`
-folder. This is closest to V1 and does not require the Node server, but the
-tablet browser must hold the HA token.
+folder. It does not require the Node server, but the tablet browser must hold
+the HA token.
 
 1. Copy the kiosk file:
 
@@ -234,7 +238,8 @@ tablet browser must hold the HA token.
    - **Connection**: display mode, Home Assistant URL/token, backend, optional
      player, optional Plex URL/token, Coming Soon sources, and landscape mode
    - **Display**: live visual preview, theme preset, accent color, frame
-     style, marquee font, progress bar, ratings badges, genre chips,
+     style, marquee font, marquee background color, corner radius, progress
+     bar, ratings badges, genre chips,
      info-panel mode, backdrops, burn-in mitigation, pixel nudge, and night
      dimming
    - **Automation**: import/download the tablet-switching Blueprint, or prepare
@@ -276,6 +281,9 @@ window.NOW_SHOWING_CONFIG = {
   visualTheme: 'classic-gold',
   visualFrameStyle: 'bulbs',
   visualMarqueeFont: 'bebas-neue',
+  visualAccentColor: '',
+  visualMarqueeBgColor: '',
+  visualCornerRadiusPx: 0,
   visualProgressBar: false,
 };
 ```
@@ -297,13 +305,14 @@ localStorage.setItem('pns.visualFrameStyle', 'gold-line');
 localStorage.setItem('pns.visualMarqueeFont', 'anton');
 localStorage.setItem('pns.visualProgressBar', 'true');
 localStorage.setItem('pns.visualAccentColor', '#ff5500');
+localStorage.setItem('pns.visualMarqueeBgColor', '#10233d');
 localStorage.setItem('pns.visualCornerRadiusPx', '16');
 ```
 
 Equivalent URL hash example:
 
 ```text
-#visualTheme=minimalist-dark&visualFrameStyle=none&visualMarqueeFont=monoton&visualProgressBar=true&visualAccentColor=%23ff5500&visualCornerRadiusPx=16
+#visualTheme=minimalist-dark&visualFrameStyle=none&visualMarqueeFont=monoton&visualProgressBar=true&visualAccentColor=%23ff5500&visualMarqueeBgColor=%2310233d&visualCornerRadiusPx=16
 ```
 
 ## Core Configuration
@@ -343,11 +352,45 @@ useful as a Fully Kiosk screensaver URL or as a target for HA automations.
 | Days offset | `coming_soon_days_offset` | `COMING_SOON_DAYS_OFFSET` | `comingSoonDaysOffset` | Include recent past releases |
 | Image type | `coming_soon_image_type` | `COMING_SOON_IMAGE_TYPE` | `comingSoonImageType` | `poster`, `fanart` |
 
+### Using Now Showing And Coming Soon Together
+
+`display_mode` is global for one add-on/server instance, so a single running
+server is either Now Showing or Coming Soon. To use both at the same time, run
+two display URLs:
+
+- **Add-on + frontend-only**: keep the add-on on `display_mode: now_showing`
+  for live playback, then use a copied frontend-only
+  `/local/now_showing.html#displayMode=coming_soon...` URL for a Coming Soon
+  screensaver tablet.
+- **Two Docker containers**: run one container on port `8099` with
+  `DISPLAY_MODE=now_showing`, and a second on another port, for example
+  `8100`, with `DISPLAY_MODE=coming_soon` plus Radarr/Sonarr settings.
+- **Two frontend-only URLs**: use the same copied HTML with different hash or
+  `localStorage` settings per tablet/browser.
+
+Fully Kiosk examples:
+
+```text
+Now Showing URL: http://<ha-ip>:8099/now_showing.html
+Coming Soon URL: http://<ha-ip>:8100/now_showing.html
+```
+
+For frontend-only Coming Soon:
+
+```text
+http://<ha-ip>:8123/local/now_showing.html#displayMode=coming_soon&comingSoonTitle=Coming%20Soon&radarrUrl=http%3A%2F%2Fradarr.local%3A7878&radarrApiKey=YOUR_KEY&comingSoonMoviesCount=8&comingSoonCycleInterval=10
+```
+
+Use the Now Showing URL as the playback target in the Blueprint or built-in
+Fully Kiosk switcher. Use the Coming Soon URL as Fully Kiosk's screensaver
+URL, start URL, or as the `stopped_url` if you want tablets to return to
+upcoming releases after playback stops.
+
 ## Visual Configuration
 
 All visual features are opt-in except the default `classic-gold` theme and
-`bulbs` frame, so existing V1-looking installs stay familiar until you enable
-something.
+`bulbs` frame, so existing v2.0.0 installs stay familiar until you enable
+something new.
 
 | Feature | Add-on option | Docker env | Frontend key | Values |
 |---------|---------------|------------|--------------|--------|
@@ -367,6 +410,7 @@ something.
 | Night opacity | `visual_night_mode_opacity` | `VISUAL_NIGHT_MODE_OPACITY` | `visualNightModeOpacity` | `0` to `0.95` |
 | Theme preset | `visual_theme` | `VISUAL_THEME` | `visualTheme` | `classic-gold`, `art-deco-silver`, `neon-80s`, `minimalist-dark` |
 | Accent color | `visual_accent_color` | `VISUAL_ACCENT_COLOR` | `visualAccentColor` | Strict `#RRGGBB`, empty for theme default |
+| Marquee background | `visual_marquee_bg_color` | `VISUAL_MARQUEE_BG_COLOR` | `visualMarqueeBgColor` | Strict `#RRGGBB`, empty for theme default |
 | Corner radius | `visual_corner_radius_px` | `VISUAL_CORNER_RADIUS_PX` | `visualCornerRadiusPx` | `0` to `48` px, default `0` |
 
 ## Backend Behavior

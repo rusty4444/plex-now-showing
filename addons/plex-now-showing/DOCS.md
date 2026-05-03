@@ -65,6 +65,7 @@ probe of `/api`) and switches to `/api/state`. Plex-only metadata calls use
 | `visual_night_mode_opacity` | `0.4` | Dim overlay opacity when night mode is active. Clamped to `0` – `0.95`. |
 | `visual_theme` | `classic-gold` | Theme preset — one of `classic-gold` / `art-deco-silver` / `neon-80s` / `minimalist-dark`. Reskins the bulbs, marquee glow, progress bar, and ratings badges. |
 | `visual_accent_color` | _empty_ | Optional `#RRGGBB` hex (e.g. `#ff5500`) that overrides the active theme's accent ramp. Empty = use theme default. Strict format — short form, names, and `rgb()` are rejected. |
+| `visual_marquee_bg_color` | _empty_ | Optional `#RRGGBB` hex that overrides the active theme's marquee background/curtain colour. Empty = use theme default. Strict format only. |
 | `visual_corner_radius_px` | `0` | Corner radius in pixels for the inner marquee, poster, and info panel. Clamped `0`-`48`; default `0` keeps the sharp cinema look. |
 | `log_level` | `info` | s6 / add-on log verbosity. |
 
@@ -86,6 +87,7 @@ through to the browser automatically — no rebuild, no per-tablet config.
 | `visual_burn_in_mitigation` | Master switch for long-running-kiosk protection. When on, the whole UI drifts by a few pixels every minute (configurable via `visual_nudge_interval_ms` + `visual_nudge_amplitude_px`) using a smooth 400 ms GPU transform, and a dim overlay can be triggered by an HA entity or the OS dark-mode media query. Off by default. |
 | `visual_night_mode_entity` | Optional HA entity id (`input_boolean`, `switch`, or `binary_sensor`). When its state is `on`, the kiosk fades in a dim overlay (opacity from `visual_night_mode_opacity`, default 40%). Leave empty and the kiosk uses `window.matchMedia('(prefers-color-scheme: dark)')` instead — handy for tablets that flip themselves at night. Requires `visual_burn_in_mitigation: true`. |
 | `visual_theme` / `visual_accent_color` | Top-level look-and-feel (#23 + #66). `visual_theme` picks one of four presets via `<body data-theme>`: `classic-gold` (default, original warm bulb look), `art-deco-silver` (cooler chrome highlights and brushed-metal glow), `neon-80s` (hot pink + cyan with magenta bulbs), or `minimalist-dark` (clean dark UI, ornament backed off). `visual_accent_color` is an optional strict `#RRGGBB` override (e.g. `#ff5500`) that re-derives the four-stop accent ramp via CSS `color-mix(in srgb, ...)` — leave blank to use the theme's default ramp. Both are presentation-only; nothing on the server changes. |
+| `visual_marquee_bg_color` | Marquee background colour picker (#62/#viz-13). Leave blank to use the selected theme's marquee/curtain colour, or set strict `#RRGGBB` to override it. The setup page includes presets for black, deep red, navy, forest green, midnight purple, and charcoal, plus an arbitrary colour picker. |
 | `visual_corner_radius_px` | Corner / frame radius slider (#68). `0` preserves the original sharp poster and marquee. Higher values round the inner marquee, poster, and info panel while leaving the outer bulb frame square, so it composes with `visual_frame_style: bulbs`. |
 
 HACS-only users (no add-on / server) can open `#setup`, switch to the
@@ -101,7 +103,7 @@ Advanced users can still set `pns.visualProgressBar=true` /
 `pns.visualNudgeIntervalMs`, `pns.visualNudgeAmplitudePx`,
 `pns.visualNightModeEntity`, `pns.visualNightModeOpacity`) /
 `pns.visualTheme=art-deco-silver` / `pns.visualAccentColor=#ff5500` /
-`pns.visualCornerRadiusPx=16` in
+`pns.visualMarqueeBgColor=#10233d` / `pns.visualCornerRadiusPx=16` in
 `localStorage`, or add the matching
 `#visualProgressBar=true` / `#visualRatingsBadges=true` /
 `#visualGenreChips=true` / `#visualInfoPanelMode=always` /
@@ -110,7 +112,7 @@ Advanced users can still set `pns.visualProgressBar=true` /
 `#visualUseBackdrops=true` / `#visualBackdropStyle=ambient` /
 `#visualBurnInMitigation=true` /
 `#visualTheme=neon-80s` / `#visualAccentColor=%23ff5500` /
-`#visualCornerRadiusPx=16`
+`#visualMarqueeBgColor=%2310233d` / `#visualCornerRadiusPx=16`
 to the kiosk URL hash.
 
 The setup page also includes an **Automation** tab. It links to the Home
@@ -118,6 +120,29 @@ Assistant Blueprint import/download flow and can generate the equivalent
 add-on options / Docker env for the built-in Fully Kiosk switcher. The switcher
 itself runs server-side, so paste the generated values into the add-on options
 or Docker `.env`, then restart the add-on/container.
+
+### Using Now Showing and Coming Soon together
+
+One add-on/server instance has one global `display_mode`, so it cannot serve
+Now Showing and Coming Soon at the same time by itself. Use two display URLs:
+
+- Keep the add-on on `display_mode: now_showing`, then use a frontend-only
+  `/local/now_showing.html#displayMode=coming_soon...` URL for a Coming Soon
+  screensaver tablet.
+- Or run a second Docker container on another port, for example `8100`, with
+  `DISPLAY_MODE=coming_soon` plus Radarr/Sonarr options.
+- Or use two frontend-only browser profiles/tablets with different setup or
+  hash values.
+
+Fully Kiosk works well with this split:
+
+```text
+playing_url: http://<ha-ip>:8099/now_showing.html
+stopped_url: http://<ha-ip>:8100/now_showing.html
+```
+
+You can also put the Coming Soon URL in Fully Kiosk's screensaver/start URL
+and keep Now Showing as the playback automation target.
 
 ### Fully Kiosk auto-switcher (#48)
 
