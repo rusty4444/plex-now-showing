@@ -255,6 +255,10 @@ the HA token.
   <img src="screenshots/v2-setup-display.png" alt="Setup Display tab" width="300">
 </p>
 
+<p align="center">
+  <img src="screenshots/v2-setup-display-preview.png" alt="Setup Display tab live preview" width="620">
+</p>
+
 4. Save and launch. Values are stored in that browser's `localStorage`.
 
 You can also use a local runtime config file:
