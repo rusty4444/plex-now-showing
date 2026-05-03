@@ -35,6 +35,7 @@
       --accent-glow: #ffd75e;
       --bulb-on: #ffe69c;
       --bulb-off: #665522;
+      --pns-bulb-size: 28px;
       --frame-border: #a0842e;
       --bg-dark: #0a0a0a;
       --bg-marquee: #111111;
@@ -45,6 +46,7 @@
       --marquee-font-family: 'Bebas Neue', sans-serif;
       --marquee-font-weight: 400;
       --marquee-letter-spacing: 0.35em;
+      --pns-corner-radius: 0px;
     }
 
     body[data-theme="classic-gold"] {
@@ -163,6 +165,11 @@
       --frame-border: color-mix(in srgb, var(--accent-override) 70%, #000 30%);
     }
 
+    body[style*="--marquee-bg-override"] {
+      --bg-marquee: var(--marquee-bg-override);
+      --red-curtain: var(--marquee-bg-override);
+    }
+
     html, body {
       width: 100%;
       height: 100%;
@@ -253,8 +260,8 @@
 
     .bulb {
       position: absolute;
-      width: 28px;
-      height: 28px;
+      width: var(--pns-bulb-size, 28px);
+      height: var(--pns-bulb-size, 28px);
       border-radius: 50%;
       /* Three-stop bulb gradient: hot core (--bulb-on lightened) → main
        * bulb colour → dark rim (--accent-mid). Now reads from the accent
@@ -288,6 +295,7 @@
       border-image: linear-gradient(135deg, var(--accent-light), var(--accent-dark), var(--accent-light), var(--accent-dark)) 1;
       overflow: hidden;
       z-index: 2;
+      border-radius: var(--pns-corner-radius) var(--pns-corner-radius) 0 0;
     }
 
     /* Red curtain background */
@@ -304,10 +312,10 @@
         ),
         linear-gradient(
           180deg,
-          #7a1a1a 0%,
-          #5c1010 30%,
-          #3d0a0a 70%,
-          #2a0808 100%
+          color-mix(in srgb, var(--red-curtain) 72%, #ffffff 28%) 0%,
+          var(--red-curtain) 30%,
+          color-mix(in srgb, var(--red-curtain) 70%, #000000 30%) 70%,
+          color-mix(in srgb, var(--red-curtain) 45%, #000000 55%) 100%
         );
     }
 
@@ -367,6 +375,7 @@
       border-image: linear-gradient(135deg, var(--accent-light), var(--accent-dark), var(--accent-light), var(--accent-dark)) 1;
       overflow: hidden;
       background: var(--bg-marquee);
+      border-radius: 0 0 var(--pns-corner-radius) var(--pns-corner-radius);
     }
 
     /* ===== BURN-IN MITIGATION (#28) =====
@@ -475,6 +484,7 @@
       border-top: none;
       pointer-events: none;
       z-index: 5;
+      border-radius: 0 0 max(0px, calc(var(--pns-corner-radius) - 6px)) max(0px, calc(var(--pns-corner-radius) - 6px));
     }
 
     /* ===== POSTER AREA ===== */
@@ -490,6 +500,7 @@
       background-color: var(--bg-marquee);
       opacity: 0;
       transition: opacity 0.8s ease;
+      border-radius: inherit;
     }
 
     .landscape-mode .poster-area {
@@ -690,6 +701,30 @@
       text-shadow: 0 1px 4px rgba(0,0,0,0.8);
     }
 
+    .media-info .app-badge {
+      display: none;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      margin-top: 7px;
+      font-family: 'Inter', sans-serif;
+      font-size: clamp(0.62rem, 1.2vw, 0.78rem);
+      color: rgba(255,255,255,0.78);
+      text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+    }
+
+    .media-info .app-badge.visible {
+      display: flex;
+    }
+
+    .media-info .app-badge img {
+      width: 20px;
+      height: 20px;
+      object-fit: contain;
+      border-radius: 4px;
+      background: rgba(0,0,0,0.22);
+    }
+
     /* ===== IDLE STATE ===== */
     .idle-wrap {
       position: absolute;
@@ -776,6 +811,8 @@
       padding: 28px 24px 32px;
       transform: translateY(30px);
       transition: transform 0.4s ease;
+      border-radius: var(--pns-corner-radius) var(--pns-corner-radius) 0 0;
+      overflow: hidden;
     }
 
     .info-overlay.visible .info-panel {
@@ -987,17 +1024,20 @@
       background: radial-gradient(ellipse at 50% 20%, #1a1a1a 0%, #050505 100%);
       z-index: 100;
       display: none;
-      align-items: center;
-      justify-content: center;
-      overflow-y: auto;
-      padding: 40px 20px;
+      height: 100dvh;
+      max-height: 100dvh;
+      overflow: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      padding: 32px 20px 72px;
     }
 
-    .setup-overlay.visible { display: flex; }
+    .setup-overlay.visible { display: block; }
 
     .setup-card {
       width: 100%;
-      max-width: 680px;
+      max-width: 960px;
+      margin: 0 auto;
       background: rgba(20, 20, 20, 0.92);
       border: 1px solid color-mix(in srgb, var(--accent-mid) 25%, transparent);
       border-radius: 12px;
@@ -1069,6 +1109,7 @@
     @media (max-width: 620px) {
       .setup-field-grid { grid-template-columns: 1fr; }
       .setup-card { padding: 24px 20px 22px; }
+      .setup-overlay { padding: 18px 12px 64px; }
     }
 
     .setup-field { margin-bottom: 14px; }
@@ -1139,6 +1180,292 @@
       grid-template-columns: 1fr auto;
       gap: 8px;
       align-items: center;
+    }
+    .setup-swatch-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .setup-color-swatch {
+      width: 30px;
+      height: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 6px;
+      background: var(--swatch);
+      cursor: pointer;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.24);
+    }
+    .setup-color-swatch:focus-visible {
+      outline: 2px solid var(--accent-light);
+      outline-offset: 2px;
+    }
+    .setup-color-clear {
+      min-height: 30px;
+      padding: 0 10px;
+      border: 1px solid color-mix(in srgb, var(--accent-mid) 28%, transparent);
+      border-radius: 6px;
+      background: #111111;
+      color: var(--text-dim);
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+    .setup-range-row {
+      display: grid;
+      grid-template-columns: 1fr 56px;
+      gap: 10px;
+      align-items: center;
+    }
+    .setup-range-row output {
+      color: var(--text-dim);
+      font-size: 0.78rem;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    .setup-visual-preview {
+      --preview-accent-light: var(--accent-light);
+      --preview-accent-mid: var(--accent-mid);
+      --preview-accent-dark: var(--accent-dark);
+      --preview-accent-glow: var(--accent-glow);
+      --preview-bg-dark: var(--bg-dark);
+      --preview-bg-marquee: var(--bg-marquee);
+      --preview-text-light: var(--text-light);
+      --preview-text-dim: var(--text-dim);
+      --preview-red-curtain: var(--red-curtain);
+      --preview-radius: 0px;
+      --preview-bulb-size: 9px;
+      --preview-nudge-x: 0px;
+      --preview-nudge-y: 0px;
+      position: relative;
+      margin-bottom: 18px;
+      padding: 10px;
+      border: 1px solid color-mix(in srgb, var(--preview-accent-mid) 38%, transparent);
+      background:
+        radial-gradient(circle at 20% 18%, color-mix(in srgb, var(--preview-accent-glow) 12%, transparent), transparent 32%),
+        var(--preview-bg-dark);
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.42);
+      overflow: hidden;
+      transition: border-color 0.18s ease, background 0.18s ease;
+    }
+    .setup-visual-preview[data-frame-style="gold-line"] {
+      border: 2px solid color-mix(in srgb, var(--preview-accent-light) 78%, transparent);
+      box-shadow:
+        inset 0 0 0 5px color-mix(in srgb, var(--preview-accent-dark) 36%, transparent),
+        0 14px 36px rgba(0, 0, 0, 0.42);
+    }
+    .setup-visual-preview[data-frame-style="none"] {
+      border-color: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.36);
+    }
+    .setup-preview-bulbs {
+      position: absolute;
+      inset: 5px;
+      pointer-events: none;
+      z-index: 3;
+    }
+    .setup-visual-preview[data-frame-style="gold-line"] .setup-preview-bulbs,
+    .setup-visual-preview[data-frame-style="none"] .setup-preview-bulbs {
+      display: none;
+    }
+    .setup-preview-bulbs span {
+      position: absolute;
+      width: var(--preview-bulb-size);
+      height: var(--preview-bulb-size);
+      border-radius: 999px;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(circle at 40% 35%,
+        color-mix(in srgb, var(--preview-accent-light) 82%, #ffffff 18%),
+        var(--preview-accent-light) 42%,
+        var(--preview-accent-mid) 100%);
+      box-shadow:
+        0 0 calc(var(--preview-bulb-size) * 1.2) color-mix(in srgb, var(--preview-accent-glow) 70%, transparent),
+        0 0 calc(var(--preview-bulb-size) * 2.2) color-mix(in srgb, var(--preview-accent-glow) 28%, transparent);
+    }
+    .setup-preview-bulbs span.off {
+      opacity: 0.45;
+      background: radial-gradient(circle at 40% 35%,
+        color-mix(in srgb, var(--preview-accent-mid) 54%, #ffffff 12%),
+        color-mix(in srgb, var(--preview-accent-dark) 62%, #000000 38%) 72%);
+      box-shadow: 0 0 calc(var(--preview-bulb-size) * 0.7) color-mix(in srgb, var(--preview-accent-dark) 54%, transparent);
+    }
+    .setup-preview-stage {
+      position: relative;
+      overflow: hidden;
+      aspect-ratio: 16 / 9;
+      min-height: 260px;
+      background: var(--preview-bg-marquee);
+      color: var(--preview-text-light);
+      border: 3px solid var(--preview-accent-mid);
+      border-radius: var(--preview-radius);
+      transition: transform 0.18s ease;
+    }
+    .setup-visual-preview.burn-in-on .setup-preview-stage {
+      transform: translate3d(var(--preview-nudge-x), var(--preview-nudge-y), 0);
+    }
+    .setup-preview-marquee {
+      height: 25%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-bottom: 3px solid var(--preview-accent-mid);
+      border-radius: var(--preview-radius) var(--preview-radius) 0 0;
+      background:
+        repeating-linear-gradient(90deg, rgba(0,0,0,0.15) 0 2px, transparent 2px 16px),
+        linear-gradient(
+          180deg,
+          color-mix(in srgb, var(--preview-red-curtain) 72%, #ffffff 28%),
+          var(--preview-red-curtain),
+          color-mix(in srgb, var(--preview-red-curtain) 45%, #000000 55%)
+        );
+    }
+    .setup-preview-marquee span {
+      font-family: var(--preview-marquee-font, var(--marquee-font-family));
+      font-weight: var(--preview-marquee-weight, var(--marquee-font-weight));
+      letter-spacing: var(--preview-marquee-spacing, var(--marquee-letter-spacing));
+      color: var(--preview-text-light);
+      font-size: clamp(1.15rem, 5vw, 3.3rem);
+      text-shadow:
+        0 0 14px color-mix(in srgb, var(--preview-accent-glow) 46%, transparent),
+        0 2px 4px rgba(0, 0, 0, 0.65);
+      white-space: nowrap;
+    }
+    .setup-preview-poster {
+      position: relative;
+      height: 75%;
+      overflow: hidden;
+      border-radius: 0 0 var(--preview-radius) var(--preview-radius);
+      background:
+        radial-gradient(circle at 28% 28%, color-mix(in srgb, var(--preview-accent-glow) 16%, transparent), transparent 24%),
+        linear-gradient(135deg, #171717, #050505);
+    }
+    .setup-preview-backdrop {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      background:
+        linear-gradient(135deg, color-mix(in srgb, var(--preview-accent-light) 42%, transparent), transparent 38%),
+        radial-gradient(circle at 74% 34%, rgba(255,255,255,0.22), transparent 30%),
+        linear-gradient(180deg, #172033, #090b11);
+      filter: blur(8px) brightness(0.72);
+      transform: scale(1.08);
+      transition: opacity 0.18s ease;
+    }
+    .setup-visual-preview.backdrop-on .setup-preview-backdrop { opacity: 0.82; }
+    .setup-preview-art {
+      position: absolute;
+      left: 7%;
+      top: 12%;
+      bottom: 12%;
+      width: 28%;
+      border: 2px solid color-mix(in srgb, var(--preview-accent-light) 64%, transparent);
+      border-radius: max(2px, calc(var(--preview-radius) * 0.45));
+      background:
+        linear-gradient(160deg, color-mix(in srgb, var(--preview-accent-light) 32%, transparent), transparent 38%),
+        linear-gradient(180deg, #263040, #111318);
+      box-shadow:
+        0 12px 26px rgba(0,0,0,0.5),
+        0 0 20px color-mix(in srgb, var(--preview-accent-glow) 18%, transparent);
+    }
+    .setup-preview-copy {
+      position: absolute;
+      left: 40%;
+      right: 7%;
+      top: 14%;
+      bottom: 12%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .setup-preview-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1rem, 3vw, 2.15rem);
+      font-weight: 900;
+      line-height: 1.05;
+    }
+    .setup-preview-subtitle {
+      color: var(--preview-text-dim);
+      font-size: 0.82rem;
+    }
+    .setup-preview-progress {
+      display: none;
+      height: 6px;
+      width: 78%;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(0,0,0,0.72);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .setup-visual-preview.progress-on .setup-preview-progress { display: block; }
+    .setup-preview-progress span {
+      display: block;
+      height: 100%;
+      width: 62%;
+      background: linear-gradient(90deg, var(--preview-accent-dark), var(--preview-accent-light), var(--preview-accent-glow));
+    }
+    .setup-preview-ratings,
+    .setup-preview-genres {
+      display: none;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .setup-visual-preview.ratings-on .setup-preview-ratings,
+    .setup-visual-preview.genres-on .setup-preview-genres { display: flex; }
+    .setup-preview-ratings span,
+    .setup-preview-genres span,
+    .setup-preview-meta span {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      padding: 3px 8px;
+      border-radius: max(3px, calc(var(--preview-radius) * 0.25));
+      background: color-mix(in srgb, var(--preview-accent-mid) 18%, rgba(0,0,0,0.55));
+      border: 1px solid color-mix(in srgb, var(--preview-accent-light) 22%, transparent);
+      color: var(--preview-text-light);
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+    .setup-preview-genres span {
+      border-radius: 999px;
+      background: rgba(80, 110, 150, 0.28);
+    }
+    .setup-preview-panel {
+      display: none;
+      margin-top: 2px;
+      padding: 12px;
+      border-radius: max(0px, calc(var(--preview-radius) * 0.7));
+      background: linear-gradient(to top, rgba(0,0,0,0.86), rgba(0,0,0,0.52));
+      border: 1px solid color-mix(in srgb, var(--preview-accent-mid) 24%, transparent);
+    }
+    .setup-visual-preview.info-on .setup-preview-panel { display: block; }
+    .setup-preview-panel strong {
+      display: block;
+      margin-bottom: 4px;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+    }
+    .setup-preview-panel p {
+      color: var(--preview-text-dim);
+      font-size: 0.72rem;
+      line-height: 1.35;
+    }
+    .setup-preview-night {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: #000;
+      opacity: 0;
+      transition: opacity 0.18s ease;
+    }
+    .setup-visual-preview.burn-in-on .setup-preview-night {
+      opacity: var(--preview-night-opacity, 0.18);
+    }
+    .setup-preview-caption {
+      margin-top: 8px;
+      color: var(--text-dim);
+      font-size: 0.72rem;
+      text-align: center;
     }
     .setup-copy {
       min-height: 130px;
@@ -1270,31 +1597,103 @@
         </div>
 
         <div class="setup-field">
-          <label for="cfgBackend">Backend</label>
-          <select id="cfgBackend" autocomplete="off">
-            <option value="plex">Plex</option>
-            <option value="jellyfin">Jellyfin</option>
-            <option value="emby">Emby</option>
-            <option value="kodi">Kodi</option>
+          <label for="cfgDisplayMode">Display Mode</label>
+          <select id="cfgDisplayMode" autocomplete="off">
+            <option value="now_showing">Now Showing</option>
+            <option value="coming_soon">Coming Soon</option>
           </select>
+          <div class="hint">Now Showing watches active media players. Coming Soon uses Radarr/Sonarr.</div>
         </div>
 
-        <div class="setup-field">
-          <label for="cfgPlexUsername">Plex Username</label>
-          <input id="cfgPlexUsername" type="text" placeholder="your_plex_username" autocomplete="off">
-          <div class="hint">Filters playback to only your sessions.</div>
-        </div>
+        <div class="setup-section-title" id="cfgPlayersSectionTitle">Players</div>
 
-        <details class="setup-advanced">
-          <summary>Optional &mdash; player &amp; Plex API</summary>
-
-          <div class="setup-field" style="margin-top:10px;">
-            <label for="cfgPlayer">Specific Player (entity id)</label>
-            <input id="cfgPlayer" type="text" placeholder="media_player.plex_plex_for_lg_tv" autocomplete="off">
-            <div class="hint">Optional. Lock the display to one player.</div>
+        <div class="setup-field-grid" id="cfgPlayersSection">
+          <div class="setup-field">
+            <label for="cfgBackend">Backend</label>
+            <select id="cfgBackend" autocomplete="off">
+              <option value="plex">Plex</option>
+              <option value="jellyfin">Jellyfin</option>
+              <option value="emby">Emby</option>
+              <option value="kodi">Kodi</option>
+              <option value="apple_tv">Apple TV</option>
+              <option value="streaming">Streaming Device</option>
+              <option value="kaleidescape">Kaleidescape</option>
+            </select>
+            <div class="hint" id="cfgBackendHint">Select which Home Assistant media integration to watch.</div>
           </div>
 
           <div class="setup-field">
+            <label for="cfgPlayer">Player Entity</label>
+            <input id="cfgPlayer" type="text" list="cfgPlayerOptions" placeholder="media_player.plex_plex_for_lg_tv" autocomplete="off">
+            <datalist id="cfgPlayerOptions"></datalist>
+            <div class="hint" id="cfgPlayerHint">Optional. Leave blank to auto-detect an active player.</div>
+          </div>
+        </div>
+
+        <div class="setup-row" id="cfgLoadPlayersRow" style="margin-top:0;">
+          <button class="setup-btn" id="setupLoadPlayersBtn" type="button">Load Players</button>
+        </div>
+
+        <div class="setup-field" id="cfgPlexUsernameField">
+          <label for="cfgPlexUsername">Plex Username</label>
+          <input id="cfgPlexUsername" type="text" placeholder="your_plex_username" autocomplete="off">
+          <div class="hint">Filters Plex playback to only your sessions when no player is pinned.</div>
+        </div>
+
+        <details class="setup-advanced" id="cfgComingSoonDetails">
+          <summary>Coming Soon sources</summary>
+
+          <div class="setup-field-grid" style="margin-top:10px;">
+            <div class="setup-field">
+              <label for="cfgComingSoonTitle">Marquee Text</label>
+              <input id="cfgComingSoonTitle" type="text" placeholder="Coming Soon" autocomplete="off">
+            </div>
+            <div class="setup-field">
+              <label for="cfgComingSoonImageType">Image Type</label>
+              <select id="cfgComingSoonImageType" autocomplete="off">
+                <option value="poster">Poster</option>
+                <option value="fanart">Fanart</option>
+              </select>
+            </div>
+            <div class="setup-field">
+              <label for="cfgRadarrUrl">Radarr URL</label>
+              <input id="cfgRadarrUrl" type="url" placeholder="http://192.168.1.100:7878" autocomplete="off">
+            </div>
+            <div class="setup-field">
+              <label for="cfgRadarrApiKey">Radarr API Key</label>
+              <input id="cfgRadarrApiKey" type="password" autocomplete="off" spellcheck="false">
+            </div>
+            <div class="setup-field">
+              <label for="cfgSonarrUrl">Sonarr URL</label>
+              <input id="cfgSonarrUrl" type="url" placeholder="http://192.168.1.100:8989" autocomplete="off">
+            </div>
+            <div class="setup-field">
+              <label for="cfgSonarrApiKey">Sonarr API Key</label>
+              <input id="cfgSonarrApiKey" type="password" autocomplete="off" spellcheck="false">
+            </div>
+            <div class="setup-field">
+              <label for="cfgComingSoonMoviesCount">Movies</label>
+              <input id="cfgComingSoonMoviesCount" type="number" min="0" max="50" step="1" inputmode="numeric" autocomplete="off">
+            </div>
+            <div class="setup-field">
+              <label for="cfgComingSoonShowsCount">Shows</label>
+              <input id="cfgComingSoonShowsCount" type="number" min="0" max="50" step="1" inputmode="numeric" autocomplete="off">
+            </div>
+            <div class="setup-field">
+              <label for="cfgComingSoonCycleInterval">Cycle Interval (s)</label>
+              <input id="cfgComingSoonCycleInterval" type="number" min="2" max="300" step="1" inputmode="numeric" autocomplete="off">
+            </div>
+            <div class="setup-field">
+              <label for="cfgComingSoonDaysOffset">Days Offset</label>
+              <input id="cfgComingSoonDaysOffset" type="number" min="0" max="365" step="1" inputmode="numeric" autocomplete="off">
+            </div>
+          </div>
+        </details>
+
+        <details class="setup-advanced" id="cfgPlexMetadataDetails">
+          <summary>Plex metadata API</summary>
+
+          <div class="setup-field" style="margin-top:10px;">
             <label for="cfgPlexUrl">Plex Server URL</label>
             <input id="cfgPlexUrl" type="url" placeholder="http://192.168.1.10:32400" autocomplete="off">
             <div class="hint">Enables media-file details (resolution, codec, bitrate).</div>
@@ -1305,18 +1704,46 @@
             <input id="cfgPlexToken" type="password" placeholder="xxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
             <div class="hint">Required if Plex URL is set.</div>
           </div>
-
-          <div class="setup-field">
-            <label class="setup-check" for="cfgLandscape">
-              <input id="cfgLandscape" type="checkbox">
-              Landscape mode (fit whole poster)
-            </label>
-          </div>
         </details>
+
+        <div class="setup-field">
+          <label class="setup-check" for="cfgLandscape">
+            <input id="cfgLandscape" type="checkbox">
+            Landscape mode (fit whole poster)
+          </label>
+        </div>
       </div>
 
       <div class="setup-tab-panel" id="setupPanelDisplay" role="tabpanel" aria-labelledby="setupTabDisplay" data-setup-panel="display">
         <div class="setup-section-title">Theme</div>
+        <div class="setup-visual-preview" id="setupVisualPreview" data-frame-style="bulbs" aria-live="polite">
+          <div class="setup-preview-bulbs" aria-hidden="true"></div>
+          <div class="setup-preview-stage">
+            <div class="setup-preview-marquee"><span id="setupPreviewMarquee">NOW SHOWING</span></div>
+            <div class="setup-preview-poster">
+              <div class="setup-preview-backdrop"></div>
+              <div class="setup-preview-art"></div>
+              <div class="setup-preview-copy">
+                <div class="setup-preview-title">Theatre Preview</div>
+                <div class="setup-preview-subtitle">Season 2, Episode 4 / Paused</div>
+                <div class="setup-preview-progress"><span></span></div>
+                <div class="setup-preview-ratings">
+                  <span>IMDb 8.7</span><span>RT 94%</span>
+                </div>
+                <div class="setup-preview-genres">
+                  <span>Sci-Fi</span><span>Drama</span>
+                </div>
+                <div class="setup-preview-panel">
+                  <strong>Info panel</strong>
+                  <div class="setup-preview-meta"><span>TV-14</span><span>48m</span></div>
+                  <p>Use this preview to test the setup controls before saving them to the kiosk.</p>
+                </div>
+              </div>
+              <div class="setup-preview-night"></div>
+            </div>
+          </div>
+          <div class="setup-preview-caption" id="setupPreviewCaption">Classic Gold / Bulbs / Sharp corners</div>
+        </div>
         <div class="setup-field-grid">
           <div class="setup-field">
             <label for="cfgVisualTheme">Theme Preset</label>
@@ -1336,6 +1763,14 @@
             </select>
           </div>
           <div class="setup-field">
+            <label for="cfgVisualBulbSizePx">Bulb Size</label>
+            <div class="setup-range-row">
+              <input id="cfgVisualBulbSizePx" type="range" min="12" max="48" step="1" autocomplete="off">
+              <output id="cfgVisualBulbSizePxValue" for="cfgVisualBulbSizePx">28px</output>
+            </div>
+            <div class="hint">Changes the animated bulb frame. Only applies when Frame Style is Bulbs.</div>
+          </div>
+          <div class="setup-field">
             <label for="cfgVisualMarqueeFont">Marquee Font</label>
             <select id="cfgVisualMarqueeFont" autocomplete="off">
               <option value="bebas-neue">Bebas Neue</option>
@@ -1353,6 +1788,33 @@
             <input id="cfgVisualAccentColorPicker" type="color" value="#c8a032" aria-label="Pick accent color">
           </div>
           <div class="hint">Leave blank for the theme default. Strict #RRGGBB only.</div>
+        </div>
+
+        <div class="setup-field">
+          <label for="cfgVisualMarqueeBgColor">Marquee Background Color</label>
+          <div class="setup-color-row">
+            <input id="cfgVisualMarqueeBgColor" type="text" maxlength="7" placeholder="#111111" autocomplete="off" spellcheck="false">
+            <input id="cfgVisualMarqueeBgColorPicker" type="color" value="#111111" aria-label="Pick marquee background color">
+          </div>
+          <div class="setup-swatch-row" aria-label="Marquee background presets">
+            <button class="setup-color-swatch" type="button" data-marquee-bg-preset="#111111" style="--swatch:#111111" title="Black" aria-label="Black marquee background"></button>
+            <button class="setup-color-swatch" type="button" data-marquee-bg-preset="#5c1010" style="--swatch:#5c1010" title="Deep red" aria-label="Deep red marquee background"></button>
+            <button class="setup-color-swatch" type="button" data-marquee-bg-preset="#10233d" style="--swatch:#10233d" title="Navy" aria-label="Navy marquee background"></button>
+            <button class="setup-color-swatch" type="button" data-marquee-bg-preset="#123524" style="--swatch:#123524" title="Forest green" aria-label="Forest green marquee background"></button>
+            <button class="setup-color-swatch" type="button" data-marquee-bg-preset="#1a0838" style="--swatch:#1a0838" title="Midnight purple" aria-label="Midnight purple marquee background"></button>
+            <button class="setup-color-swatch" type="button" data-marquee-bg-preset="#1f2937" style="--swatch:#1f2937" title="Charcoal" aria-label="Charcoal marquee background"></button>
+            <button class="setup-color-clear" type="button" id="cfgVisualMarqueeBgClear">Theme default</button>
+          </div>
+          <div class="hint">Leave blank for the theme default. Strict #RRGGBB only.</div>
+        </div>
+
+        <div class="setup-field">
+          <label for="cfgVisualCornerRadiusPx">Corner Radius</label>
+          <div class="setup-range-row">
+            <input id="cfgVisualCornerRadiusPx" type="range" min="0" max="48" step="1" autocomplete="off">
+            <output id="cfgVisualCornerRadiusPxValue" for="cfgVisualCornerRadiusPx">0px</output>
+          </div>
+          <div class="hint">Rounds the marquee, poster, and info panel. The outer bulb frame stays square.</div>
         </div>
 
         <div class="setup-section-title">Info Panel</div>
@@ -1530,6 +1992,10 @@
       <div class="media-info" id="mediaInfo">
         <div class="media-type" id="mediaType"></div>
         <div class="player-name" id="playerName"></div>
+        <div class="app-badge" id="appBadge">
+          <img id="appIcon" alt="" loading="lazy">
+          <span id="appName"></span>
+        </div>
       </div>
 
       <!-- PLAYBACK PROGRESS BAR (#17) — opt-in via VISUAL_PROGRESS_BAR env -->
@@ -1643,16 +2109,36 @@
       return Number.isFinite(n) ? n : defaultValue;
     }
 
-    const BACKENDS = ['plex', 'jellyfin', 'emby', 'kodi'];
+    const BACKENDS = ['plex', 'jellyfin', 'emby', 'kodi', 'apple_tv', 'streaming', 'kaleidescape'];
     const BACKEND_RULES = {
       plex: { entityPrefix: 'media_player.plex_', exactEntities: [] },
       jellyfin: { entityPrefix: 'media_player.jellyfin_', exactEntities: ['media_player.jellyfin'] },
       emby: { entityPrefix: 'media_player.emby_', exactEntities: ['media_player.emby'] },
       kodi: { entityPrefix: 'media_player.kodi_', exactEntities: ['media_player.kodi'] },
+      apple_tv: {
+        entityPrefix: 'media_player.apple_tv',
+        exactEntities: ['media_player.apple_tv'],
+        entityIncludes: ['_apple_tv', 'appletv']
+      },
+      streaming: {
+        entityPrefix: 'media_player.',
+        exactEntities: [],
+        requiredAttributes: ['app_name']
+      },
+      kaleidescape: {
+        entityPrefix: 'media_player.kaleidescape_',
+        exactEntities: ['media_player.kaleidescape'],
+        entityIncludes: ['kaleidescape']
+      },
     };
     function readBackend(value) {
       const v = String(value || '').trim().toLowerCase();
       return BACKENDS.includes(v) ? v : 'plex';
+    }
+    const DISPLAY_MODES = ['now_showing', 'coming_soon'];
+    function readDisplayMode(value) {
+      const v = String(value || '').trim().toLowerCase().replace(/-/g, '_');
+      return DISPLAY_MODES.includes(v) ? v : 'now_showing';
     }
 
     const HA_URL        = readConfig('haUrl',        { aliases: ['ha_url'], defaultValue: window.location.origin });
@@ -1666,6 +2152,19 @@
     const LANDSCAPE_MODE = readBool('landscape', runtimeConfig.landscape === true);
     const POLL_INTERVAL  = readInt('poll', 5000);
     let ACTIVE_BACKEND = BACKEND;
+    let DISPLAY_MODE = readDisplayMode(readConfig('displayMode', { aliases: ['display_mode', 'mode'], defaultValue: 'now_showing' }));
+    const COMING_SOON = {
+      title: readConfig('comingSoonTitle', { aliases: ['coming_soon_title'], defaultValue: 'Coming Soon' }),
+      radarrUrl: readConfig('radarrUrl', { aliases: ['radarr_url'] }),
+      radarrApiKey: readConfig('radarrApiKey', { aliases: ['radarr_api_key'], sensitive: true }),
+      sonarrUrl: readConfig('sonarrUrl', { aliases: ['sonarr_url'] }),
+      sonarrApiKey: readConfig('sonarrApiKey', { aliases: ['sonarr_api_key'], sensitive: true }),
+      moviesCount: readIntClamped('comingSoonMoviesCount', 5, 0, 50),
+      showsCount: readIntClamped('comingSoonShowsCount', 5, 0, 50),
+      cycleInterval: readIntClamped('comingSoonCycleInterval', 8, 2, 300),
+      daysOffset: readIntClamped('comingSoonDaysOffset', 0, 0, 365),
+      imageType: readConfig('comingSoonImageType', { aliases: ['coming_soon_image_type'], defaultValue: 'poster' }) === 'fanart' ? 'fanart' : 'poster',
+    };
 
     // ===== SERVER MODE DETECTION =====
     //
@@ -1683,6 +2182,7 @@
         const body = await resp.json();
         SERVER_MODE = body && body.name === 'plex-now-showing-server';
         if (SERVER_MODE) ACTIVE_BACKEND = readBackend(body.backend || ACTIVE_BACKEND);
+        if (SERVER_MODE) DISPLAY_MODE = readDisplayMode(body.displayMode || DISPLAY_MODE);
         if (SERVER_MODE) console.info('[plex-now-showing] Running against unified server — using /api/state proxy.');
         return SERVER_MODE;
       } catch (_) {
@@ -1721,6 +2221,7 @@
       genreChips: false,
       infoPanelMode: 'on_tap',
       frameStyle: 'bulbs',
+      bulbSizePx: 28,
       // #21 backdrop art on pause.
       useBackdrops: false,
       backdropStyle: 'fullscreen', // 'fullscreen' | 'ambient'
@@ -1735,6 +2236,8 @@
       // the active theme's default".
       theme: 'classic-gold',
       accentColor: '',
+      marqueeBgColor: '',
+      cornerRadiusPx: 0,
       marqueeFont: 'bebas-neue',
     };
 
@@ -1789,6 +2292,14 @@
     function readAccentColor(defaultValue) {
       const value = String(readConfig('visualAccentColor')).trim().toLowerCase();
       if (value && HEX_RE.test(value)) return value;
+      if (value) console.warn('[plex-now-showing] Ignoring invalid visualAccentColor:', value);
+      return defaultValue;
+    }
+
+    function readMarqueeBgColor(defaultValue) {
+      const value = String(readConfig('visualMarqueeBgColor')).trim().toLowerCase();
+      if (value && HEX_RE.test(value)) return value;
+      if (value) console.warn('[plex-now-showing] Ignoring invalid visualMarqueeBgColor:', value);
       return defaultValue;
     }
 
@@ -1808,6 +2319,7 @@
       VISUAL.genreChips = readBool('visualGenreChips', false);
       VISUAL.infoPanelMode = readInfoPanelMode('on_tap');
       VISUAL.frameStyle = readFrameStyle('bulbs');
+      VISUAL.bulbSizePx = readIntClamped('visualBulbSizePx', 28, 12, 48);
       VISUAL.marqueeFont = readMarqueeFont('bebas-neue');
       VISUAL.useBackdrops = readBool('visualUseBackdrops', false);
       VISUAL.backdropStyle = readBackdropStyle('fullscreen');
@@ -1822,6 +2334,8 @@
       // below if /api/config responds with non-empty values.
       VISUAL.theme = readVisualTheme('classic-gold');
       VISUAL.accentColor = readAccentColor('');
+      VISUAL.marqueeBgColor = readMarqueeBgColor('');
+      VISUAL.cornerRadiusPx = readIntClamped('visualCornerRadiusPx', 0, 0, 48);
 
       await serverModeReady;
       if (!SERVER_MODE) return;
@@ -1830,6 +2344,16 @@
         if (!resp.ok) return;
         const body = await resp.json();
         if (body && body.backend) ACTIVE_BACKEND = readBackend(body.backend);
+        if (body && body.displayMode) DISPLAY_MODE = readDisplayMode(body.displayMode);
+        if (body && body.comingSoon) {
+          const cs = body.comingSoon;
+          if (typeof cs.title === 'string') COMING_SOON.title = cs.title || 'Coming Soon';
+          if (Number.isFinite(cs.moviesCount)) COMING_SOON.moviesCount = cs.moviesCount;
+          if (Number.isFinite(cs.showsCount)) COMING_SOON.showsCount = cs.showsCount;
+          if (Number.isFinite(cs.cycleInterval)) COMING_SOON.cycleInterval = cs.cycleInterval;
+          if (Number.isFinite(cs.daysOffset)) COMING_SOON.daysOffset = cs.daysOffset;
+          if (cs.imageType === 'poster' || cs.imageType === 'fanart') COMING_SOON.imageType = cs.imageType;
+        }
         const v = body && body.visual;
         if (v && typeof v.progressBar === 'boolean') VISUAL.progressBar = v.progressBar;
         if (v && typeof v.ratingsBadges === 'boolean') VISUAL.ratingsBadges = v.ratingsBadges;
@@ -1839,6 +2363,9 @@
         }
         if (v && typeof v.frameStyle === 'string' && FRAME_STYLES.includes(v.frameStyle)) {
           VISUAL.frameStyle = v.frameStyle;
+        }
+        if (v && Number.isFinite(v.bulbSizePx)) {
+          VISUAL.bulbSizePx = Math.max(12, Math.min(48, v.bulbSizePx));
         }
         if (v && typeof v.marqueeFont === 'string' && MARQUEE_FONTS.includes(v.marqueeFont)) {
           VISUAL.marqueeFont = v.marqueeFont;
@@ -1863,7 +2390,22 @@
         // response.
         if (v && typeof v.accentColor === 'string') {
           const c = v.accentColor.trim().toLowerCase();
-          VISUAL.accentColor = (c === '' || HEX_RE.test(c)) ? c : '';
+          if (c === '' || HEX_RE.test(c)) VISUAL.accentColor = c;
+          else {
+            console.warn('[plex-now-showing] Ignoring invalid server accentColor:', c);
+            VISUAL.accentColor = '';
+          }
+        }
+        if (v && typeof v.marqueeBgColor === 'string') {
+          const c = v.marqueeBgColor.trim().toLowerCase();
+          if (c === '' || HEX_RE.test(c)) VISUAL.marqueeBgColor = c;
+          else {
+            console.warn('[plex-now-showing] Ignoring invalid server marqueeBgColor:', c);
+            VISUAL.marqueeBgColor = '';
+          }
+        }
+        if (v && Number.isFinite(v.cornerRadiusPx)) {
+          VISUAL.cornerRadiusPx = Math.max(0, Math.min(48, v.cornerRadiusPx));
         }
       } catch (err) {
         console.warn('[plex-now-showing] /api/config fetch failed — using local defaults.', err);
@@ -1981,6 +2523,7 @@
       // owns the bulb DOM and chase timer so non-bulb modes do no extra work.
       document.body.dataset.frameStyle = VISUAL.frameStyle;
       document.body.dataset.marqueeFont = VISUAL.marqueeFont;
+      document.documentElement.style.setProperty('--pns-bulb-size', `${VISUAL.bulbSizePx || 28}px`);
       syncFrameStyle();
       // #21 backdrop art. Two body classes:
       //   backdrop-ambient-mode  — flag for CSS to reveal the blurred layer
@@ -2022,6 +2565,16 @@
       } else {
         document.body.style.removeProperty('--accent-override');
       }
+
+      if (VISUAL.marqueeBgColor) {
+        document.body.style.setProperty('--marquee-bg-override', VISUAL.marqueeBgColor);
+      } else {
+        document.body.style.removeProperty('--marquee-bg-override');
+      }
+
+      // #68 corner radius. Applies only to inner panels through CSS custom
+      // property consumers; the outer bulb frame remains square.
+      document.documentElement.style.setProperty('--pns-corner-radius', `${VISUAL.cornerRadiusPx || 0}px`);
     }
 
     // ===== SETUP PAGE CONTROLLER (#setup) =====
@@ -2034,15 +2587,29 @@
       // localStorage key (without pns. prefix), input element id, default
       ['haUrl', 'cfgHaUrl', ''],
       ['haToken', 'cfgHaToken', ''],
+      ['displayMode', 'cfgDisplayMode', DISPLAY_MODE],
       ['backend', 'cfgBackend', BACKEND],
       ['plexUsername', 'cfgPlexUsername', ''],
       ['player', 'cfgPlayer', ''],
       ['plexUrl', 'cfgPlexUrl', ''],
       ['plexToken', 'cfgPlexToken', ''],
+      ['comingSoonTitle', 'cfgComingSoonTitle', 'Coming Soon'],
+      ['radarrUrl', 'cfgRadarrUrl', ''],
+      ['radarrApiKey', 'cfgRadarrApiKey', ''],
+      ['sonarrUrl', 'cfgSonarrUrl', ''],
+      ['sonarrApiKey', 'cfgSonarrApiKey', ''],
+      ['comingSoonMoviesCount', 'cfgComingSoonMoviesCount', '5'],
+      ['comingSoonShowsCount', 'cfgComingSoonShowsCount', '5'],
+      ['comingSoonCycleInterval', 'cfgComingSoonCycleInterval', '8'],
+      ['comingSoonDaysOffset', 'cfgComingSoonDaysOffset', '0'],
+      ['comingSoonImageType', 'cfgComingSoonImageType', 'poster'],
       ['visualTheme', 'cfgVisualTheme', 'classic-gold'],
       ['visualFrameStyle', 'cfgVisualFrameStyle', 'bulbs'],
+      ['visualBulbSizePx', 'cfgVisualBulbSizePx', '28'],
       ['visualMarqueeFont', 'cfgVisualMarqueeFont', 'bebas-neue'],
       ['visualAccentColor', 'cfgVisualAccentColor', ''],
+      ['visualMarqueeBgColor', 'cfgVisualMarqueeBgColor', ''],
+      ['visualCornerRadiusPx', 'cfgVisualCornerRadiusPx', '0'],
       ['visualInfoPanelMode', 'cfgVisualInfoPanelMode', 'on_tap'],
       ['visualBackdropStyle', 'cfgVisualBackdropStyle', 'fullscreen'],
       ['visualBackdropDelayMs', 'cfgVisualBackdropDelayMs', '10000'],
@@ -2070,16 +2637,128 @@
       visualNudgeIntervalMs: { min: 5000, max: 600000, fallback: 60000, float: false },
       visualNudgeAmplitudePx: { min: 1, max: 16, fallback: 4, float: false },
       visualNightModeOpacity: { min: 0, max: 0.95, fallback: 0.4, float: true },
+      visualBulbSizePx: { min: 12, max: 48, fallback: 28, float: false },
       switcherIntervalMs: { min: 1000, max: 60000, fallback: 5000, float: false },
+      comingSoonMoviesCount: { min: 0, max: 50, fallback: 5, float: false },
+      comingSoonShowsCount: { min: 0, max: 50, fallback: 5, float: false },
+      comingSoonCycleInterval: { min: 2, max: 300, fallback: 8, float: false },
+      comingSoonDaysOffset: { min: 0, max: 365, fallback: 0, float: false },
+      visualCornerRadiusPx: { min: 0, max: 48, fallback: 0, float: false },
     };
     const ACCENT_PICKER_DEFAULT = '#c8a032';
+    const MARQUEE_BG_PICKER_DEFAULT = '#111111';
     const BLUEPRINT_URL = 'https://raw.githubusercontent.com/rusty4444/plex-now-showing/dev/blueprints/automation/rusty4444/plex_now_showing_display.yaml';
     const BLUEPRINT_IMPORT_URL = 'https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=' + encodeURIComponent(BLUEPRINT_URL);
+    const SETUP_BACKEND_HINTS = {
+      plex: 'Watches media_player.plex_* entities and can filter by Plex username.',
+      jellyfin: 'Watches media_player.jellyfin_* or media_player.jellyfin entities.',
+      emby: 'Watches media_player.emby_* or media_player.emby entities.',
+      kodi: 'Watches media_player.kodi_* or media_player.kodi entities.',
+      apple_tv: 'Watches Apple TV media_player entities and shows app_name icons.',
+      streaming: 'Watches any media_player.* entity with app_name, media_title, and artwork attributes.',
+      kaleidescape: 'Watches Kaleidescape media_player entities exposed by Home Assistant.',
+    };
+    const SETUP_PLAYER_HINTS = {
+      plex: 'Optional. Leave blank to auto-detect, or pin one Plex media_player entity.',
+      jellyfin: 'Optional. Leave blank to auto-detect, or pin one Jellyfin media_player entity.',
+      emby: 'Optional. Leave blank to auto-detect, or pin one Emby media_player entity.',
+      kodi: 'Optional. Leave blank to auto-detect, or pin one Kodi media_player entity.',
+      apple_tv: 'Optional. Pin your Apple TV entity if auto-detection sees more than one.',
+      streaming: 'Optional. Pin a Roku, Google TV, Android TV, Apple TV, or similar entity.',
+      kaleidescape: 'Optional. Pin your Kaleidescape player if you have multiple rooms.',
+    };
+    const SETUP_THEME_PREVIEW = {
+      'classic-gold': {
+        label: 'Classic Gold',
+        accentLight: '#e8c84a',
+        accentMid: '#c9a73b',
+        accentDark: '#8b6f2a',
+        accentGlow: '#ffd75e',
+        bgDark: '#0a0a0a',
+        bgMarquee: '#111111',
+        textLight: '#f5f0e0',
+        textDim: '#998c6e',
+        redCurtain: '#5c1010',
+      },
+      'art-deco-silver': {
+        label: 'Art Deco Silver',
+        accentLight: '#e6e8ee',
+        accentMid: '#b9bcc6',
+        accentDark: '#6f7480',
+        accentGlow: '#f7f9ff',
+        bgDark: '#0c0e12',
+        bgMarquee: '#14171c',
+        textLight: '#ecedf2',
+        textDim: '#8d909a',
+        redCurtain: '#2b3340',
+      },
+      'neon-80s': {
+        label: 'Neon 80s',
+        accentLight: '#ff5cf0',
+        accentMid: '#c026d3',
+        accentDark: '#6b21a8',
+        accentGlow: '#00e5ff',
+        bgDark: '#0a0420',
+        bgMarquee: '#15082e',
+        textLight: '#fff0ff',
+        textDim: '#a878c8',
+        redCurtain: '#1a0838',
+      },
+      'minimalist-dark': {
+        label: 'Minimalist Dark',
+        accentLight: '#e5e7eb',
+        accentMid: '#9ca3af',
+        accentDark: '#4b5563',
+        accentGlow: '#f9fafb',
+        bgDark: '#050505',
+        bgMarquee: '#0a0a0a',
+        textLight: '#f3f4f6',
+        textDim: '#6b7280',
+        redCurtain: '#18181b',
+      },
+    };
+    const SETUP_FONT_PREVIEW = {
+      'bebas-neue': { family: "'Bebas Neue', sans-serif", weight: '400', spacing: '0.35em', label: 'Bebas Neue' },
+      anton: { family: "'Anton', sans-serif", weight: '400', spacing: '0.22em', label: 'Anton' },
+      oswald: { family: "'Oswald', sans-serif", weight: '700', spacing: '0.24em', label: 'Oswald' },
+      monoton: { family: "'Monoton', cursive", weight: '400', spacing: '0.12em', label: 'Monoton' },
+      'playfair-display': { family: "'Playfair Display', serif", weight: '900', spacing: '0.14em', label: 'Playfair Display' },
+    };
+    const SETUP_VISUAL_FIELD_IDS = [
+      'cfgVisualTheme',
+      'cfgVisualFrameStyle',
+      'cfgVisualBulbSizePx',
+      'cfgVisualMarqueeFont',
+      'cfgVisualAccentColor',
+      'cfgVisualAccentColorPicker',
+      'cfgVisualMarqueeBgColor',
+      'cfgVisualMarqueeBgColorPicker',
+      'cfgVisualCornerRadiusPx',
+      'cfgVisualProgressBar',
+      'cfgVisualRatingsBadges',
+      'cfgVisualGenreChips',
+      'cfgVisualInfoPanelMode',
+      'cfgVisualUseBackdrops',
+      'cfgVisualBackdropStyle',
+      'cfgVisualBackdropDelayMs',
+      'cfgVisualBurnInMitigation',
+      'cfgVisualNudgeIntervalMs',
+      'cfgVisualNudgeAmplitudePx',
+      'cfgVisualNightModeEntity',
+      'cfgVisualNightModeOpacity',
+    ];
 
     function setupVisible(show) {
       const el = document.getElementById('setupOverlay');
       if (!el) return;
       el.classList.toggle('visible', !!show);
+      if (show) {
+        el.scrollTop = 0;
+        requestAnimationFrame(() => {
+          el.scrollTop = 0;
+          document.getElementById('setupForm')?.scrollIntoView({ block: 'start', inline: 'nearest' });
+        });
+      }
     }
 
     function populateSetupForm() {
@@ -2098,26 +2777,113 @@
           const stored = window.localStorage.getItem('pns.' + key);
           input.checked = stored == null ? !!defaultValue : /^(1|true|yes|on)$/i.test(stored);
         }
+        syncSetupDisplayModeFields();
         syncSetupBackendFields();
         syncSetupVisualFields();
         syncSetupAutomationFields();
         syncAccentPickerFromText();
+        syncMarqueeBgPickerFromText();
+        syncBulbSizeField();
+        syncCornerRadiusField();
         initSetupAutomationLinks();
       } catch (_) { /* storage unavailable */ }
     }
 
     function syncSetupBackendFields() {
       const backend = readBackend(document.getElementById('cfgBackend')?.value || BACKEND);
-      for (const id of ['cfgPlexUsername', 'cfgPlexUrl', 'cfgPlexToken']) {
-        const field = document.getElementById(id)?.closest('.setup-field');
-        if (field) field.style.display = backend === 'plex' ? '' : 'none';
-      }
+      const isPlex = backend === 'plex';
+      const usernameField = document.getElementById('cfgPlexUsernameField');
+      const metadataDetails = document.getElementById('cfgPlexMetadataDetails');
+      if (usernameField) usernameField.style.display = isPlex ? '' : 'none';
+      if (metadataDetails) metadataDetails.style.display = isPlex ? '' : 'none';
+      const backendHint = document.getElementById('cfgBackendHint');
+      if (backendHint) backendHint.textContent = SETUP_BACKEND_HINTS[backend] || SETUP_BACKEND_HINTS.plex;
       const player = document.getElementById('cfgPlayer');
       if (player) {
-        player.placeholder = backend === 'plex'
-          ? 'media_player.plex_plex_for_lg_tv'
-          : `media_player.${backend}`;
+        const examples = {
+          plex: 'media_player.plex_plex_for_lg_tv',
+          jellyfin: 'media_player.jellyfin_living_room',
+          emby: 'media_player.emby_living_room',
+          kodi: 'media_player.kodi_theater',
+          apple_tv: 'media_player.living_room_apple_tv',
+          streaming: 'media_player.living_room_roku',
+          kaleidescape: 'media_player.kaleidescape_theater'
+        };
+        player.placeholder = examples[backend] || `media_player.${backend}`;
       }
+      const playerHint = document.getElementById('cfgPlayerHint');
+      if (playerHint) playerHint.textContent = SETUP_PLAYER_HINTS[backend] || SETUP_PLAYER_HINTS.plex;
+    }
+
+    function syncSetupDisplayModeFields() {
+      const mode = readDisplayMode(document.getElementById('cfgDisplayMode')?.value || DISPLAY_MODE);
+      const comingSoon = document.getElementById('cfgComingSoonDetails');
+      const isComingSoon = mode === 'coming_soon';
+      if (comingSoon) {
+        comingSoon.style.display = isComingSoon ? '' : 'none';
+        comingSoon.open = isComingSoon;
+      }
+      for (const id of [
+        'cfgPlayersSectionTitle',
+        'cfgPlayersSection',
+        'cfgLoadPlayersRow',
+        'cfgPlexUsernameField',
+        'cfgPlexMetadataDetails',
+      ]) {
+        const field = document.getElementById(id);
+        if (field) field.style.display = isComingSoon ? 'none' : '';
+      }
+      if (!isComingSoon) syncSetupBackendFields();
+      syncSetupVisualPreview();
+    }
+
+    async function loadSetupPlayers() {
+      const haUrl = document.getElementById('cfgHaUrl')?.value.trim() || window.location.origin;
+      const haTok = document.getElementById('cfgHaToken')?.value.trim();
+      const backend = readBackend(document.getElementById('cfgBackend')?.value || BACKEND);
+      if (!haTok) {
+        setupStatus('Enter an HA token to load player entities, or type the entity id manually.', 'err');
+        return;
+      }
+      setupStatus('Loading media players...');
+      let states;
+      try {
+        const r = await fetch(haUrl.replace(/\/$/, '') + '/api/states', {
+          headers: { 'Authorization': 'Bearer ' + haTok, 'Content-Type': 'application/json' }
+        });
+        if (!r.ok) { setupStatus('HA returned ' + r.status + ' while loading players.', 'err'); return; }
+        states = await r.json();
+      } catch (e) {
+        setupStatus('Could not load players: ' + e.message, 'err');
+        return;
+      }
+      const rule = BACKEND_RULES[backend] || BACKEND_RULES.plex;
+      const players = Array.isArray(states)
+        ? states.filter(s => isBackendPlayer(s, rule))
+        : [];
+      const options = document.getElementById('cfgPlayerOptions');
+      if (options) {
+        options.innerHTML = '';
+        for (const state of players) {
+          const attrs = state.attributes || {};
+          const option = document.createElement('option');
+          option.value = state.entity_id;
+          option.label = [
+            attrs.friendly_name || state.entity_id,
+            state.state,
+            attrs.app_name,
+          ].filter(Boolean).join(' / ');
+          options.appendChild(option);
+        }
+      }
+      if (players.length === 1) {
+        const player = document.getElementById('cfgPlayer');
+        if (player && !player.value) player.value = players[0].entity_id;
+      }
+      setupStatus(players.length
+        ? `Loaded ${players.length} ${backend.replace('_', ' ')} player${players.length === 1 ? '' : 's'}.`
+        : `No ${backend.replace('_', ' ')} players found. You can still type the entity id manually.`,
+        players.length ? 'ok' : 'err');
     }
 
     function switchSetupTab(name) {
@@ -2130,6 +2896,7 @@
       for (const panel of document.querySelectorAll('[data-setup-panel]')) {
         panel.classList.toggle('active', panel.dataset.setupPanel === tabName);
       }
+      if (tabName === 'display') requestAnimationFrame(syncSetupVisualPreview);
     }
 
     function setupQuote(value) {
@@ -2208,6 +2975,9 @@
     }
 
     function syncSetupVisualFields() {
+      const frameStyle = document.getElementById('cfgVisualFrameStyle')?.value || 'bulbs';
+      setSetupDependents(['cfgVisualBulbSizePx'], frameStyle === 'bulbs');
+
       const useBackdrops = !!document.getElementById('cfgVisualUseBackdrops')?.checked;
       setSetupDependents(['cfgVisualBackdropStyle', 'cfgVisualBackdropDelayMs'], useBackdrops);
 
@@ -2218,6 +2988,7 @@
         'cfgVisualNightModeEntity',
         'cfgVisualNightModeOpacity',
       ], burnIn);
+      syncSetupVisualPreview();
     }
 
     function syncAccentPickerFromText() {
@@ -2226,6 +2997,7 @@
       if (!text || !picker) return;
       const value = text.value.trim().toLowerCase();
       picker.value = HEX_RE.test(value) ? value : ACCENT_PICKER_DEFAULT;
+      syncSetupVisualPreview();
     }
 
     function syncAccentTextFromPicker() {
@@ -2233,6 +3005,213 @@
       const picker = document.getElementById('cfgVisualAccentColorPicker');
       if (!text || !picker) return;
       text.value = picker.value.toLowerCase();
+      syncSetupVisualPreview();
+    }
+
+    function syncMarqueeBgPickerFromText() {
+      const text = document.getElementById('cfgVisualMarqueeBgColor');
+      const picker = document.getElementById('cfgVisualMarqueeBgColorPicker');
+      if (!text || !picker) return;
+      const value = text.value.trim().toLowerCase();
+      picker.value = HEX_RE.test(value) ? value : MARQUEE_BG_PICKER_DEFAULT;
+      syncSetupVisualPreview();
+    }
+
+    function syncMarqueeBgTextFromPicker() {
+      const text = document.getElementById('cfgVisualMarqueeBgColor');
+      const picker = document.getElementById('cfgVisualMarqueeBgColorPicker');
+      if (!text || !picker) return;
+      text.value = picker.value.toLowerCase();
+      syncSetupVisualPreview();
+    }
+
+    function setMarqueeBgPreset(value) {
+      const text = document.getElementById('cfgVisualMarqueeBgColor');
+      const picker = document.getElementById('cfgVisualMarqueeBgColorPicker');
+      if (!text) return;
+      const color = String(value || '').trim().toLowerCase();
+      text.value = HEX_RE.test(color) ? color : '';
+      if (picker) picker.value = text.value || MARQUEE_BG_PICKER_DEFAULT;
+      syncSetupVisualPreview();
+    }
+
+    function hexToRgb(hex) {
+      const value = String(hex || '').replace('#', '');
+      if (!/^[0-9a-f]{6}$/i.test(value)) return null;
+      return {
+        r: parseInt(value.slice(0, 2), 16),
+        g: parseInt(value.slice(2, 4), 16),
+        b: parseInt(value.slice(4, 6), 16),
+      };
+    }
+
+    function rgbToHex({ r, g, b }) {
+      return '#' + [r, g, b]
+        .map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0'))
+        .join('');
+    }
+
+    function mixHex(a, b, amount) {
+      const left = hexToRgb(a);
+      const right = hexToRgb(b);
+      if (!left || !right) return a;
+      return rgbToHex({
+        r: left.r * (1 - amount) + right.r * amount,
+        g: left.g * (1 - amount) + right.g * amount,
+        b: left.b * (1 - amount) + right.b * amount,
+      });
+    }
+
+    function createBulbLine(count, start, spacing, fixed, axis, out) {
+      for (let i = 0; i < count; i++) {
+        out.push(axis === 'x'
+          ? { x: start + i * spacing, y: fixed }
+          : { x: fixed, y: start + i * spacing });
+      }
+    }
+
+    function renderSetupPreviewBulbs(preview, bulbSize) {
+      const bulbs = preview.querySelector('.setup-preview-bulbs');
+      if (!bulbs) return;
+      const w = bulbs.clientWidth;
+      const h = bulbs.clientHeight;
+      if (!w || !h) return;
+
+      const spacing = Math.max(18, Math.round(bulbSize * 1.5));
+      const positions = [];
+      const horizontalCount = Math.max(2, Math.floor(w / spacing));
+      const horizontalStart = (w - (horizontalCount - 1) * spacing) / 2;
+      createBulbLine(horizontalCount, horizontalStart, spacing, 0, 'x', positions);
+      createBulbLine(horizontalCount, horizontalStart, spacing, h, 'x', positions);
+
+      const verticalCount = Math.max(2, Math.floor(h / spacing));
+      const verticalStart = (h - (verticalCount - 1) * spacing) / 2;
+      createBulbLine(verticalCount, verticalStart, spacing, 0, 'y', positions);
+      createBulbLine(verticalCount, verticalStart, spacing, w, 'y', positions);
+
+      const marquee = preview.querySelector('.setup-preview-marquee');
+      if (marquee) {
+        const bulbsRect = bulbs.getBoundingClientRect();
+        const marqueeBottom = marquee.getBoundingClientRect().bottom - bulbsRect.top;
+        if (Number.isFinite(marqueeBottom) && marqueeBottom > 0 && marqueeBottom < h) {
+          createBulbLine(horizontalCount, horizontalStart, spacing, marqueeBottom, 'x', positions);
+        }
+      }
+
+      bulbs.innerHTML = '';
+      positions.forEach((pos, idx) => {
+        const el = document.createElement('span');
+        el.style.left = `${pos.x}px`;
+        el.style.top = `${pos.y}px`;
+        el.classList.toggle('off', idx % 3 !== 0);
+        bulbs.appendChild(el);
+      });
+    }
+
+    function syncSetupVisualPreview() {
+      const preview = document.getElementById('setupVisualPreview');
+      if (!preview) return;
+
+      const themeKey = document.getElementById('cfgVisualTheme')?.value || 'classic-gold';
+      const theme = SETUP_THEME_PREVIEW[themeKey] || SETUP_THEME_PREVIEW['classic-gold'];
+      const accentRaw = (document.getElementById('cfgVisualAccentColor')?.value || '').trim().toLowerCase();
+      const accent = HEX_RE.test(accentRaw) ? accentRaw : '';
+      const marqueeBgRaw = (document.getElementById('cfgVisualMarqueeBgColor')?.value || '').trim().toLowerCase();
+      const marqueeBg = HEX_RE.test(marqueeBgRaw) ? marqueeBgRaw : '';
+      const radius = Math.max(0, Math.min(48, parseInt(document.getElementById('cfgVisualCornerRadiusPx')?.value || '0', 10) || 0));
+      const bulbSize = Math.max(12, Math.min(48, parseInt(document.getElementById('cfgVisualBulbSizePx')?.value || '28', 10) || 28));
+      const fontKey = document.getElementById('cfgVisualMarqueeFont')?.value || 'bebas-neue';
+      const font = SETUP_FONT_PREVIEW[fontKey] || SETUP_FONT_PREVIEW['bebas-neue'];
+      const frameStyle = document.getElementById('cfgVisualFrameStyle')?.value || 'bulbs';
+      const infoMode = document.getElementById('cfgVisualInfoPanelMode')?.value || 'on_tap';
+      const useBackdrops = !!document.getElementById('cfgVisualUseBackdrops')?.checked;
+      const backdropStyle = document.getElementById('cfgVisualBackdropStyle')?.value || 'fullscreen';
+      const burnIn = !!document.getElementById('cfgVisualBurnInMitigation')?.checked;
+      const nudgeAmplitude = Math.max(1, Math.min(16, parseInt(document.getElementById('cfgVisualNudgeAmplitudePx')?.value || '4', 10) || 4));
+      const nightOpacity = Math.max(0, Math.min(0.95, parseFloat(document.getElementById('cfgVisualNightModeOpacity')?.value || '0.4') || 0.4));
+      const displayMode = readDisplayMode(document.getElementById('cfgDisplayMode')?.value || DISPLAY_MODE);
+      const comingSoonTitle = document.getElementById('cfgComingSoonTitle')?.value.trim() || 'COMING SOON';
+
+      const palette = {
+        ...theme,
+        accentLight: accent || theme.accentLight,
+        accentMid: accent ? mixHex(accent, '#000000', 0.2) : theme.accentMid,
+        accentDark: accent ? mixHex(accent, '#000000', 0.5) : theme.accentDark,
+        accentGlow: accent ? mixHex(accent, '#ffffff', 0.3) : theme.accentGlow,
+        bgMarquee: marqueeBg || theme.bgMarquee,
+        redCurtain: marqueeBg || theme.redCurtain,
+      };
+      const vars = {
+        '--preview-accent-light': palette.accentLight,
+        '--preview-accent-mid': palette.accentMid,
+        '--preview-accent-dark': palette.accentDark,
+        '--preview-accent-glow': palette.accentGlow,
+        '--preview-bg-dark': palette.bgDark,
+        '--preview-bg-marquee': palette.bgMarquee,
+        '--preview-text-light': palette.textLight,
+        '--preview-text-dim': palette.textDim,
+        '--preview-red-curtain': palette.redCurtain,
+        '--preview-radius': `${radius}px`,
+        '--preview-bulb-size': `${Math.max(5, Math.round(bulbSize * 0.32))}px`,
+        '--preview-marquee-font': font.family,
+        '--preview-marquee-weight': font.weight,
+        '--preview-marquee-spacing': font.spacing,
+        '--preview-night-opacity': String(Math.max(0.08, nightOpacity * 0.45)),
+        '--preview-nudge-x': `${Math.min(10, nudgeAmplitude)}px`,
+        '--preview-nudge-y': `${-Math.min(6, Math.max(2, Math.round(nudgeAmplitude / 2)))}px`,
+      };
+      for (const [key, value] of Object.entries(vars)) preview.style.setProperty(key, value);
+
+      preview.dataset.frameStyle = FRAME_STYLES.includes(frameStyle) ? frameStyle : 'bulbs';
+      renderSetupPreviewBulbs(preview, bulbSize);
+      preview.classList.toggle('progress-on', !!document.getElementById('cfgVisualProgressBar')?.checked);
+      preview.classList.toggle('ratings-on', !!document.getElementById('cfgVisualRatingsBadges')?.checked);
+      preview.classList.toggle('genres-on', !!document.getElementById('cfgVisualGenreChips')?.checked);
+      preview.classList.toggle('info-on', infoMode !== 'on_tap');
+      preview.classList.toggle('backdrop-on', useBackdrops);
+      preview.classList.toggle('burn-in-on', burnIn);
+
+      const marquee = document.getElementById('setupPreviewMarquee');
+      if (marquee) marquee.textContent = displayMode === 'coming_soon' ? comingSoonTitle.toUpperCase() : 'NOW SHOWING';
+
+      const caption = document.getElementById('setupPreviewCaption');
+      if (caption) {
+        const bits = [
+          theme.label,
+          accent ? `Accent ${accent}` : 'Theme accent',
+          marqueeBg ? `Marquee bg ${marqueeBg}` : 'Theme marquee',
+          frameStyle,
+          frameStyle === 'bulbs' ? `${bulbSize}px bulbs` : '',
+          font.label,
+          `${radius}px radius`,
+          infoMode === 'on_tap' ? 'Info hidden until tap' : `Info ${infoMode.replace('_', ' ')}`,
+          useBackdrops ? `${backdropStyle} backdrop` : '',
+          burnIn ? `${nudgeAmplitude}px nudge + night dim sample` : '',
+        ].filter(Boolean);
+        caption.textContent = bits.join(' / ');
+      }
+    }
+
+    function syncCornerRadiusField() {
+      const input = document.getElementById('cfgVisualCornerRadiusPx');
+      const output = document.getElementById('cfgVisualCornerRadiusPxValue');
+      if (!input) return;
+      const n = Math.max(0, Math.min(48, parseInt(input.value || '0', 10) || 0));
+      input.value = String(n);
+      if (output) output.textContent = `${n}px`;
+      document.documentElement.style.setProperty('--pns-corner-radius', `${n}px`);
+      syncSetupVisualPreview();
+    }
+
+    function syncBulbSizeField() {
+      const input = document.getElementById('cfgVisualBulbSizePx');
+      const output = document.getElementById('cfgVisualBulbSizePxValue');
+      if (!input) return;
+      const n = Math.max(12, Math.min(48, parseInt(input.value || '28', 10) || 28));
+      input.value = String(n);
+      if (output) output.textContent = `${n}px`;
+      document.documentElement.style.setProperty('--pns-bulb-size', `${n}px`);
+      syncSetupVisualPreview();
     }
 
     function normalizeSetupNumber(key, id) {
@@ -2263,11 +3242,37 @@
     }
 
     async function setupTest() {
+      const displayMode = readDisplayMode(document.getElementById('cfgDisplayMode')?.value || DISPLAY_MODE);
       const haUrl = document.getElementById('cfgHaUrl').value.trim() || window.location.origin;
       const haTok = document.getElementById('cfgHaToken').value.trim();
       const backend = readBackend(document.getElementById('cfgBackend').value);
       const plexUrl = document.getElementById('cfgPlexUrl').value.trim();
       const plexTok = document.getElementById('cfgPlexToken').value.trim();
+      const radarrUrl = document.getElementById('cfgRadarrUrl')?.value.trim() || '';
+      const radarrKey = document.getElementById('cfgRadarrApiKey')?.value.trim() || '';
+      const sonarrUrl = document.getElementById('cfgSonarrUrl')?.value.trim() || '';
+      const sonarrKey = document.getElementById('cfgSonarrApiKey')?.value.trim() || '';
+
+      if (displayMode === 'coming_soon') {
+        if (!((radarrUrl && radarrKey) || (sonarrUrl && sonarrKey))) {
+          setupStatus('Add Radarr or Sonarr details first.', 'err');
+          return;
+        }
+        setupStatus('Testing Coming Soon source...');
+        const sourceUrl = radarrUrl || sonarrUrl;
+        const sourceKey = radarrKey || sonarrKey;
+        try {
+          const r = await fetch(sourceUrl.replace(/\/$/, '') + '/api/v3/system/status', {
+            headers: { 'X-Api-Key': sourceKey }
+          });
+          if (!r.ok) { setupStatus('Source returned ' + r.status + '. Check URL and API key.', 'err'); return; }
+        } catch (e) {
+          setupStatus('Could not reach Coming Soon source: ' + e.message, 'err');
+          return;
+        }
+        setupStatus('Coming Soon source responded.', 'ok');
+        return;
+      }
 
       if (!haTok) { setupStatus('Enter an HA token first.', 'err'); return; }
       setupStatus('Testing Home Assistant\u2026');
@@ -2300,7 +3305,18 @@
 
     function setupSave() {
       const haTok = document.getElementById('cfgHaToken').value.trim();
-      if (!haTok) { setupStatus('HA token is required.', 'err'); return; }
+      const displayMode = readDisplayMode(document.getElementById('cfgDisplayMode')?.value || DISPLAY_MODE);
+      if (!haTok && displayMode !== 'coming_soon') { setupStatus('HA token is required.', 'err'); return; }
+      if (displayMode === 'coming_soon') {
+        const hasSource = (document.getElementById('cfgRadarrUrl')?.value.trim()
+          && document.getElementById('cfgRadarrApiKey')?.value.trim())
+          || (document.getElementById('cfgSonarrUrl')?.value.trim()
+          && document.getElementById('cfgSonarrApiKey')?.value.trim());
+        if (!hasSource) {
+          setupStatus('Coming Soon mode needs Radarr or Sonarr details.', 'err');
+          return;
+        }
+      }
       const accentInput = document.getElementById('cfgVisualAccentColor');
       const accentColor = (accentInput?.value || '').trim().toLowerCase();
       if (accentColor && !HEX_RE.test(accentColor)) {
@@ -2309,10 +3325,19 @@
         accentInput?.focus();
         return;
       }
+      const marqueeBgInput = document.getElementById('cfgVisualMarqueeBgColor');
+      const marqueeBgColor = (marqueeBgInput?.value || '').trim().toLowerCase();
+      if (marqueeBgColor && !HEX_RE.test(marqueeBgColor)) {
+        switchSetupTab('display');
+        setupStatus('Marquee background color must be #RRGGBB, or blank for theme default.', 'err');
+        marqueeBgInput?.focus();
+        return;
+      }
       try {
         for (const [key, id] of SETUP_VALUE_FIELDS) {
           let v = document.getElementById(id)?.value.trim() || '';
           if (key === 'visualAccentColor') v = accentColor;
+          if (key === 'visualMarqueeBgColor') v = marqueeBgColor;
           if (SETUP_NUMBER_RULES[key]) v = normalizeSetupNumber(key, id);
           if (v) window.localStorage.setItem('pns.' + key, v);
           else window.localStorage.removeItem('pns.' + key);
@@ -2349,18 +3374,39 @@
       const save  = document.getElementById('setupSaveBtn');
       const clear = document.getElementById('setupClearBtn');
       const gear  = document.getElementById('setupGear');
+      const displayMode = document.getElementById('cfgDisplayMode');
       const backend = document.getElementById('cfgBackend');
+      const loadPlayers = document.getElementById('setupLoadPlayersBtn');
       const accent = document.getElementById('cfgVisualAccentColor');
       const accentPicker = document.getElementById('cfgVisualAccentColorPicker');
+      const marqueeBg = document.getElementById('cfgVisualMarqueeBgColor');
+      const marqueeBgPicker = document.getElementById('cfgVisualMarqueeBgColorPicker');
+      const marqueeBgClear = document.getElementById('cfgVisualMarqueeBgClear');
+      const bulbSize = document.getElementById('cfgVisualBulbSizePx');
+      const cornerRadius = document.getElementById('cfgVisualCornerRadiusPx');
       const copyBlueprint = document.getElementById('setupCopyBlueprintBtn');
       const copySwitcher = document.getElementById('setupCopySwitcherBtn');
       if (form)  form.addEventListener('submit', (e) => { e.preventDefault(); setupSave(); });
       if (test)  test.addEventListener('click', setupTest);
       if (save)  save.addEventListener('click', setupSave);
       if (clear) clear.addEventListener('click', setupClear);
+      if (displayMode) displayMode.addEventListener('change', syncSetupDisplayModeFields);
       if (backend) backend.addEventListener('change', syncSetupBackendFields);
+      if (loadPlayers) loadPlayers.addEventListener('click', loadSetupPlayers);
       for (const tab of document.querySelectorAll('[data-setup-tab]')) {
         tab.addEventListener('click', () => switchSetupTab(tab.dataset.setupTab));
+      }
+      for (const id of SETUP_VISUAL_FIELD_IDS) {
+        const input = document.getElementById(id);
+        if (!input) continue;
+        input.addEventListener('input', syncSetupVisualFields);
+        input.addEventListener('change', syncSetupVisualFields);
+      }
+      for (const id of ['cfgDisplayMode', 'cfgComingSoonTitle']) {
+        const input = document.getElementById(id);
+        if (!input) continue;
+        input.addEventListener('input', syncSetupVisualPreview);
+        input.addEventListener('change', syncSetupVisualPreview);
       }
       for (const id of ['cfgVisualUseBackdrops', 'cfgVisualBurnInMitigation']) {
         const input = document.getElementById(id);
@@ -2381,6 +3427,14 @@
       }
       if (accent) accent.addEventListener('input', syncAccentPickerFromText);
       if (accentPicker) accentPicker.addEventListener('input', syncAccentTextFromPicker);
+      if (marqueeBg) marqueeBg.addEventListener('input', syncMarqueeBgPickerFromText);
+      if (marqueeBgPicker) marqueeBgPicker.addEventListener('input', syncMarqueeBgTextFromPicker);
+      if (marqueeBgClear) marqueeBgClear.addEventListener('click', () => setMarqueeBgPreset(''));
+      for (const swatch of document.querySelectorAll('[data-marquee-bg-preset]')) {
+        swatch.addEventListener('click', () => setMarqueeBgPreset(swatch.dataset.marqueeBgPreset));
+      }
+      if (bulbSize) bulbSize.addEventListener('input', syncBulbSizeField);
+      if (cornerRadius) cornerRadius.addEventListener('input', syncCornerRadiusField);
       if (copyBlueprint) copyBlueprint.addEventListener('click', () => copySetupText(BLUEPRINT_URL, 'Blueprint URL'));
       if (copySwitcher) copySwitcher.addEventListener('click', () => copySetupText(buildSwitcherConfigText(), 'Switcher config'));
       if (gear)  gear.addEventListener('click', () => {
@@ -2392,14 +3446,17 @@
       // Show the gear icon on the live display whenever we have any saved
       // config — it's the escape hatch to reopen setup.
       const hasSavedConfig = (() => {
-        try { return !!window.localStorage.getItem('pns.haToken'); } catch (_) { return false; }
+        try {
+          return !!(window.localStorage.getItem('pns.haToken')
+            || window.localStorage.getItem('pns.displayMode'));
+        } catch (_) { return false; }
       })();
       if (gear && hasSavedConfig) gear.style.display = 'block';
 
       // First-run: if we have no HA token at all and no config script supplied
       // one, auto-open setup. Also honour explicit `#setup` in the hash.
       const forceSetup = /(^|&)setup(=|&|$)/.test(window.location.hash.replace(/^#/, ''));
-      if (forceSetup || !HA_TOKEN) {
+      if (forceSetup || (!HA_TOKEN && DISPLAY_MODE !== 'coming_soon')) {
         switchSetupTab('connection');
         populateSetupForm();
         setupVisible(true);
@@ -2412,7 +3469,7 @@
       initSetup();
     }
 
-    if (!HA_TOKEN) {
+    if (!HA_TOKEN && DISPLAY_MODE !== 'coming_soon') {
       console.warn('[plex-now-showing] No HA token configured — opening setup.');
     }
     if (HA_TOKEN && ACTIVE_BACKEND === 'plex' && !PLEX_USERNAME) {
@@ -2430,11 +3487,15 @@
     const mediaInfo = document.getElementById('mediaInfo');
     const mediaType = document.getElementById('mediaType');
     const playerName = document.getElementById('playerName');
+    const appBadge = document.getElementById('appBadge');
+    const appIcon = document.getElementById('appIcon');
+    const appName = document.getElementById('appName');
     const ambientGlow = document.getElementById('ambientGlow');
     const backdropAmbient = document.getElementById('backdropAmbient');
     const backdropImage = document.getElementById('backdropImage');
     const bulbsOuterContainer = document.getElementById('bulbsOuter');
     const marquee = document.getElementById('marquee');
+    const marqueeHeading = marquee ? marquee.querySelector('h1') : null;
 
     // ===== STATE =====
     let currentMediaKey = '';
@@ -2678,7 +3739,9 @@
       infoTitle.textContent = d.seriesTitle || d.title;
 
       // Subtitle
-      if (d.seriesTitle) {
+      if (d.comingSoon && d.subtitle) {
+        infoSubtitle.textContent = d.subtitle;
+      } else if (d.seriesTitle) {
         let sub = d.title;
         if (d.season && d.episode) {
           sub = `S${String(d.season).padStart(2,'0')}E${String(d.episode).padStart(2,'0')} · ${d.title}`;
@@ -2690,13 +3753,15 @@
 
       // Meta tags
       let tags = [];
-      let typeLabel = 'Movie';
-      if (d.contentType === 'tvshow' || d.contentType === 'episode' || d.seriesTitle) {
+      let typeLabel = d.comingSoon ? (d.typeLabel || 'Coming Soon') : 'Movie';
+      if (!d.comingSoon && (d.contentType === 'tvshow' || d.contentType === 'episode' || d.seriesTitle)) {
         typeLabel = 'TV Series';
-      } else if (d.contentType === 'music') {
+      } else if (!d.comingSoon && d.contentType === 'music') {
         typeLabel = 'Music';
       }
       tags.push(typeLabel);
+      if (d.comingSoon && d.countdown) tags.push(d.countdown);
+      if (d.comingSoon && d.releaseLabel) tags.push(d.releaseLabel);
       if (d.contentRating) tags.push(d.contentRating);
       if (d.duration) {
         const mins = Math.round(d.duration / 60);
@@ -2726,7 +3791,7 @@
       // we fall through to the direct fetch which requires the URL + token.
       infoTech.innerHTML = '';
       renderRatingsBadges(null); // reset
-      if (d.ratingKey && hasPlexMetadataAccess()) {
+      if (!d.comingSoon && d.ratingKey && hasPlexMetadataAccess()) {
         const mi = await fetchPlexMediaInfo(d.ratingKey);
         if (mi) {
           renderRatingsBadges(mi.ratings);
@@ -2758,7 +3823,9 @@
       }
 
       // Player
-      infoPlayer.textContent = `Playing on ${d.playerName}`;
+      infoPlayer.textContent = d.appName
+        ? `Playing on ${d.playerName} via ${d.appName}`
+        : `Playing on ${d.playerName}`;
 
       infoOverlay.classList.add('visible');
 
@@ -2826,10 +3893,11 @@
       }
       const w = window.innerWidth;
       const h = window.innerHeight;
-      const spacing = 42;
+      const bulbSize = Math.max(12, Math.min(48, VISUAL.bulbSizePx || 28));
+      const spacing = Math.max(18, Math.round(bulbSize * 1.5));
       const bulbs = [];
       const pad = 4;
-      const bulbR = 14;
+      const bulbR = bulbSize / 2;
 
       // Top edge
       const topY = pad - bulbR + 2;
@@ -2909,8 +3977,192 @@
       chaseOffset = (chaseOffset + 1) % 3;
     }
 
+    let comingSoonCache = { items: [], fetchedAt: 0 };
+
+    function syncDisplayModeText() {
+      if (!marqueeHeading) return;
+      marqueeHeading.textContent = DISPLAY_MODE === 'coming_soon'
+        ? (COMING_SOON.title || 'Coming Soon')
+        : 'NOW SHOWING';
+      document.body.classList.toggle('display-coming-soon', DISPLAY_MODE === 'coming_soon');
+    }
+
+    async function fetchComingSoonData() {
+      await serverModeReady;
+      let payload = null;
+      if (SERVER_MODE) {
+        const resp = await fetch('/api/coming-soon', { cache: 'no-store' });
+        if (!resp.ok) return null;
+        payload = await resp.json();
+        if (payload && payload.title) COMING_SOON.title = payload.title;
+        if (payload && payload.imageType) COMING_SOON.imageType = payload.imageType;
+        if (payload && Number.isFinite(payload.cycleInterval)) COMING_SOON.cycleInterval = payload.cycleInterval;
+        comingSoonCache = { items: Array.isArray(payload.items) ? payload.items : [], fetchedAt: Date.now() };
+      } else if (Date.now() - comingSoonCache.fetchedAt > 15 * 60 * 1000) {
+        comingSoonCache = { items: await fetchComingSoonDirect(), fetchedAt: Date.now() };
+      }
+
+      syncDisplayModeText();
+      const items = comingSoonCache.items;
+      if (!items.length) return null;
+      const intervalMs = Math.max(2, Number(COMING_SOON.cycleInterval) || 8) * 1000;
+      const index = Math.floor(Date.now() / intervalMs) % items.length;
+      return buildComingSoonMediaData(items[index]);
+    }
+
+    async function fetchComingSoonDirect() {
+      const start = new Date(Date.now() - (Number(COMING_SOON.daysOffset) || 0) * 86400000);
+      const end = new Date(Date.now() + 90 * 86400000);
+      const startDate = start.toISOString().split('T')[0];
+      const endDate = end.toISOString().split('T')[0];
+      const fetches = [];
+
+      if (COMING_SOON.radarrUrl && COMING_SOON.radarrApiKey) {
+        const base = COMING_SOON.radarrUrl.replace(/\/$/, '');
+        fetches.push(fetch(`${base}/api/v3/calendar?start=${startDate}&end=${endDate}&unmonitored=false`, {
+          headers: { 'X-Api-Key': COMING_SOON.radarrApiKey }
+        }).then(r => r.ok ? r.json() : []));
+      } else fetches.push(Promise.resolve([]));
+
+      if (COMING_SOON.sonarrUrl && COMING_SOON.sonarrApiKey) {
+        const base = COMING_SOON.sonarrUrl.replace(/\/$/, '');
+        fetches.push(fetch(`${base}/api/v3/calendar?start=${startDate}&end=${endDate}&unmonitored=false&includeSeries=true`, {
+          headers: { 'X-Api-Key': COMING_SOON.sonarrApiKey }
+        }).then(r => r.ok ? r.json() : []));
+      } else fetches.push(Promise.resolve([]));
+
+      const [radarr, sonarr] = await Promise.all(fetches);
+      return interleaveComingSoonItems(
+        mapRadarrComingSoon(radarr).slice(0, COMING_SOON.moviesCount),
+        mapSonarrComingSoon(sonarr).slice(0, COMING_SOON.showsCount),
+      );
+    }
+
+    function mapRadarrComingSoon(items) {
+      const base = COMING_SOON.radarrUrl.replace(/\/$/, '');
+      const start = new Date(Date.now() - (Number(COMING_SOON.daysOffset) || 0) * 86400000);
+      start.setHours(0, 0, 0, 0);
+      return (Array.isArray(items) ? items : [])
+        .filter(m => !m.hasFile && m.digitalRelease && new Date(m.digitalRelease) >= start)
+        .sort((a, b) => new Date(a.digitalRelease) - new Date(b.digitalRelease))
+        .map(m => ({
+          type: 'movie',
+          typeLabel: 'Movie',
+          title: m.title || 'Untitled Movie',
+          subtitle: [m.year, Array.isArray(m.genres) ? m.genres.join(' / ') : ''].filter(Boolean).join(' / '),
+          releaseDate: m.digitalRelease,
+          countdown: formatComingSoonCountdown(m.digitalRelease),
+          releaseLabel: formatComingSoonDate(m.digitalRelease),
+          overview: m.overview || '',
+          posterUrl: coverImage(m.images, 'poster'),
+          fanartUrl: coverImage(m.images, 'fanart'),
+          localPosterUrl: m.id ? `${base}/api/v3/MediaCover/${m.id}/poster.jpg?apikey=${encodeURIComponent(COMING_SOON.radarrApiKey)}` : '',
+          localFanartUrl: m.id ? `${base}/api/v3/MediaCover/${m.id}/fanart.jpg?apikey=${encodeURIComponent(COMING_SOON.radarrApiKey)}` : '',
+        }));
+    }
+
+    function mapSonarrComingSoon(items) {
+      const base = COMING_SOON.sonarrUrl.replace(/\/$/, '');
+      const start = new Date(Date.now() - (Number(COMING_SOON.daysOffset) || 0) * 86400000);
+      start.setHours(0, 0, 0, 0);
+      const seen = new Set();
+      return (Array.isArray(items) ? items : [])
+        .filter(ep => !ep.hasFile && ep.airDateUtc && new Date(ep.airDateUtc) >= start)
+        .sort((a, b) => new Date(a.airDateUtc) - new Date(b.airDateUtc))
+        .filter(ep => {
+          const id = ep.seriesId || ep.series?.id || ep.series?.title || ep.title;
+          if (seen.has(id)) return false;
+          seen.add(id);
+          return true;
+        })
+        .map(ep => {
+          const series = ep.series || {};
+          const season = String(ep.seasonNumber || 0).padStart(2, '0');
+          const episode = String(ep.episodeNumber || 0).padStart(2, '0');
+          const releaseDate = ep.airDate || (ep.airDateUtc ? ep.airDateUtc.split('T')[0] : '');
+          const sid = series.id || ep.seriesId;
+          return {
+            type: 'tv',
+            typeLabel: 'TV',
+            title: series.title || ep.title || 'Untitled Series',
+            subtitle: `S${season}E${episode}${ep.title ? ` / ${ep.title}` : ''}`,
+            releaseDate,
+            countdown: formatComingSoonCountdown(releaseDate),
+            releaseLabel: formatComingSoonDate(releaseDate),
+            overview: ep.overview || '',
+            posterUrl: coverImage(series.images, 'poster'),
+            fanartUrl: coverImage(series.images, 'fanart'),
+            localPosterUrl: sid ? `${base}/api/v3/MediaCover/${sid}/poster.jpg?apikey=${encodeURIComponent(COMING_SOON.sonarrApiKey)}` : '',
+            localFanartUrl: sid ? `${base}/api/v3/MediaCover/${sid}/fanart.jpg?apikey=${encodeURIComponent(COMING_SOON.sonarrApiKey)}` : '',
+          };
+        });
+    }
+
+    function buildComingSoonMediaData(item) {
+      const useFanart = COMING_SOON.imageType === 'fanart';
+      const artwork = useFanart
+        ? (item.fanartUrl || item.localFanartUrl || item.posterUrl || item.localPosterUrl || '')
+        : (item.posterUrl || item.localPosterUrl || item.fanartUrl || item.localFanartUrl || '');
+      return {
+        title: item.title || 'Coming Soon',
+        subtitle: item.subtitle || '',
+        contentType: item.type === 'tv' ? 'episode' : 'movie',
+        artwork,
+        playerName: [item.countdown, item.releaseLabel].filter(Boolean).join(' / '),
+        state: 'playing',
+        duration: 0,
+        position: 0,
+        positionUpdatedAt: '',
+        summary: item.overview || '',
+        ratingKey: '',
+        comingSoon: true,
+        typeLabel: item.typeLabel || (item.type === 'tv' ? 'TV' : 'Movie'),
+        releaseLabel: item.releaseLabel || '',
+        countdown: item.countdown || '',
+      };
+    }
+
+    function interleaveComingSoonItems(movies, shows) {
+      const out = [];
+      const max = Math.max(movies.length, shows.length);
+      for (let i = 0; i < max; i++) {
+        if (i < movies.length) out.push(movies[i]);
+        if (i < shows.length) out.push(shows[i]);
+      }
+      return out;
+    }
+
+    function coverImage(images, type) {
+      if (!Array.isArray(images)) return '';
+      return images.find(i => i && i.coverType === type)?.remoteUrl || '';
+    }
+
+    function formatComingSoonCountdown(dateStr) {
+      const target = new Date(String(dateStr).substring(0, 10) + 'T00:00:00');
+      if (Number.isNaN(target.getTime())) return '';
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const diff = Math.round((target - today) / 86400000);
+      if (diff < 0) return 'Available';
+      if (diff === 0) return 'Today';
+      if (diff === 1) return 'Tomorrow';
+      if (diff < 7) return `In ${diff} days`;
+      if (diff < 14) return 'In 1 week';
+      if (diff < 30) return `In ${Math.round(diff / 7)} weeks`;
+      if (diff < 60) return 'In 1 month';
+      return `In ${Math.round(diff / 30)} months`;
+    }
+
+    function formatComingSoonDate(dateStr) {
+      const d = new Date(dateStr);
+      if (Number.isNaN(d.getTime())) return '';
+      return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
     // ===== FETCH NOW-SHOWING DATA FROM HA =====
     async function fetchNowShowingData() {
+      if (DISPLAY_MODE === 'coming_soon') return fetchComingSoonData();
+
       // Unified-server path: /api/state is already normalised.
       await serverModeReady;
       if (SERVER_MODE) {
@@ -2983,12 +4235,46 @@
 
     function isBackendPlayer(state, rule) {
       if (!state || typeof state.entity_id !== 'string') return false;
+      if ((rule.requiredAttributes || []).some(name => !(state.attributes || {})[name])) return false;
       return state.entity_id.startsWith(rule.entityPrefix)
-        || rule.exactEntities.includes(state.entity_id);
+        || rule.exactEntities.includes(state.entity_id)
+        || (rule.entityIncludes || []).some(token => state.entity_id.includes(token));
+    }
+
+    const APP_ICON_SLUGS = {
+      'Disney+': 'disney-plus',
+      'Prime Video': 'amazon-prime',
+      'Amazon Prime Video': 'amazon-prime',
+      'Apple TV': 'apple-tv-plus',
+      'Apple TV+': 'apple-tv-plus',
+      'HBO Max': 'hbo',
+      'Max': 'hbo',
+      'YouTube': 'youtube',
+      'Netflix': 'netflix',
+      'Hulu': 'hulu',
+      'Plex': 'plex',
+      'Spotify': 'spotify',
+      'Twitch': 'twitch',
+      'Infuse': 'infuse',
+      'Paramount+': 'paramount-plus',
+      'Peacock': 'peacock'
+    };
+
+    function appIconUrlFor(app) {
+      if (!app) return '';
+      const slug = APP_ICON_SLUGS[app]
+        || String(app).trim().toLowerCase()
+          .replace(/&/g, 'and')
+          .replace(/\+/g, '-plus')
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+      if (!slug) return '';
+      return `https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/${slug}.png`;
     }
 
     function buildMediaData(playerState) {
       const attrs = playerState.attributes || {};
+      const app = attrs.app_name || '';
       return {
         title: attrs.media_title || 'Unknown Title',
         seriesTitle: attrs.media_series_title || '',
@@ -3003,7 +4289,10 @@
         position: Number.isFinite(attrs.media_position) ? attrs.media_position : 0,
         positionUpdatedAt: attrs.media_position_updated_at || '',
         summary: attrs.media_summary || '',
-        ratingKey: attrs.media_content_id || ''
+        ratingKey: attrs.media_content_id || '',
+        appName: app,
+        appId: attrs.app_id || '',
+        appIconUrl: appIconUrlFor(app)
       };
     }
 
@@ -3190,6 +4479,30 @@
       else if (typeof mql.addListener === 'function') mql.addListener(handler); // Safari
     } catch (_) { /* matchMedia unsupported — skip */ }
 
+    function renderAppBadge(data) {
+      if (!appBadge || !appIcon || !appName) return;
+      const label = data && data.appName ? String(data.appName).trim() : '';
+      if (!label) {
+        appBadge.classList.remove('visible');
+        appName.textContent = '';
+        appIcon.removeAttribute('src');
+        return;
+      }
+      appName.textContent = label;
+      const icon = data.appIconUrl || appIconUrlFor(label);
+      if (icon) {
+        appIcon.style.display = '';
+        appIcon.src = icon;
+      } else {
+        appIcon.style.display = 'none';
+        appIcon.removeAttribute('src');
+      }
+      appIcon.onerror = () => {
+        appIcon.style.display = 'none';
+      };
+      appBadge.classList.add('visible');
+    }
+
     // ===== UPDATE DISPLAY =====
     function showMedia(data) {
       const artworkUrl = data.artwork.startsWith('http')
@@ -3211,6 +4524,7 @@
         // the progress bar's paused class, then bail out of the full re-render.
         syncInfoPanelForMode(data);
         setProgressFromState(data);
+        renderAppBadge(data);
         // #21 fullscreen backdrop reacts to pause/play transitions only (the
         // ambient layer doesn't change on state). The media key hasn't
         // changed, so backdropCtx.artUrl is still valid — (re)schedule on
@@ -3254,23 +4568,26 @@
         subtitleText.textContent = sub;
       } else {
         titleText.textContent = data.title;
-        subtitleText.textContent = '';
+        subtitleText.textContent = data.comingSoon ? (data.subtitle || data.releaseLabel || '') : '';
       }
 
       // Media type label
-      let typeLabel = 'Movie';
-      if (data.contentType === 'tvshow' || data.contentType === 'episode' || data.seriesTitle) {
+      let typeLabel = data.comingSoon ? (data.typeLabel || 'Coming Soon') : 'Movie';
+      if (!data.comingSoon && (data.contentType === 'tvshow' || data.contentType === 'episode' || data.seriesTitle)) {
         typeLabel = 'TV Series';
-      } else if (data.contentType === 'music') {
+      } else if (!data.comingSoon && data.contentType === 'music') {
         typeLabel = 'Music';
       }
 
-      if (data.state === 'paused') {
+      if (data.comingSoon && data.countdown) {
+        typeLabel += ' / ' + data.countdown;
+      } else if (data.state === 'paused') {
         typeLabel += ' · Paused';
       }
 
       mediaType.textContent = typeLabel;
       playerName.textContent = data.playerName;
+      renderAppBadge(data);
       mediaInfo.classList.add('visible');
 
       // Hide idle
@@ -3325,6 +4642,7 @@
       posterOverlay.style.display = 'none';
       posterTitle.style.display = 'none';
       mediaInfo.classList.remove('visible');
+      renderAppBadge(null);
       idleContent.classList.add('visible');
       ambientGlow.classList.remove('active');
       hideProgressBar();
@@ -3348,6 +4666,7 @@
       // flash the default UI and then repaint.
       await loadVisualConfig();
       applyVisualToggles();
+      syncDisplayModeText();
       poll();
       setInterval(poll, POLL_INTERVAL);
     }
@@ -3358,6 +4677,9 @@
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
         if (VISUAL.frameStyle === 'bulbs') createOuterBulbs();
+        if (document.getElementById('setupOverlay')?.classList.contains('visible')) {
+          syncSetupVisualPreview();
+        }
       }, 200);
     });
 

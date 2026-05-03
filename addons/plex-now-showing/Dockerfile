@@ -1,4 +1,4 @@
-# Home Assistant add-on image for Plex Now Showing.
+# Home Assistant add-on image for Now Showing.
 #
 # Uses HA's official Alpine base so we inherit their s6-overlay, bashio, and
 # ffmpeg-free slim image. Node 20 is installed from Alpine's repository
@@ -43,15 +43,15 @@ RUN chmod +x /etc/services.d/plex-now-showing/run \
 
 # ---- Labels (add-on store + OCI) ----
 LABEL \
-  io.hass.name="Plex Now Showing" \
-  io.hass.description="Cinema-style now-playing kiosk for Plex" \
+  io.hass.name="Now Showing" \
+  io.hass.description="Cinema-style now-playing and coming-soon kiosk for Home Assistant" \
   io.hass.arch="${BUILD_ARCH}" \
   io.hass.type="addon" \
   io.hass.version="${BUILD_VERSION}" \
   maintainer="rusty4444" \
-  org.opencontainers.image.title="Plex Now Showing add-on" \
-  org.opencontainers.image.description="HA add-on that serves the Plex Now Showing kiosk and proxies HA/Plex" \
-  org.opencontainers.image.source="https://github.com/rusty4444/plex-now-showing" \
+  org.opencontainers.image.title="Now Showing add-on" \
+  org.opencontainers.image.description="HA add-on that serves the Now Showing kiosk and proxies Home Assistant/media metadata" \
+  org.opencontainers.image.source="https://github.com/rusty4444/now-showing-ha" \
   org.opencontainers.image.licenses="MIT"
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \

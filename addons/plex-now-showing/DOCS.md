@@ -1,4 +1,4 @@
-# Plex Now Showing — Add-on Documentation
+# Now Showing - Add-on Documentation
 
 ## How it runs
 
@@ -21,7 +21,8 @@ probe of `/api`) and switches to `/api/state`. Plex-only metadata calls use
 
 | Option | Default | Purpose |
 |--------|---------|---------|
-| `backend` | `plex` | Media backend to watch: `plex`, `jellyfin`, `emby`, or `kodi`. |
+| `display_mode` | `now_showing` | `now_showing` for live playback, `coming_soon` for a Radarr/Sonarr upcoming-release screensaver. |
+| `backend` | `plex` | Media backend to watch: `plex`, `jellyfin`, `emby`, `kodi`, `apple_tv`, `streaming`, or `kaleidescape`. Use `streaming` for Roku, Google TV, Android TV, Apple TV, or any `media_player` exposing `app_name`. |
 | `player` | _empty_ | Optional exact `media_player` entity id. Leave empty to auto-detect active players for `backend`. |
 | `plex_url` | _empty_ | e.g. `https://plex.example.com:32400`. Needed for the info panel. |
 | `plex_token` | _empty_ | Plex `X-Plex-Token`. Required together with `plex_url`. |
@@ -32,6 +33,17 @@ probe of `/api`) and switches to `/api/state`. Plex-only metadata calls use
 | `poll_interval` | `5000` | Kiosk poll interval (ms). |
 | `state_ttl_ms` | `3000` | Server-side cache for `/api/state`. Smooths multi-tablet polls. |
 | `media_info_ttl_ms` | `600000` | Server-side cache for `/api/media-info/:ratingKey`. |
+| `coming_soon_ttl_ms` | `900000` | Server-side cache for `/api/coming-soon`. |
+| `coming_soon_title` | `Coming Soon` | Marquee text in Coming Soon mode. |
+| `radarr_url` | _empty_ | Optional Radarr URL for upcoming movies. |
+| `radarr_api_key` | _empty_ | Required with `radarr_url`. |
+| `sonarr_url` | _empty_ | Optional Sonarr URL for upcoming episodes. |
+| `sonarr_api_key` | _empty_ | Required with `sonarr_url`. |
+| `coming_soon_movies_count` | `5` | Number of Radarr movies to include. |
+| `coming_soon_shows_count` | `5` | Number of Sonarr series to include. |
+| `coming_soon_cycle_interval` | `8` | Seconds each upcoming title stays on screen. |
+| `coming_soon_days_offset` | `0` | Include releases from this many days in the past. |
+| `coming_soon_image_type` | `poster` | `poster` or `fanart`. |
 | `proxy_secret` | _empty_ | If set, requests to `/api/*` must carry `X-Proxy-Secret`. |
 | `allowed_origins` | `[]` | Comma-joined allowlist for the `Origin` header on `/api/*`. Leave empty for Ingress-only. |
 | `switcher_enabled` | `false` | Turn on the built-in Fully Kiosk auto-switcher. Use **this or the Blueprint (#47)** — not both. |
@@ -42,6 +54,7 @@ probe of `/api`) and switches to `/api/state`. Plex-only metadata calls use
 | `visual_genre_chips` | `false` | Genre pills (Action, Sci-Fi, …) next to the content rating in the info panel. Needs `plex_url` + `plex_token`. |
 | `visual_info_panel_mode` | `on_tap` | When to show the info panel. `on_tap` (default), `on_pause` (pinned while paused), `always` (pinned whenever media is active). |
 | `visual_frame_style` | `bulbs` | Screen-edge frame style: `bulbs` (animated marquee bulbs), `gold-line` (thin accent double border), or `none`. |
+| `visual_bulb_size_px` | `28` | Animated bulb diameter in pixels. Clamped `12`-`48`; only visible when `visual_frame_style` is `bulbs`. |
 | `visual_marquee_font` | `bebas-neue` | NOW SHOWING banner font: `bebas-neue`, `anton`, `oswald`, `monoton`, or `playfair-display`. |
 | `visual_use_backdrops` | `false` | Master switch for the backdrop-art feature. Needs `plex_url` + `plex_token`. |
 | `visual_backdrop_style` | `fullscreen` | `fullscreen` (landscape-only crossfade after `visual_backdrop_delay_ms`) or `ambient` (blurred fanart behind the poster, both orientations). |
@@ -53,6 +66,8 @@ probe of `/api`) and switches to `/api/state`. Plex-only metadata calls use
 | `visual_night_mode_opacity` | `0.4` | Dim overlay opacity when night mode is active. Clamped to `0` – `0.95`. |
 | `visual_theme` | `classic-gold` | Theme preset — one of `classic-gold` / `art-deco-silver` / `neon-80s` / `minimalist-dark`. Reskins the bulbs, marquee glow, progress bar, and ratings badges. |
 | `visual_accent_color` | _empty_ | Optional `#RRGGBB` hex (e.g. `#ff5500`) that overrides the active theme's accent ramp. Empty = use theme default. Strict format — short form, names, and `rgb()` are rejected. |
+| `visual_marquee_bg_color` | _empty_ | Optional `#RRGGBB` hex that overrides the active theme's marquee background/curtain colour. Empty = use theme default. Strict format only. |
+| `visual_corner_radius_px` | `0` | Corner radius in pixels for the inner marquee, poster, and info panel. Clamped `0`-`48`; default `0` keeps the sharp cinema look. |
 | `log_level` | `info` | s6 / add-on log verbosity. |
 
 ### Visual toggles (V2)
@@ -68,32 +83,41 @@ through to the browser automatically — no rebuild, no per-tablet config.
 | `visual_genre_chips` | Adds genre pills (Action, Sci-Fi, …) next to the content rating in the info panel. Tags are pulled from Plex metadata (`item.Genre[]`) via `/api/media-info/:ratingKey` — requires `plex_url` + `plex_token`. Personal media libraries without metadata agents will simply render nothing, which is fine. Capped at 6 chips to keep the meta row tidy. |
 | `visual_info_panel_mode` | Controls **when** the whole info panel appears. `on_tap` (default) matches v1 behaviour — hidden until you tap the poster, auto-hides after 8 s. `on_pause` pins the panel open whenever the player is paused (tap-to-peek still works during playback). `always` keeps the panel open the entire time media is active; tap is suppressed. Combine with `visual_ratings_badges` if you want ratings visible on pause or always. |
 | `visual_frame_style` | Frame style picker (#65). `bulbs` keeps the existing animated outer bulb string. `gold-line` hides the bulbs and draws a quiet double border around the screen edge using the active accent colour, including `visual_accent_color` overrides. `none` removes the decorative frame entirely and stops the bulb animation timer. |
+| `visual_bulb_size_px` | Bulb size slider. `28` preserves the original marquee bulbs. Smaller values make the frame quieter; larger values make the theatre lights chunkier. The live display and setup preview both keep bulb spacing proportional to the selected size. |
 | `visual_marquee_font` | Marquee font picker (#62/#63). `bebas-neue` preserves the original v1 banner. `anton` and `oswald` are clean bold alternatives, `monoton` gives the marquee a neon sign feel, and `playfair-display` is a more editorial serif option. |
 | `visual_use_backdrops` / `visual_backdrop_style` / `visual_backdrop_delay_ms` | Backdrop art on pause (#21). **Master switch** is `visual_use_backdrops`. **Style** picks between `fullscreen` (after the item has been paused for `visual_backdrop_delay_ms`, the poster view crossfades to the Plex fanart — landscape orientations only, portrait is silently skipped because fanart crops look bad there) and `ambient` (a blurred + darkened copy of the fanart replaces the yellow bulb-lit background whenever media is active; works on both orientations because the blur makes aspect ratio moot). Images are proxied through the server at `/api/plex-art?path=…` so the Plex token never leaves the server. Requires `plex_url` + `plex_token`. |
 | `visual_burn_in_mitigation` | Master switch for long-running-kiosk protection. When on, the whole UI drifts by a few pixels every minute (configurable via `visual_nudge_interval_ms` + `visual_nudge_amplitude_px`) using a smooth 400 ms GPU transform, and a dim overlay can be triggered by an HA entity or the OS dark-mode media query. Off by default. |
 | `visual_night_mode_entity` | Optional HA entity id (`input_boolean`, `switch`, or `binary_sensor`). When its state is `on`, the kiosk fades in a dim overlay (opacity from `visual_night_mode_opacity`, default 40%). Leave empty and the kiosk uses `window.matchMedia('(prefers-color-scheme: dark)')` instead — handy for tablets that flip themselves at night. Requires `visual_burn_in_mitigation: true`. |
 | `visual_theme` / `visual_accent_color` | Top-level look-and-feel (#23 + #66). `visual_theme` picks one of four presets via `<body data-theme>`: `classic-gold` (default, original warm bulb look), `art-deco-silver` (cooler chrome highlights and brushed-metal glow), `neon-80s` (hot pink + cyan with magenta bulbs), or `minimalist-dark` (clean dark UI, ornament backed off). `visual_accent_color` is an optional strict `#RRGGBB` override (e.g. `#ff5500`) that re-derives the four-stop accent ramp via CSS `color-mix(in srgb, ...)` — leave blank to use the theme's default ramp. Both are presentation-only; nothing on the server changes. |
+| `visual_marquee_bg_color` | Marquee background colour picker (#62/#viz-13). Leave blank to use the selected theme's marquee/curtain colour, or set strict `#RRGGBB` to override it. The setup page includes presets for black, deep red, navy, forest green, midnight purple, and charcoal, plus an arbitrary colour picker. |
+| `visual_corner_radius_px` | Corner / frame radius slider (#68). `0` preserves the original sharp poster and marquee. Higher values round the inner marquee, poster, and info panel while leaving the outer bulb frame square, so it composes with `visual_frame_style: bulbs`. |
 
 HACS-only users (no add-on / server) can open `#setup`, switch to the
 **Display** tab, and configure every visual toggle without editing code. The
-form writes the same per-tablet `pns.*` keys the kiosk reads at runtime.
+wide preview at the top of the tab updates as controls change, and the form
+writes the same per-tablet `pns.*` keys the kiosk reads at runtime.
+In the Home Assistant add-on, the setup overlay opens at the top and scrolls
+inside Ingress, so all controls remain reachable on smaller tablet or desktop
+iframes without zooming out.
 Advanced users can still set `pns.visualProgressBar=true` /
 `pns.visualRatingsBadges=true` / `pns.visualGenreChips=true` /
 `pns.visualInfoPanelMode=on_pause` / `pns.visualFrameStyle=gold-line` /
-`pns.visualMarqueeFont=anton` /
+`pns.visualBulbSizePx=32` / `pns.visualMarqueeFont=anton` /
 `pns.visualUseBackdrops=true` / `pns.visualBackdropStyle=ambient` /
 `pns.visualBurnInMitigation=true` (with optional
 `pns.visualNudgeIntervalMs`, `pns.visualNudgeAmplitudePx`,
 `pns.visualNightModeEntity`, `pns.visualNightModeOpacity`) /
-`pns.visualTheme=art-deco-silver` / `pns.visualAccentColor=#ff5500` in
+`pns.visualTheme=art-deco-silver` / `pns.visualAccentColor=#ff5500` /
+`pns.visualMarqueeBgColor=#10233d` / `pns.visualCornerRadiusPx=16` in
 `localStorage`, or add the matching
 `#visualProgressBar=true` / `#visualRatingsBadges=true` /
 `#visualGenreChips=true` / `#visualInfoPanelMode=always` /
 `#visualFrameStyle=none` /
-`#visualMarqueeFont=monoton` /
+`#visualBulbSizePx=32` / `#visualMarqueeFont=monoton` /
 `#visualUseBackdrops=true` / `#visualBackdropStyle=ambient` /
 `#visualBurnInMitigation=true` /
-`#visualTheme=neon-80s` / `#visualAccentColor=%23ff5500`
+`#visualTheme=neon-80s` / `#visualAccentColor=%23ff5500` /
+`#visualMarqueeBgColor=%2310233d` / `#visualCornerRadiusPx=16`
 to the kiosk URL hash.
 
 The setup page also includes an **Automation** tab. It links to the Home
@@ -101,6 +125,29 @@ Assistant Blueprint import/download flow and can generate the equivalent
 add-on options / Docker env for the built-in Fully Kiosk switcher. The switcher
 itself runs server-side, so paste the generated values into the add-on options
 or Docker `.env`, then restart the add-on/container.
+
+### Using Now Showing and Coming Soon together
+
+One add-on/server instance has one global `display_mode`, so it cannot serve
+Now Showing and Coming Soon at the same time by itself. Use two display URLs:
+
+- Keep the add-on on `display_mode: now_showing`, then use a frontend-only
+  `/local/now_showing.html#displayMode=coming_soon...` URL for a Coming Soon
+  screensaver tablet.
+- Or run a second Docker container on another port, for example `8100`, with
+  `DISPLAY_MODE=coming_soon` plus Radarr/Sonarr options.
+- Or use two frontend-only browser profiles/tablets with different setup or
+  hash values.
+
+Fully Kiosk works well with this split:
+
+```text
+playing_url: http://<ha-ip>:8099/now_showing.html
+stopped_url: http://<ha-ip>:8100/now_showing.html
+```
+
+You can also put the Coming Soon URL in Fully Kiosk's screensaver/start URL
+and keep Now Showing as the playback automation target.
 
 ### Fully Kiosk auto-switcher (#48)
 

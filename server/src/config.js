@@ -23,10 +23,13 @@ export function loadConfig(env = process.env) {
     : (env.HA_URL || '').replace(/\/$/, '');
   const haToken = mode === 'addon' ? supervisorToken : (env.HA_TOKEN || '');
   const backend = normaliseBackend(env.BACKEND || env.MEDIA_SERVER || env.SERVER_TYPE, 'plex');
+  const displayMode = parseEnum(env.DISPLAY_MODE || env.DISPLAY_MODE_DEFAULT,
+    ['now_showing', 'coming_soon'], 'now_showing');
 
   const config = {
     mode,
     port: parseInt(env.PORT || '8099', 10),
+    displayMode,
     backend,
     haUrl,
     haToken,
@@ -45,6 +48,19 @@ export function loadConfig(env = process.env) {
     // TTLs (ms) — tuned below 1× poll interval so a second tablet doesn't re-hit HA
     stateTtl: parseInt(env.STATE_TTL_MS || '3000', 10),
     mediaInfoTtl: parseInt(env.MEDIA_INFO_TTL_MS || '600000', 10), // 10 min
+    comingSoonTtl: parseInt(env.COMING_SOON_TTL_MS || '900000', 10), // 15 min
+    comingSoon: {
+      title: env.COMING_SOON_TITLE || 'Coming Soon',
+      radarrUrl: (env.RADARR_URL || '').replace(/\/$/, ''),
+      radarrApiKey: env.RADARR_API_KEY || '',
+      sonarrUrl: (env.SONARR_URL || '').replace(/\/$/, ''),
+      sonarrApiKey: env.SONARR_API_KEY || '',
+      moviesCount: parseIntClamped(env.COMING_SOON_MOVIES_COUNT, 5, 0, 50),
+      showsCount: parseIntClamped(env.COMING_SOON_SHOWS_COUNT, 5, 0, 50),
+      cycleInterval: parseIntClamped(env.COMING_SOON_CYCLE_INTERVAL, 8, 2, 300),
+      daysOffset: parseIntClamped(env.COMING_SOON_DAYS_OFFSET, 0, 0, 365),
+      imageType: parseEnum(env.COMING_SOON_IMAGE_TYPE, ['poster', 'fanart'], 'poster'),
+    },
     // Fully Kiosk auto-switcher (#48). Disabled by default; users who prefer
     // the HA Blueprint (#47) can leave it off and vice versa.
     switcherEnabled: parseBool(env.SWITCHER_ENABLED, false),
@@ -73,6 +89,9 @@ export function loadConfig(env = process.env) {
       // decorative screen-edge frame for OLED / minimalist installs.
       frameStyle: parseEnum(env.VISUAL_FRAME_STYLE,
         ['bulbs', 'gold-line', 'none'], 'bulbs'),
+      // Bulb diameter for the animated frame. 28px preserves the original
+      // look; smaller/larger values keep proportional spacing in the client.
+      bulbSizePx: parseIntClamped(env.VISUAL_BULB_SIZE_PX, 28, 12, 48),
       // Marquee font picker (#62/#63). Defaults to Bebas Neue, which is the
       // original v1 headline font.
       marqueeFont: parseEnum(env.VISUAL_MARQUEE_FONT,
@@ -127,6 +146,11 @@ export function loadConfig(env = process.env) {
       // Hex validation is strict (#RRGGBB only) so a typo can't break the
       // whole UI — falls back to '' (theme default) on bad input.
       accentColor: parseHexColor(env.VISUAL_ACCENT_COLOR, ''),
+      // Empty string means the active theme owns --bg-marquee / --red-curtain.
+      marqueeBgColor: parseHexColor(env.VISUAL_MARQUEE_BG_COLOR, ''),
+      // Corner / frame radius slider (#68). Applies to the inner marquee,
+      // poster, and info panel only; the outer bulb frame stays square.
+      cornerRadiusPx: parseIntClamped(env.VISUAL_CORNER_RADIUS_PX, 0, 0, 48),
     },
     // Where the static HTML lives (overridden in tests)
     staticDir: env.STATIC_DIR || new URL('../../www', import.meta.url).pathname,
@@ -181,6 +205,12 @@ function validate(c) {
   if (c.plexUrl && !c.plexToken) errors.push('plexToken is required when plexUrl is set');
   if (!Number.isFinite(c.port) || c.port < 1 || c.port > 65535) errors.push('port must be between 1 and 65535');
   if (!Number.isFinite(c.poll) || c.poll < 1000) errors.push('poll must be \u2265 1000 ms');
+  if (!Number.isFinite(c.comingSoonTtl) || c.comingSoonTtl < 10000) errors.push('comingSoonTtl must be \u2265 10000 ms');
+  if (c.displayMode === 'coming_soon') {
+    const hasSource = !!((c.comingSoon.radarrUrl && c.comingSoon.radarrApiKey)
+      || (c.comingSoon.sonarrUrl && c.comingSoon.sonarrApiKey));
+    if (!hasSource) errors.push('at least one Coming Soon source is required when DISPLAY_MODE=coming_soon');
+  }
   if (c.switcherEnabled && !c.fullyKiosksRaw) {
     errors.push('FULLY_KIOSKS is required when SWITCHER_ENABLED is true');
   }

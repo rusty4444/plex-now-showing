@@ -50,8 +50,12 @@ export function normalise(states, {
 
 function isBackendPlayer(state, rule) {
   if (!state || typeof state.entity_id !== 'string') return false;
+  if ((rule.requiredAttributes || []).some(name => !(state.attributes || {})[name])) {
+    return false;
+  }
   return state.entity_id.startsWith(rule.entityPrefix)
-    || rule.exactEntities.includes(state.entity_id);
+    || rule.exactEntities.includes(state.entity_id)
+    || (rule.entityIncludes || []).some(token => state.entity_id.includes(token));
 }
 
 function shape(playerState) {
@@ -84,5 +88,7 @@ function shape(playerState) {
     positionUpdatedAt,
     summary: attrs.media_summary || '',
     ratingKey: attrs.media_content_id || '',
+    appName: attrs.app_name || '',
+    appId: attrs.app_id || '',
   };
 }

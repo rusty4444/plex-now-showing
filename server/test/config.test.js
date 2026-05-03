@@ -25,11 +25,11 @@ test('standalone mode strips trailing slash on HA_URL', () => {
   assert.equal(config.haUrl, 'https://ha.example.com:8123');
 });
 
-test('backend defaults to plex and accepts Jellyfin, Emby, and Kodi', () => {
+test('backend defaults to plex and accepts supported HA media backends', () => {
   const def = loadConfig({ SUPERVISOR_TOKEN: 'x' });
   assert.equal(def.config.backend, 'plex');
 
-  for (const backend of ['plex', 'jellyfin', 'emby', 'kodi']) {
+  for (const backend of ['plex', 'jellyfin', 'emby', 'kodi', 'apple_tv', 'streaming', 'kaleidescape']) {
     const { config } = loadConfig({ SUPERVISOR_TOKEN: 'x', BACKEND: backend });
     assert.equal(config.backend, backend);
   }
@@ -71,6 +71,53 @@ test('TTL defaults match spec (3 s state, 10 min media-info)', () => {
   const { config } = loadConfig({ SUPERVISOR_TOKEN: 'x' });
   assert.equal(config.stateTtl, 3000);
   assert.equal(config.mediaInfoTtl, 600000);
+  assert.equal(config.comingSoonTtl, 900000);
+});
+
+test('display mode defaults to now_showing and accepts coming_soon', () => {
+  const def = loadConfig({ SUPERVISOR_TOKEN: 'x' });
+  assert.equal(def.config.displayMode, 'now_showing');
+
+  const comingSoon = loadConfig({
+    SUPERVISOR_TOKEN: 'x',
+    DISPLAY_MODE: 'coming_soon',
+    RADARR_URL: 'http://radarr.local:7878',
+    RADARR_API_KEY: 'rk',
+  });
+  assert.equal(comingSoon.config.displayMode, 'coming_soon');
+  assert.deepEqual(comingSoon.errors, []);
+
+  const invalid = loadConfig({ SUPERVISOR_TOKEN: 'x', DISPLAY_MODE: 'lobby' });
+  assert.equal(invalid.config.displayMode, 'now_showing');
+});
+
+test('coming soon config parses source settings and validates required source', () => {
+  const missing = loadConfig({ SUPERVISOR_TOKEN: 'x', DISPLAY_MODE: 'coming_soon' });
+  assert.ok(missing.errors.some(e => e.includes('Coming Soon source')));
+
+  const { config, errors } = loadConfig({
+    SUPERVISOR_TOKEN: 'x',
+    RADARR_URL: 'http://radarr.local:7878/',
+    RADARR_API_KEY: 'rk',
+    SONARR_URL: 'http://sonarr.local:8989/',
+    SONARR_API_KEY: 'sk',
+    COMING_SOON_TITLE: 'Next Releases',
+    COMING_SOON_MOVIES_COUNT: '9',
+    COMING_SOON_SHOWS_COUNT: '3',
+    COMING_SOON_CYCLE_INTERVAL: '12',
+    COMING_SOON_DAYS_OFFSET: '2',
+    COMING_SOON_IMAGE_TYPE: 'fanart',
+  });
+
+  assert.deepEqual(errors, []);
+  assert.equal(config.comingSoon.title, 'Next Releases');
+  assert.equal(config.comingSoon.radarrUrl, 'http://radarr.local:7878');
+  assert.equal(config.comingSoon.sonarrUrl, 'http://sonarr.local:8989');
+  assert.equal(config.comingSoon.moviesCount, 9);
+  assert.equal(config.comingSoon.showsCount, 3);
+  assert.equal(config.comingSoon.cycleInterval, 12);
+  assert.equal(config.comingSoon.daysOffset, 2);
+  assert.equal(config.comingSoon.imageType, 'fanart');
 });
 
 test('visual toggles all default to false', () => {
@@ -159,6 +206,23 @@ test('VISUAL_FRAME_STYLE defaults to bulbs and accepts the three frame modes', (
 
   const bogus = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_FRAME_STYLE: 'bulb-ish' });
   assert.equal(bogus.config.visual.frameStyle, 'bulbs');
+});
+
+test('VISUAL_BULB_SIZE_PX defaults to 28 and is clamped to [12, 48]', () => {
+  const def = loadConfig({ SUPERVISOR_TOKEN: 'x' });
+  assert.equal(def.config.visual.bulbSizePx, 28);
+
+  const ok = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_BULB_SIZE_PX: '36' });
+  assert.equal(ok.config.visual.bulbSizePx, 36);
+
+  const tooSmall = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_BULB_SIZE_PX: '4' });
+  assert.equal(tooSmall.config.visual.bulbSizePx, 12);
+
+  const tooLarge = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_BULB_SIZE_PX: '72' });
+  assert.equal(tooLarge.config.visual.bulbSizePx, 48);
+
+  const bogus = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_BULB_SIZE_PX: 'huge' });
+  assert.equal(bogus.config.visual.bulbSizePx, 28);
 });
 
 test('VISUAL_MARQUEE_FONT defaults to Bebas Neue and accepts supported fonts', () => {
@@ -282,6 +346,43 @@ test('VISUAL_ACCENT_COLOR accepts #RRGGBB and rejects everything else', () => {
 
   const garbage = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_ACCENT_COLOR: 'rgb(255,0,0)' });
   assert.equal(garbage.config.visual.accentColor, '');
+});
+
+test('VISUAL_MARQUEE_BG_COLOR defaults empty and accepts strict #RRGGBB', () => {
+  const def = loadConfig({ SUPERVISOR_TOKEN: 'x' });
+  assert.equal(def.config.visual.marqueeBgColor, '');
+
+  const lower = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_MARQUEE_BG_COLOR: '#112233' });
+  assert.equal(lower.config.visual.marqueeBgColor, '#112233');
+
+  const upper = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_MARQUEE_BG_COLOR: '#AABBCC' });
+  assert.equal(upper.config.visual.marqueeBgColor, '#aabbcc');
+
+  const padded = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_MARQUEE_BG_COLOR: '  #0f172a  ' });
+  assert.equal(padded.config.visual.marqueeBgColor, '#0f172a');
+
+  const short = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_MARQUEE_BG_COLOR: '#abc' });
+  assert.equal(short.config.visual.marqueeBgColor, '');
+
+  const named = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_MARQUEE_BG_COLOR: 'navy' });
+  assert.equal(named.config.visual.marqueeBgColor, '');
+});
+
+test('VISUAL_CORNER_RADIUS_PX defaults to 0 and clamps to [0, 48]', () => {
+  const def = loadConfig({ SUPERVISOR_TOKEN: 'x' });
+  assert.equal(def.config.visual.cornerRadiusPx, 0);
+
+  const ok = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_CORNER_RADIUS_PX: '16' });
+  assert.equal(ok.config.visual.cornerRadiusPx, 16);
+
+  const tooLow = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_CORNER_RADIUS_PX: '-5' });
+  assert.equal(tooLow.config.visual.cornerRadiusPx, 0);
+
+  const tooHigh = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_CORNER_RADIUS_PX: '99' });
+  assert.equal(tooHigh.config.visual.cornerRadiusPx, 48);
+
+  const garbage = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_CORNER_RADIUS_PX: 'round' });
+  assert.equal(garbage.config.visual.cornerRadiusPx, 0);
 });
 
 test('switcher is off by default, on requires FULLY_KIOSKS', () => {

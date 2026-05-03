@@ -1,7 +1,47 @@
 # Changelog
 
-All notable changes to the Plex Now Showing add-on will be documented here.
+All notable changes to the Now Showing add-on will be documented here.
 The project follows [Semantic Versioning](https://semver.org/).
+
+## 2.1.0 - 2026-05-03
+
+### Added
+- The Home Assistant add-on is now presented as **Now Showing** in the add-on
+  store, Ingress labels, container metadata, and add-on documentation. The
+  internal slug/image path remains unchanged for existing installs.
+- Apple TV, generic streaming-device, and Kaleidescape backends are now part
+  of the documented v2.1.0 release path.
+- Coming Soon mode can use Radarr/Sonarr as a Fully Kiosk screensaver, with
+  configurable marquee text, movie/show counts, cycle interval, days offset,
+  and poster/fanart artwork.
+- The setup UI can load/pick compatible media players, configure Coming Soon
+  sources, generate automation/switcher config, and preview visual changes in
+  a wider Display-tab preview with a generated bulb frame that matches the
+  live display.
+- Marquee background colour picker (closes #62/#viz-13). Add-on option
+  `visual_marquee_bg_color`, Docker env `VISUAL_MARQUEE_BG_COLOR`, and
+  frontend key `visualMarqueeBgColor` accept strict `#RRGGBB` values or empty
+  theme default. Setup includes black, deep red, navy, forest green,
+  midnight purple, charcoal, and arbitrary picker options.
+- Corner radius, frame style, bulb size, marquee font, theme, accent colour,
+  progress bar, ratings, genre chips, info panel, backdrops, burn-in nudge,
+  and night dimming are all documented as Display setup controls.
+- Bulb size slider. Add-on option `visual_bulb_size_px`, Docker env
+  `VISUAL_BULB_SIZE_PX`, and frontend key `visualBulbSizePx` resize the
+  animated bulb frame from `12` to `48` px. Default `28` preserves the
+  original look.
+
+### Documentation
+- README and add-on docs now explain how to use Now Showing and Coming Soon at
+  the same time with two URLs/instances, including Fully Kiosk
+  `playing_url`/`stopped_url` examples.
+
+### Fixed
+- Setup now opens at the top and scrolls inside Home Assistant add-on Ingress,
+  so tall setup tabs no longer have unreachable controls unless the browser is
+  zoomed out.
+- The Display-tab preview now generates bulbs around the preview frame and
+  marquee divider instead of showing a sparse fixed set of sample dots.
 
 ## 2.0.0 - 2026-04-27
 
@@ -74,6 +114,11 @@ The project follows [Semantic Versioning](https://semver.org/).
   CSS `color-mix(in srgb, ...)`. Empty value (the default) leaves the
   theme's ramp untouched. Short form (`#abc`) and named colours are
   rejected at both server and client validation layers.
+- Corner / frame radius slider (closes #68). New
+  `visual_corner_radius_px` option, `VISUAL_CORNER_RADIUS_PX` env, and
+  setup slider round the inner marquee, poster, and info panel from
+  `0`-`48` px while leaving the outer bulb frame square. Default `0`
+  preserves the original sharp cinema look.
 - Frame style picker (closes #65). New `visual_frame_style` option with
   `bulbs` (default, current animated bulb string), `gold-line` (thin
   accent-coloured double border with no bulb glow), and `none` (no
@@ -86,13 +131,28 @@ The project follows [Semantic Versioning](https://semver.org/).
 - Frontend-only setup now has a Display tab with controls for every visual
   option: theme, accent colour, frame style, progress bar, ratings badges,
   genre chips, info panel mode, backdrops, burn-in mitigation, pixel nudge,
-  and night dimming.
+  and night dimming. The Display tab includes a wide live preview so visual
+  changes can be tested before saving.
 - Marquee font picker (`visual_marquee_font`) adds Bebas Neue, Anton, Oswald,
   Monoton, and Playfair Display choices to the add-on, Docker, server, and
   frontend-only setup paths.
 - Setup Automation tab links to the tablet-switching Blueprint import/download
   flow and generates add-on/Docker config for the built-in Fully Kiosk
   switcher.
+- Apple TV backend support (closes #77). `backend: apple_tv` auto-detects
+  active Apple TV media players, carries HA `app_name` through to the kiosk,
+  and shows a compact app badge/icon when available.
+- Generic streaming backend support (refs #77). `backend: streaming`
+  auto-detects any active `media_player.*` entity with an `app_name`
+  attribute, so the same app-name, title, artwork, and dashboard-icons badge
+  path works for Roku, Google TV, Android TV, YouTube, Disney+, Netflix, Plex,
+  and similar providers.
+- Kaleidescape backend support (closes #78). `backend: kaleidescape`
+  auto-detects active Kaleidescape `media_player` entities exposed by Home
+  Assistant and renders their now-playing artwork and metadata.
+- Coming Soon display mode (closes #33). `display_mode: coming_soon` turns
+  the kiosk into a Radarr/Sonarr upcoming-release carousel with a Coming Soon
+  marquee, poster/fanart selection, counts, cycle interval, and days offset.
 
 ### Fixed
 - Dev add-on installs now use a matching pre-release image tag and the build

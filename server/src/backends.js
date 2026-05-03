@@ -1,4 +1,12 @@
-export const BACKENDS = Object.freeze(['plex', 'jellyfin', 'emby', 'kodi']);
+export const BACKENDS = Object.freeze([
+  'plex',
+  'jellyfin',
+  'emby',
+  'kodi',
+  'apple_tv',
+  'streaming',
+  'kaleidescape',
+]);
 
 export const BACKEND_RULES = Object.freeze({
   plex: Object.freeze({
@@ -27,6 +35,30 @@ export const BACKEND_RULES = Object.freeze({
     label: 'Kodi',
     entityPrefix: 'media_player.kodi_',
     exactEntities: Object.freeze(['media_player.kodi']),
+    defaultPlayer: '',
+  }),
+  apple_tv: Object.freeze({
+    id: 'apple_tv',
+    label: 'Apple TV',
+    entityPrefix: 'media_player.apple_tv',
+    exactEntities: Object.freeze(['media_player.apple_tv']),
+    entityIncludes: Object.freeze(['_apple_tv', 'appletv']),
+    defaultPlayer: '',
+  }),
+  streaming: Object.freeze({
+    id: 'streaming',
+    label: 'Streaming Device',
+    entityPrefix: 'media_player.',
+    exactEntities: Object.freeze([]),
+    requiredAttributes: Object.freeze(['app_name']),
+    defaultPlayer: '',
+  }),
+  kaleidescape: Object.freeze({
+    id: 'kaleidescape',
+    label: 'Kaleidescape',
+    entityPrefix: 'media_player.kaleidescape_',
+    exactEntities: Object.freeze(['media_player.kaleidescape']),
+    entityIncludes: Object.freeze(['kaleidescape']),
     defaultPlayer: '',
   }),
 });

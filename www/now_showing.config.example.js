@@ -17,8 +17,21 @@ window.NOW_SHOWING_CONFIG = {
   // haToken: 'PASTE_LONG_LIVED_TOKEN_HERE',        // better: store in localStorage via #setup
 
   // Backend selection
-  backend: 'plex',    // plex | jellyfin | emby | kodi
+  displayMode: 'now_showing', // now_showing | coming_soon
+  backend: 'plex',    // plex | jellyfin | emby | kodi | apple_tv | streaming | kaleidescape
   player:  '',        // optional: lock to a specific media_player entity id
+
+  // Coming Soon mode (Radarr/Sonarr). Used when displayMode is coming_soon.
+  comingSoonTitle: 'Coming Soon',
+  // radarrUrl: 'http://192.168.1.100:7878',
+  // radarrApiKey: 'RADARR_API_KEY',
+  // sonarrUrl: 'http://192.168.1.100:8989',
+  // sonarrApiKey: 'SONARR_API_KEY',
+  comingSoonMoviesCount: 5,
+  comingSoonShowsCount: 5,
+  comingSoonCycleInterval: 8,
+  comingSoonDaysOffset: 0,
+  comingSoonImageType: 'poster',
 
   // Plex filtering
   plexUsername: '',   // your Plex username - filters to only your playback
@@ -37,6 +50,8 @@ window.NOW_SHOWING_CONFIG = {
   // visualFrameStyle: 'bulbs',
   // visualMarqueeFont: 'bebas-neue',
   // visualAccentColor: '',
+  // visualMarqueeBgColor: '',
+  // visualCornerRadiusPx: 0,
   // visualProgressBar: false,
   // visualInfoPanelMode: 'on_tap',
 };

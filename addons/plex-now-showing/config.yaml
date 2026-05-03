@@ -1,5 +1,5 @@
 ---
-# Home Assistant add-on manifest for Plex Now Showing (V2).
+# Home Assistant add-on manifest for Now Showing (V2).
 #
 # Wraps the unified Node 20 server (../server/) so HA OS / Supervised users
 # install this with one click from the add-on store. No user-created long-
@@ -8,11 +8,11 @@
 #
 # Docs on each field: https://developers.home-assistant.io/docs/add-ons/configuration
 
-name: Plex Now Showing
-version: "2.0.0"
+name: Now Showing
+version: "2.1.0"
 slug: plex_now_showing
-description: Cinema-style now-playing kiosk for Plex, Jellyfin, Emby, and Kodi.
-url: https://github.com/rusty4444/plex-now-showing
+description: Cinema-style now-playing and coming-soon kiosk for Home Assistant.
+url: https://github.com/rusty4444/now-showing-ha
 arch:
   - amd64
   - aarch64
@@ -40,6 +40,7 @@ ports_description:
 map:
   - ssl
 options:
+  display_mode: now_showing
   backend: plex
   player: ""
   plex_url: ""
@@ -51,6 +52,17 @@ options:
   poll_interval: 5000
   state_ttl_ms: 3000
   media_info_ttl_ms: 600000
+  coming_soon_ttl_ms: 900000
+  coming_soon_title: Coming Soon
+  radarr_url: ""
+  radarr_api_key: ""
+  sonarr_url: ""
+  sonarr_api_key: ""
+  coming_soon_movies_count: 5
+  coming_soon_shows_count: 5
+  coming_soon_cycle_interval: 8
+  coming_soon_days_offset: 0
+  coming_soon_image_type: poster
   proxy_secret: ""
   allowed_origins: []
   # Fully Kiosk auto-switcher (#48) — disabled by default. Enable this OR the
@@ -65,6 +77,7 @@ options:
   visual_genre_chips: false
   visual_info_panel_mode: on_tap
   visual_frame_style: bulbs
+  visual_bulb_size_px: 28
   visual_marquee_font: bebas-neue
   # Backdrop art on pause (#21). Master switch is off; backdrop_style picks
   # fullscreen (landscape-only crossfade, default) vs ambient (blurred
@@ -80,15 +93,17 @@ options:
   visual_nudge_amplitude_px: 4
   visual_night_mode_entity: ""
   visual_night_mode_opacity: 0.4
-  # Theme presets (#23) + accent colour picker (#66). Both are presentation-
-  # only and safe to leave at defaults; classic-gold mirrors the original
-  # bulb look. Accent colour is a strict #RRGGBB override (empty = theme
-  # default ramp).
+  # Theme presets (#23), accent colour (#66), and marquee background
+  # (#62/#viz-13). All are presentation-only and safe to leave at defaults.
+  # Colours are strict #RRGGBB overrides; empty = theme default.
   visual_theme: classic-gold
   visual_accent_color: ""
+  visual_marquee_bg_color: ""
+  visual_corner_radius_px: 0
   log_level: info
 schema:
-  backend: "list(plex|jellyfin|emby|kodi)"
+  display_mode: "list(now_showing|coming_soon)"
+  backend: "list(plex|jellyfin|emby|kodi|apple_tv|streaming|kaleidescape)"
   player: "str?"
   plex_url: "str?"
   plex_token: "password?"
@@ -99,6 +114,17 @@ schema:
   poll_interval: "int(1000,60000)"
   state_ttl_ms: "int(500,30000)"
   media_info_ttl_ms: "int(10000,3600000)"
+  coming_soon_ttl_ms: "int(10000,3600000)"
+  coming_soon_title: "str?"
+  radarr_url: "str?"
+  radarr_api_key: "password?"
+  sonarr_url: "str?"
+  sonarr_api_key: "password?"
+  coming_soon_movies_count: "int(0,50)"
+  coming_soon_shows_count: "int(0,50)"
+  coming_soon_cycle_interval: "int(2,300)"
+  coming_soon_days_offset: "int(0,365)"
+  coming_soon_image_type: "list(poster|fanart)"
   proxy_secret: "password?"
   allowed_origins:
     - "url?"
@@ -114,6 +140,7 @@ schema:
   visual_genre_chips: "bool"
   visual_info_panel_mode: "list(on_tap|on_pause|always)"
   visual_frame_style: "list(bulbs|gold-line|none)"
+  visual_bulb_size_px: "int(12,48)"
   visual_marquee_font: "list(bebas-neue|anton|oswald|monoton|playfair-display)"
   visual_use_backdrops: "bool"
   visual_backdrop_style: "list(fullscreen|ambient)"
@@ -125,5 +152,7 @@ schema:
   visual_night_mode_opacity: "float(0,0.95)"
   visual_theme: "list(classic-gold|art-deco-silver|neon-80s|minimalist-dark)"
   visual_accent_color: "str?"
+  visual_marquee_bg_color: "str?"
+  visual_corner_radius_px: "int(0,48)"
   log_level: "list(trace|debug|info|notice|warning|error|fatal)?"
 image: ghcr.io/rusty4444/plex-now-showing-{arch}

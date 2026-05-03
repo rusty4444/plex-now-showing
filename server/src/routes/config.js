@@ -14,8 +14,19 @@ export function configRoute({ config }) {
     // browsers on the wall might live for days. Let them re-read on reload.
     res.set('Cache-Control', 'no-store');
     res.json({
+      displayMode: config.displayMode || 'now_showing',
       backend: config.backend || 'plex',
       player: config.player || '',
+      comingSoon: {
+        title: config.comingSoon?.title || 'Coming Soon',
+        enabled: !!((config.comingSoon?.radarrUrl && config.comingSoon?.radarrApiKey)
+          || (config.comingSoon?.sonarrUrl && config.comingSoon?.sonarrApiKey)),
+        moviesCount: config.comingSoon?.moviesCount ?? 5,
+        showsCount: config.comingSoon?.showsCount ?? 5,
+        cycleInterval: config.comingSoon?.cycleInterval ?? 8,
+        daysOffset: config.comingSoon?.daysOffset ?? 0,
+        imageType: config.comingSoon?.imageType || 'poster',
+      },
       visual: {
         progressBar: !!config.visual?.progressBar,
         ratingsBadges: !!config.visual?.ratingsBadges,
@@ -25,6 +36,7 @@ export function configRoute({ config }) {
         // #65 frame style. Presentation-only; frontend maps this to body
         // data-frame-style and starts/stops the bulb timer as needed.
         frameStyle: config.visual?.frameStyle || 'bulbs',
+        bulbSizePx: config.visual?.bulbSizePx ?? 28,
         marqueeFont: config.visual?.marqueeFont || 'bebas-neue',
         backdropStyle: config.visual?.backdropStyle || 'fullscreen',
         backdropDelayMs: Number.isFinite(config.visual?.backdropDelayMs)
@@ -41,6 +53,8 @@ export function configRoute({ config }) {
         // + a single CSS custom property override.
         theme: config.visual?.theme || 'classic-gold',
         accentColor: config.visual?.accentColor || '',
+        marqueeBgColor: config.visual?.marqueeBgColor || '',
+        cornerRadiusPx: config.visual?.cornerRadiusPx ?? 0,
       },
     });
   });

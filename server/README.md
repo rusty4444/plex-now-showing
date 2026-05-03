@@ -18,6 +18,7 @@ Standalone (HACS-only) installs continue to work against the unmodified
 | GET    | `/now_showing.html`               | The kiosk UI (served from `STATIC_DIR`, default `../www`) |
 | GET    | `/api`                            | Version + mode + backend + endpoint listing              |
 | GET    | `/api/state`                      | Normalised now-playing payload (3 s TTL cache)          |
+| GET    | `/api/coming-soon`                | Radarr/Sonarr upcoming items for Coming Soon mode       |
 | GET    | `/api/config`                     | Browser-safe runtime flags (visual toggles)              |
 | GET    | `/api/night-mode`                 | `{configured, on}` for the optional night-mode HA entity |
 | GET    | `/api/media-info/:ratingKey`      | Plex metadata for the info panel (10 min TTL cache)      |
@@ -48,7 +49,8 @@ For HA Container users running via Docker Compose. Set:
 | `PORT` | `8099` | Listen port |
 | `SUPERVISOR_TOKEN` | – | Set by Supervisor; switches to add-on mode |
 | `HA_URL` / `HA_TOKEN` | – | Standalone mode |
-| `BACKEND` | `plex` | Media backend to watch: `plex`, `jellyfin`, `emby`, or `kodi` |
+| `DISPLAY_MODE` | `now_showing` | `now_showing` or `coming_soon` |
+| `BACKEND` | `plex` | Media backend to watch: `plex`, `jellyfin`, `emby`, `kodi`, `apple_tv`, `streaming`, or `kaleidescape` |
 | `PLAYER` | – | Optional exact `media_player` entity id. Leave empty to auto-detect active players for `BACKEND` |
 | `PLEX_URL` / `PLEX_TOKEN` | – | Required together if you want `/api/media-info/:ratingKey` |
 | `PLEX_USERNAME` | – | Filters which `media_player.plex_*` entities count as "yours" |
@@ -58,6 +60,15 @@ For HA Container users running via Docker Compose. Set:
 | `POLL` | `5000` | Kiosk poll interval in ms |
 | `STATE_TTL_MS` | `3000` | Server-side `/api/state` cache |
 | `MEDIA_INFO_TTL_MS` | `600000` | Server-side media-info cache |
+| `COMING_SOON_TTL_MS` | `900000` | Server-side `/api/coming-soon` cache |
+| `COMING_SOON_TITLE` | `Coming Soon` | Marquee text in Coming Soon mode |
+| `RADARR_URL` / `RADARR_API_KEY` | – | Optional upcoming movie source for Coming Soon mode |
+| `SONARR_URL` / `SONARR_API_KEY` | – | Optional upcoming TV source for Coming Soon mode |
+| `COMING_SOON_MOVIES_COUNT` | `5` | Number of Radarr movies to include |
+| `COMING_SOON_SHOWS_COUNT` | `5` | Number of Sonarr series to include |
+| `COMING_SOON_CYCLE_INTERVAL` | `8` | Seconds per upcoming title |
+| `COMING_SOON_DAYS_OFFSET` | `0` | Include releases from this many days in the past |
+| `COMING_SOON_IMAGE_TYPE` | `poster` | `poster` or `fanart` |
 | `PROXY_SECRET` | – | If set, requests to `/api/*` must carry `X-Proxy-Secret` |
 | `ALLOWED_ORIGINS` | – | Comma-separated allowlist for `Origin` on `/api/*` |
 | `SWITCHER_ENABLED` | `false` | Turn on the built-in Fully Kiosk auto-switcher (#48) |
@@ -68,6 +79,7 @@ For HA Container users running via Docker Compose. Set:
 | `VISUAL_GENRE_CHIPS` | `false` | Show genre pills next to the content rating in the info panel (needs `PLEX_URL` + `PLEX_TOKEN`) |
 | `VISUAL_INFO_PANEL_MODE` | `on_tap` | When to show the info panel: `on_tap`, `on_pause`, or `always` |
 | `VISUAL_FRAME_STYLE` | `bulbs` | Screen-edge frame style: `bulbs`, `gold-line`, or `none` |
+| `VISUAL_BULB_SIZE_PX` | `28` | Animated bulb diameter in px, clamped 12-48 |
 | `VISUAL_MARQUEE_FONT` | `bebas-neue` | NOW SHOWING banner font: `bebas-neue`, `anton`, `oswald`, `monoton`, or `playfair-display` |
 | `VISUAL_USE_BACKDROPS` | `false` | Master switch for backdrop art on pause (#21). Needs `PLEX_URL` + `PLEX_TOKEN` |
 | `VISUAL_BACKDROP_STYLE` | `fullscreen` | `fullscreen` (landscape-only crossfade) or `ambient` (blurred fanart behind the poster, all orientations) |
@@ -79,6 +91,8 @@ For HA Container users running via Docker Compose. Set:
 | `VISUAL_NIGHT_MODE_OPACITY` | `0.4` | Dim overlay opacity (clamped 0–0.95) |
 | `VISUAL_THEME` | `classic-gold` | Theme preset — one of `classic-gold` / `art-deco-silver` / `neon-80s` / `minimalist-dark`. Drives `<body data-theme>` |
 | `VISUAL_ACCENT_COLOR` | _empty_ | Optional `#RRGGBB` accent override applied on top of the theme. Strict (no `#abc`, no named colours, no `rgb()`) |
+| `VISUAL_MARQUEE_BG_COLOR` | _empty_ | Optional `#RRGGBB` marquee background/curtain override. Empty uses the active theme |
+| `VISUAL_CORNER_RADIUS_PX` | `0` | Inner marquee, poster, and info-panel corner radius in px, clamped 0-48 |
 | `STATIC_DIR` | `../www` | Override where `now_showing.html` is served from |
 
 ## Local development
