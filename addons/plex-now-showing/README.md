@@ -13,6 +13,8 @@ token, no Docker command line.
   Fully Kiosk-friendly screensaver.
 - The setup UI can load compatible players, configure Coming Soon sources, and
   preview display changes before saving.
+- Setup now opens at the top and scrolls correctly inside Home Assistant
+  Ingress, so tall setup tabs no longer require browser zoom.
 - New visual controls include frame style, marquee font, theme preset, accent
   color, marquee background color, corner radius, progress bar, ratings,
   genre chips, info-panel mode, backdrops, burn-in nudge, and night dimming.

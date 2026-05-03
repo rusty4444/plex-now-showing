@@ -60,7 +60,7 @@ real-world kiosk features:
 |------|---------------|
 | More playback sources | Apple TV, generic streaming-device, and Kaleidescape backends join Plex, Jellyfin, Emby, and Kodi. Apple TV / streaming mode can use Home Assistant `app_name`, `media_title`, `entity_picture`, and dashboard-icons app badges for Disney+, YouTube, Netflix, Plex, Hulu, Prime Video, and similar apps. |
 | Coming Soon screensaver | New `coming_soon` display mode rotates upcoming Radarr/Sonarr movies and episodes with configurable marquee text, movie/show counts, cycle interval, days offset, and poster/fanart artwork. |
-| Setup UI | The setup flow now has player loading/picking, backend-specific player hints, Coming Soon source fields, Fully Kiosk automation helpers, and a wider live visual preview in the Display tab. |
+| Setup UI | The setup flow now has player loading/picking, backend-specific player hints, Coming Soon source fields, Fully Kiosk automation helpers, a wider live visual preview in the Display tab, and fixed scrolling inside Home Assistant add-on Ingress views. |
 | Visual controls | Frame style, marquee font, theme preset, accent color, marquee background color, corner radius, progress bar, ratings badges, genre chips, info-panel mode, backdrops, burn-in nudge, and night dimming are configurable from setup without editing the HTML. |
 | Now Showing + Coming Soon together | The docs now cover running two display URLs/instances so Fully Kiosk can show Now Showing during playback and Coming Soon as the idle/screensaver view. |
 | Release package | The Home Assistant add-on package and Node server package are versioned at `2.1.0`, with Docker/add-on release docs updated for the `addon-v2.1.0` package flow. |
@@ -100,6 +100,8 @@ real-world kiosk features:
   Now Showing page.
 - Setup Automation tab with Blueprint import/download links and a built-in
   Fully Kiosk switcher config helper.
+- Setup page scrolling is fixed for Home Assistant add-on Ingress, including
+  tall setup tabs that previously opened with the top controls cut off.
 
 ## Requirements
 
@@ -510,6 +512,8 @@ paused, or always visible while media is active.
 - **Visual options do not change in frontend-only mode**: open the setup gear,
   switch to the Display tab, save, and let the page reload. URL hash values
   still override saved settings for one-off testing.
+- **Setup opens with controls cut off in the add-on**: v2.1.0 fixes the setup
+  overlay so it starts at the top and scrolls inside Home Assistant Ingress.
 - **Fully Kiosk switches twice**: disable either the Blueprint or the built-in
   switcher for that tablet.
 

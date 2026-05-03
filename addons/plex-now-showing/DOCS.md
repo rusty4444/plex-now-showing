@@ -94,6 +94,9 @@ HACS-only users (no add-on / server) can open `#setup`, switch to the
 **Display** tab, and configure every visual toggle without editing code. The
 wide preview at the top of the tab updates as controls change, and the form
 writes the same per-tablet `pns.*` keys the kiosk reads at runtime.
+In the Home Assistant add-on, the setup overlay opens at the top and scrolls
+inside Ingress, so all controls remain reachable on smaller tablet or desktop
+iframes without zooming out.
 Advanced users can still set `pns.visualProgressBar=true` /
 `pns.visualRatingsBadges=true` / `pns.visualGenreChips=true` /
 `pns.visualInfoPanelMode=on_pause` / `pns.visualFrameStyle=gold-line` /

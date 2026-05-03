@@ -31,6 +31,11 @@ The project follows [Semantic Versioning](https://semver.org/).
   the same time with two URLs/instances, including Fully Kiosk
   `playing_url`/`stopped_url` examples.
 
+### Fixed
+- Setup now opens at the top and scrolls inside Home Assistant add-on Ingress,
+  so tall setup tabs no longer have unreachable controls unless the browser is
+  zoomed out.
+
 ## 2.0.0 - 2026-04-27
 
 ### Added
