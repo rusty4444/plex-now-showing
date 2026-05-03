@@ -3,6 +3,31 @@
 All notable changes to the Plex Now Showing add-on will be documented here.
 The project follows [Semantic Versioning](https://semver.org/).
 
+## 2.1.0 - 2026-05-03
+
+### Added
+- Apple TV, generic streaming-device, and Kaleidescape backends are now part
+  of the documented v2.1.0 release path.
+- Coming Soon mode can use Radarr/Sonarr as a Fully Kiosk screensaver, with
+  configurable marquee text, movie/show counts, cycle interval, days offset,
+  and poster/fanart artwork.
+- The setup UI can load/pick compatible media players, configure Coming Soon
+  sources, generate automation/switcher config, and preview visual changes in
+  a wider Display-tab preview.
+- Marquee background colour picker (closes #62/#viz-13). Add-on option
+  `visual_marquee_bg_color`, Docker env `VISUAL_MARQUEE_BG_COLOR`, and
+  frontend key `visualMarqueeBgColor` accept strict `#RRGGBB` values or empty
+  theme default. Setup includes black, deep red, navy, forest green,
+  midnight purple, charcoal, and arbitrary picker options.
+- Corner radius, frame style, marquee font, theme, accent colour, progress
+  bar, ratings, genre chips, info panel, backdrops, burn-in nudge, and night
+  dimming are all documented as Display setup controls.
+
+### Documentation
+- README and add-on docs now explain how to use Now Showing and Coming Soon at
+  the same time with two URLs/instances, including Fully Kiosk
+  `playing_url`/`stopped_url` examples.
+
 ## 2.0.0 - 2026-04-27
 
 ### Added

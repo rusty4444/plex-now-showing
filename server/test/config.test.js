@@ -331,6 +331,26 @@ test('VISUAL_ACCENT_COLOR accepts #RRGGBB and rejects everything else', () => {
   assert.equal(garbage.config.visual.accentColor, '');
 });
 
+test('VISUAL_MARQUEE_BG_COLOR defaults empty and accepts strict #RRGGBB', () => {
+  const def = loadConfig({ SUPERVISOR_TOKEN: 'x' });
+  assert.equal(def.config.visual.marqueeBgColor, '');
+
+  const lower = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_MARQUEE_BG_COLOR: '#112233' });
+  assert.equal(lower.config.visual.marqueeBgColor, '#112233');
+
+  const upper = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_MARQUEE_BG_COLOR: '#AABBCC' });
+  assert.equal(upper.config.visual.marqueeBgColor, '#aabbcc');
+
+  const padded = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_MARQUEE_BG_COLOR: '  #0f172a  ' });
+  assert.equal(padded.config.visual.marqueeBgColor, '#0f172a');
+
+  const short = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_MARQUEE_BG_COLOR: '#abc' });
+  assert.equal(short.config.visual.marqueeBgColor, '');
+
+  const named = loadConfig({ SUPERVISOR_TOKEN: 'x', VISUAL_MARQUEE_BG_COLOR: 'navy' });
+  assert.equal(named.config.visual.marqueeBgColor, '');
+});
+
 test('VISUAL_CORNER_RADIUS_PX defaults to 0 and clamps to [0, 48]', () => {
   const def = loadConfig({ SUPERVISOR_TOKEN: 'x' });
   assert.equal(def.config.visual.cornerRadiusPx, 0);

@@ -91,6 +91,7 @@ export_opt VISUAL_NIGHT_MODE_OPACITY  visual_night_mode_opacity
 # a strict #RRGGBB override (empty = use theme's default ramp).
 export_opt VISUAL_THEME               visual_theme
 export_opt VISUAL_ACCENT_COLOR        visual_accent_color
+export_opt VISUAL_MARQUEE_BG_COLOR    visual_marquee_bg_color
 export_opt VISUAL_CORNER_RADIUS_PX    visual_corner_radius_px
 
 # ---- Diagnostics (no secrets) ----
@@ -122,6 +123,7 @@ bashio::log.info "Backdrop art:             ${VISUAL_USE_BACKDROPS:-false} (${VI
 bashio::log.info "Burn-in mitigation:       ${VISUAL_BURN_IN_MITIGATION:-false} (nudge ${VISUAL_NUDGE_AMPLITUDE_PX:-4}px every ${VISUAL_NUDGE_INTERVAL_MS:-60000}ms, night entity=${VISUAL_NIGHT_MODE_ENTITY:-<none>}, opacity=${VISUAL_NIGHT_MODE_OPACITY:-0.4})"
 bashio::log.info "Visual theme:             ${VISUAL_THEME:-classic-gold}"
 bashio::log.info "Accent colour override:   ${VISUAL_ACCENT_COLOR:-<theme default>}"
+bashio::log.info "Marquee background:       ${VISUAL_MARQUEE_BG_COLOR:-<theme default>}"
 bashio::log.info "Corner radius:            ${VISUAL_CORNER_RADIUS_PX:-0}px"
 bashio::log.info "Switcher enabled:         ${SWITCHER_ENABLED:-false}"
 if bashio::var.true "${SWITCHER_ENABLED:-false}"; then
