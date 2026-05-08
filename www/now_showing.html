@@ -1687,6 +1687,11 @@
               <label for="cfgComingSoonDaysOffset">Days Offset</label>
               <input id="cfgComingSoonDaysOffset" type="number" min="0" max="365" step="1" inputmode="numeric" autocomplete="off">
             </div>
+            <div class="setup-field">
+              <label for="cfgComingSoonLookaheadDays">Look-ahead Days</label>
+              <input id="cfgComingSoonLookaheadDays" type="number" min="1" max="365" step="1" inputmode="numeric" autocomplete="off">
+              <div class="hint">Forward window for upcoming releases. Default 90.</div>
+            </div>
           </div>
         </details>
 
@@ -2163,6 +2168,7 @@
       showsCount: readIntClamped('comingSoonShowsCount', 5, 0, 50),
       cycleInterval: readIntClamped('comingSoonCycleInterval', 8, 2, 300),
       daysOffset: readIntClamped('comingSoonDaysOffset', 0, 0, 365),
+      lookaheadDays: readIntClamped('comingSoonLookaheadDays', 90, 1, 365),
       imageType: readConfig('comingSoonImageType', { aliases: ['coming_soon_image_type'], defaultValue: 'poster' }) === 'fanart' ? 'fanart' : 'poster',
     };
 
@@ -2352,6 +2358,7 @@
           if (Number.isFinite(cs.showsCount)) COMING_SOON.showsCount = cs.showsCount;
           if (Number.isFinite(cs.cycleInterval)) COMING_SOON.cycleInterval = cs.cycleInterval;
           if (Number.isFinite(cs.daysOffset)) COMING_SOON.daysOffset = cs.daysOffset;
+          if (Number.isFinite(cs.lookaheadDays)) COMING_SOON.lookaheadDays = cs.lookaheadDays;
           if (cs.imageType === 'poster' || cs.imageType === 'fanart') COMING_SOON.imageType = cs.imageType;
         }
         const v = body && body.visual;
@@ -2602,6 +2609,7 @@
       ['comingSoonShowsCount', 'cfgComingSoonShowsCount', '5'],
       ['comingSoonCycleInterval', 'cfgComingSoonCycleInterval', '8'],
       ['comingSoonDaysOffset', 'cfgComingSoonDaysOffset', '0'],
+      ['comingSoonLookaheadDays', 'cfgComingSoonLookaheadDays', '90'],
       ['comingSoonImageType', 'cfgComingSoonImageType', 'poster'],
       ['visualTheme', 'cfgVisualTheme', 'classic-gold'],
       ['visualFrameStyle', 'cfgVisualFrameStyle', 'bulbs'],
@@ -2643,6 +2651,7 @@
       comingSoonShowsCount: { min: 0, max: 50, fallback: 5, float: false },
       comingSoonCycleInterval: { min: 2, max: 300, fallback: 8, float: false },
       comingSoonDaysOffset: { min: 0, max: 365, fallback: 0, float: false },
+      comingSoonLookaheadDays: { min: 1, max: 365, fallback: 90, float: false },
       visualCornerRadiusPx: { min: 0, max: 48, fallback: 0, float: false },
     };
     const ACCENT_PICKER_DEFAULT = '#c8a032';
@@ -4011,8 +4020,10 @@
     }
 
     async function fetchComingSoonDirect() {
+      const lookaheadDays = Number(COMING_SOON.lookaheadDays);
+      const lookahead = Number.isFinite(lookaheadDays) && lookaheadDays >= 1 ? lookaheadDays : 90;
       const start = new Date(Date.now() - (Number(COMING_SOON.daysOffset) || 0) * 86400000);
-      const end = new Date(Date.now() + 90 * 86400000);
+      const end = new Date(Date.now() + lookahead * 86400000);
       const startDate = start.toISOString().split('T')[0];
       const endDate = end.toISOString().split('T')[0];
       const fetches = [];
@@ -4042,17 +4053,33 @@
       const base = COMING_SOON.radarrUrl.replace(/\/$/, '');
       const start = new Date(Date.now() - (Number(COMING_SOON.daysOffset) || 0) * 86400000);
       start.setHours(0, 0, 0, 0);
+      const lookaheadDays = Number(COMING_SOON.lookaheadDays);
+      const lookahead = Number.isFinite(lookaheadDays) && lookaheadDays >= 1 ? lookaheadDays : 90;
+      const end = new Date(Date.now() + lookahead * 86400000);
+      // #85: accept digitalRelease OR physicalRelease (not inCinemas), pick the
+      // earliest qualifying date inside the window.
+      const pickReleaseDate = (m) => {
+        const startMs = start.getTime();
+        const endMs = end.getTime();
+        const candidates = [m.digitalRelease, m.physicalRelease]
+          .filter(Boolean)
+          .map(d => ({ raw: d, ts: new Date(d).getTime() }))
+          .filter(({ ts }) => Number.isFinite(ts) && ts >= startMs && ts <= endMs)
+          .sort((a, b) => a.ts - b.ts);
+        return candidates.length ? candidates[0].raw : null;
+      };
       return (Array.isArray(items) ? items : [])
-        .filter(m => !m.hasFile && m.digitalRelease && new Date(m.digitalRelease) >= start)
-        .sort((a, b) => new Date(a.digitalRelease) - new Date(b.digitalRelease))
-        .map(m => ({
+        .map(m => ({ m, releaseDate: pickReleaseDate(m) }))
+        .filter(({ m, releaseDate }) => !m.hasFile && releaseDate)
+        .sort((a, b) => new Date(a.releaseDate) - new Date(b.releaseDate))
+        .map(({ m, releaseDate }) => ({
           type: 'movie',
           typeLabel: 'Movie',
           title: m.title || 'Untitled Movie',
           subtitle: [m.year, Array.isArray(m.genres) ? m.genres.join(' / ') : ''].filter(Boolean).join(' / '),
-          releaseDate: m.digitalRelease,
-          countdown: formatComingSoonCountdown(m.digitalRelease),
-          releaseLabel: formatComingSoonDate(m.digitalRelease),
+          releaseDate,
+          countdown: formatComingSoonCountdown(releaseDate),
+          releaseLabel: formatComingSoonDate(releaseDate),
           overview: m.overview || '',
           posterUrl: coverImage(m.images, 'poster'),
           fanartUrl: coverImage(m.images, 'fanart'),
@@ -4065,9 +4092,16 @@
       const base = COMING_SOON.sonarrUrl.replace(/\/$/, '');
       const start = new Date(Date.now() - (Number(COMING_SOON.daysOffset) || 0) * 86400000);
       start.setHours(0, 0, 0, 0);
+      const lookaheadDays = Number(COMING_SOON.lookaheadDays);
+      const lookahead = Number.isFinite(lookaheadDays) && lookaheadDays >= 1 ? lookaheadDays : 90;
+      const end = new Date(Date.now() + lookahead * 86400000);
       const seen = new Set();
       return (Array.isArray(items) ? items : [])
-        .filter(ep => !ep.hasFile && ep.airDateUtc && new Date(ep.airDateUtc) >= start)
+        .filter(ep => {
+          if (ep.hasFile || !ep.airDateUtc) return false;
+          const ts = new Date(ep.airDateUtc).getTime();
+          return Number.isFinite(ts) && ts >= start.getTime() && ts <= end.getTime();
+        })
         .sort((a, b) => new Date(a.airDateUtc) - new Date(b.airDateUtc))
         .filter(ep => {
           const id = ep.seriesId || ep.series?.id || ep.series?.title || ep.title;

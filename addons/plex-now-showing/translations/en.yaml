@@ -85,6 +85,12 @@ configuration:
   coming_soon_days_offset:
     name: Coming Soon days offset
     description: Include releases from this many days in the past.
+  coming_soon_lookahead_days:
+    name: Coming Soon look-ahead days
+    description: >-
+      Forward window for upcoming releases. Defaults to 90 days; raise it if
+      Coming Soon isn't filling up because qualifying digital/physical
+      release dates fall further out.
   coming_soon_image_type:
     name: Coming Soon image type
     description: Use portrait poster art or landscape fanart/backdrop art.

@@ -43,6 +43,7 @@ function baseConfig(overrides = {}) {
       showsCount: 5,
       cycleInterval: 8,
       daysOffset: 0,
+      lookaheadDays: 90,
       imageType: 'poster',
     },
     visual: { progressBar: false, ratingsBadges: false, genreChips: false, infoPanelMode: 'on_tap' },
@@ -131,6 +132,7 @@ test('GET /api/config defaults every visual toggle off', async () => {
         showsCount: 5,
         cycleInterval: 8,
         daysOffset: 0,
+        lookaheadDays: 90,
         imageType: 'poster',
       },
       visual: {
@@ -197,6 +199,7 @@ test('GET /api/coming-soon returns configured upcoming items', async () => {
       showsCount: 5,
       cycleInterval: 8,
       daysOffset: 0,
+      lookaheadDays: 90,
       imageType: 'poster',
     },
   }), haClient);

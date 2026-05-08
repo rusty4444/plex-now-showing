@@ -1,4 +1,5 @@
 const DAY_MS = 86400000;
+const DEFAULT_LOOKAHEAD_DAYS = 90;
 
 export function hasComingSoonSource(config = {}) {
   const c = config.comingSoon || {};
@@ -12,8 +13,9 @@ export async function fetchComingSoonItems({
 } = {}) {
   const c = config?.comingSoon || {};
   const offsetDays = numberOr(c.daysOffset, 0);
+  const lookaheadDays = numberOr(c.lookaheadDays, DEFAULT_LOOKAHEAD_DAYS);
   const start = startOfDay(new Date(now.getTime() - offsetDays * DAY_MS));
-  const end = new Date(now.getTime() + 90 * DAY_MS);
+  const end = new Date(now.getTime() + lookaheadDays * DAY_MS);
 
   const [movies, shows] = await Promise.all([
     fetchRadarrItems({ config: c, fetchImpl, start, end, now }),
@@ -38,9 +40,10 @@ async function fetchRadarrItems({ config, fetchImpl, start, end, now }) {
   }
   const data = await resp.json();
   return (Array.isArray(data) ? data : [])
-    .filter(item => !item.hasFile && item.digitalRelease && new Date(item.digitalRelease) >= start)
-    .sort((a, b) => new Date(a.digitalRelease) - new Date(b.digitalRelease))
-    .map(item => {
+    .map(item => ({ item, releaseDate: pickRadarrReleaseDate(item, start, end) }))
+    .filter(({ item, releaseDate }) => !item.hasFile && releaseDate)
+    .sort((a, b) => new Date(a.releaseDate) - new Date(b.releaseDate))
+    .map(({ item, releaseDate }) => {
       const id = item.id || item.movieId || '';
       const genres = Array.isArray(item.genres) ? item.genres.filter(Boolean).join(' / ') : '';
       return {
@@ -48,9 +51,9 @@ async function fetchRadarrItems({ config, fetchImpl, start, end, now }) {
         typeLabel: 'Movie',
         title: item.title || 'Untitled Movie',
         subtitle: [item.year, genres].filter(Boolean).join(' / '),
-        releaseDate: item.digitalRelease,
-        countdown: formatCountdown(item.digitalRelease, now),
-        releaseLabel: formatReleaseDate(item.digitalRelease),
+        releaseDate,
+        countdown: formatCountdown(releaseDate, now),
+        releaseLabel: formatReleaseDate(releaseDate),
         overview: item.overview || '',
         posterUrl: imageUrl(item.images, 'poster'),
         fanartUrl: imageUrl(item.images, 'fanart'),
@@ -58,6 +61,20 @@ async function fetchRadarrItems({ config, fetchImpl, start, end, now }) {
         localFanartUrl: id ? `${base}/api/v3/MediaCover/${id}/fanart.jpg?apikey=${encodeURIComponent(config.radarrApiKey)}` : '',
       };
     });
+}
+
+// Return the earliest of digitalRelease/physicalRelease that falls inside the
+// [start, end] look-ahead window, or null if neither qualifies. inCinemas is
+// deliberately not considered — theatrical dates aren't a "coming home soon"
+// signal for a Plex/Radarr workflow.
+function pickRadarrReleaseDate(item, start, end) {
+  const candidates = [item.digitalRelease, item.physicalRelease]
+    .filter(Boolean)
+    .map(d => ({ raw: d, ts: new Date(d).getTime() }))
+    .filter(({ ts }) => Number.isFinite(ts) && ts >= start.getTime() && ts <= end.getTime());
+  if (!candidates.length) return null;
+  candidates.sort((a, b) => a.ts - b.ts);
+  return candidates[0].raw;
 }
 
 async function fetchSonarrItems({ config, fetchImpl, start, end, now }) {
@@ -73,7 +90,11 @@ async function fetchSonarrItems({ config, fetchImpl, start, end, now }) {
   const data = await resp.json();
   const seenSeries = new Set();
   return (Array.isArray(data) ? data : [])
-    .filter(item => !item.hasFile && item.airDateUtc && new Date(item.airDateUtc) >= start)
+    .filter(item => {
+      if (item.hasFile || !item.airDateUtc) return false;
+      const ts = new Date(item.airDateUtc).getTime();
+      return Number.isFinite(ts) && ts >= start.getTime() && ts <= end.getTime();
+    })
     .sort((a, b) => new Date(a.airDateUtc) - new Date(b.airDateUtc))
     .filter(item => {
       const id = item.seriesId || item.series?.id || item.series?.title || item.title;

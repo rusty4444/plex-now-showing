@@ -31,6 +31,7 @@ window.NOW_SHOWING_CONFIG = {
   comingSoonShowsCount: 5,
   comingSoonCycleInterval: 8,
   comingSoonDaysOffset: 0,
+  comingSoonLookaheadDays: 90, // forward window in days; widen if Coming Soon doesn't fill up
   comingSoonImageType: 'poster',
 
   // Plex filtering

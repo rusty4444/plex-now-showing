@@ -43,6 +43,7 @@ probe of `/api`) and switches to `/api/state`. Plex-only metadata calls use
 | `coming_soon_shows_count` | `5` | Number of Sonarr series to include. |
 | `coming_soon_cycle_interval` | `8` | Seconds each upcoming title stays on screen. |
 | `coming_soon_days_offset` | `0` | Include releases from this many days in the past. |
+| `coming_soon_lookahead_days` | `90` | Forward window (days) for upcoming releases. Radarr considers `digitalRelease` and `physicalRelease`; the earliest qualifying date inside the window wins. |
 | `coming_soon_image_type` | `poster` | `poster` or `fanart`. |
 | `proxy_secret` | _empty_ | If set, requests to `/api/*` must carry `X-Proxy-Secret`. |
 | `allowed_origins` | `[]` | Comma-joined allowlist for the `Origin` header on `/api/*`. Leave empty for Ingress-only. |

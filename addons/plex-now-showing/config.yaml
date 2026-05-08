@@ -62,6 +62,7 @@ options:
   coming_soon_shows_count: 5
   coming_soon_cycle_interval: 8
   coming_soon_days_offset: 0
+  coming_soon_lookahead_days: 90
   coming_soon_image_type: poster
   proxy_secret: ""
   allowed_origins: []
@@ -124,6 +125,7 @@ schema:
   coming_soon_shows_count: "int(0,50)"
   coming_soon_cycle_interval: "int(2,300)"
   coming_soon_days_offset: "int(0,365)"
+  coming_soon_lookahead_days: "int(1,365)"
   coming_soon_image_type: "list(poster|fanart)"
   proxy_secret: "password?"
   allowed_origins:

@@ -68,6 +68,7 @@ For HA Container users running via Docker Compose. Set:
 | `COMING_SOON_SHOWS_COUNT` | `5` | Number of Sonarr series to include |
 | `COMING_SOON_CYCLE_INTERVAL` | `8` | Seconds per upcoming title |
 | `COMING_SOON_DAYS_OFFSET` | `0` | Include releases from this many days in the past |
+| `COMING_SOON_LOOKAHEAD_DAYS` | `90` | Forward window (days). Radarr matches `digitalRelease` or `physicalRelease`; widen if the rotation isn't filling up |
 | `COMING_SOON_IMAGE_TYPE` | `poster` | `poster` or `fanart` |
 | `PROXY_SECRET` | – | If set, requests to `/api/*` must carry `X-Proxy-Secret` |
 | `ALLOWED_ORIGINS` | – | Comma-separated allowlist for `Origin` on `/api/*` |

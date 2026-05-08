@@ -358,6 +358,7 @@ useful as a Fully Kiosk screensaver URL or as a target for HA automations.
 | Show count | `coming_soon_shows_count` | `COMING_SOON_SHOWS_COUNT` | `comingSoonShowsCount` | `0` to `50` |
 | Cycle interval | `coming_soon_cycle_interval` | `COMING_SOON_CYCLE_INTERVAL` | `comingSoonCycleInterval` | Seconds, `2` to `300` |
 | Days offset | `coming_soon_days_offset` | `COMING_SOON_DAYS_OFFSET` | `comingSoonDaysOffset` | Include recent past releases |
+| Look-ahead days | `coming_soon_lookahead_days` | `COMING_SOON_LOOKAHEAD_DAYS` | `comingSoonLookaheadDays` | Forward window, default `90`, range `1`–`365`. Radarr matches `digitalRelease` or `physicalRelease` |
 | Image type | `coming_soon_image_type` | `COMING_SOON_IMAGE_TYPE` | `comingSoonImageType` | `poster`, `fanart` |
 
 ### Using Now Showing And Coming Soon Together

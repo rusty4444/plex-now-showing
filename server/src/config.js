@@ -59,6 +59,10 @@ export function loadConfig(env = process.env) {
       showsCount: parseIntClamped(env.COMING_SOON_SHOWS_COUNT, 5, 0, 50),
       cycleInterval: parseIntClamped(env.COMING_SOON_CYCLE_INTERVAL, 8, 2, 300),
       daysOffset: parseIntClamped(env.COMING_SOON_DAYS_OFFSET, 0, 0, 365),
+      // Forward window for upcoming releases (#85). Default preserves the
+      // pre-#85 hard-coded 90-day horizon. Lower bound of 1 keeps the window
+      // meaningful; upper bound of 365 mirrors daysOffset.
+      lookaheadDays: parseIntClamped(env.COMING_SOON_LOOKAHEAD_DAYS, 90, 1, 365),
       imageType: parseEnum(env.COMING_SOON_IMAGE_TYPE, ['poster', 'fanart'], 'poster'),
     },
     // Fully Kiosk auto-switcher (#48). Disabled by default; users who prefer

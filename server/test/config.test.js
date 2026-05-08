@@ -106,6 +106,7 @@ test('coming soon config parses source settings and validates required source', 
     COMING_SOON_SHOWS_COUNT: '3',
     COMING_SOON_CYCLE_INTERVAL: '12',
     COMING_SOON_DAYS_OFFSET: '2',
+    COMING_SOON_LOOKAHEAD_DAYS: '180',
     COMING_SOON_IMAGE_TYPE: 'fanart',
   });
 
@@ -117,7 +118,25 @@ test('coming soon config parses source settings and validates required source', 
   assert.equal(config.comingSoon.showsCount, 3);
   assert.equal(config.comingSoon.cycleInterval, 12);
   assert.equal(config.comingSoon.daysOffset, 2);
+  assert.equal(config.comingSoon.lookaheadDays, 180);
   assert.equal(config.comingSoon.imageType, 'fanart');
+});
+
+test('coming soon lookaheadDays defaults to 90 and clamps out-of-range values', () => {
+  const { config: defaults } = loadConfig({ SUPERVISOR_TOKEN: 'x' });
+  assert.equal(defaults.comingSoon.lookaheadDays, 90);
+
+  const { config: clamped } = loadConfig({
+    SUPERVISOR_TOKEN: 'x',
+    COMING_SOON_LOOKAHEAD_DAYS: '9999',
+  });
+  assert.equal(clamped.comingSoon.lookaheadDays, 365);
+
+  const { config: floor } = loadConfig({
+    SUPERVISOR_TOKEN: 'x',
+    COMING_SOON_LOOKAHEAD_DAYS: '0',
+  });
+  assert.equal(floor.comingSoon.lookaheadDays, 1);
 });
 
 test('visual toggles all default to false', () => {

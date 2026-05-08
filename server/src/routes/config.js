@@ -25,6 +25,7 @@ export function configRoute({ config }) {
         showsCount: config.comingSoon?.showsCount ?? 5,
         cycleInterval: config.comingSoon?.cycleInterval ?? 8,
         daysOffset: config.comingSoon?.daysOffset ?? 0,
+        lookaheadDays: config.comingSoon?.lookaheadDays ?? 90,
         imageType: config.comingSoon?.imageType || 'poster',
       },
       visual: {

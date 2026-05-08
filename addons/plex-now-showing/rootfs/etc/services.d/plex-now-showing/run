@@ -50,6 +50,7 @@ export_opt COMING_SOON_MOVIES_COUNT coming_soon_movies_count
 export_opt COMING_SOON_SHOWS_COUNT  coming_soon_shows_count
 export_opt COMING_SOON_CYCLE_INTERVAL coming_soon_cycle_interval
 export_opt COMING_SOON_DAYS_OFFSET coming_soon_days_offset
+export_opt COMING_SOON_LOOKAHEAD_DAYS coming_soon_lookahead_days
 export_opt COMING_SOON_IMAGE_TYPE  coming_soon_image_type
 
 # allowed_origins is a list → join with commas for the server's parser.
