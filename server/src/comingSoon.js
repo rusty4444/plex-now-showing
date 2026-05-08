@@ -63,12 +63,10 @@ async function fetchRadarrItems({ config, fetchImpl, start, end, now }) {
     });
 }
 
-// Return the earliest of digitalRelease/physicalRelease that falls inside the
-// [start, end] look-ahead window, or null if neither qualifies. inCinemas is
-// deliberately not considered — theatrical dates aren't a "coming home soon"
-// signal for a Plex/Radarr workflow.
+// Return the earliest of digitalRelease/physicalRelease/inCinemas that falls
+// inside the [start, end] look-ahead window, or null if none qualify (#87).
 function pickRadarrReleaseDate(item, start, end) {
-  const candidates = [item.digitalRelease, item.physicalRelease]
+  const candidates = [item.digitalRelease, item.physicalRelease, item.inCinemas]
     .filter(Boolean)
     .map(d => ({ raw: d, ts: new Date(d).getTime() }))
     .filter(({ ts }) => Number.isFinite(ts) && ts >= start.getTime() && ts <= end.getTime());

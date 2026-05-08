@@ -198,7 +198,7 @@ test('Radarr falls back to digitalRelease when physicalRelease is outside the wi
   assert.equal(item.releaseDate, '2026-06-01T00:00:00Z');
 });
 
-test('inCinemas is not used as a fallback', async () => {
+test('Radarr falls back to inCinemas when only inCinemas is set and within window (#87)', async () => {
   const fetchImpl = async (url) => {
     if (url.includes('radarr')) {
       return response([
@@ -207,6 +207,107 @@ test('inCinemas is not used as a fallback', async () => {
           title: 'Theatrical Only',
           inCinemas: '2026-05-20T00:00:00Z',
           hasFile: false,
+        },
+      ]);
+    }
+    return response([]);
+  };
+
+  const items = await fetchComingSoonItems({
+    config: {
+      comingSoon: {
+        radarrUrl: 'http://radarr.local:7878',
+        radarrApiKey: 'rk',
+        moviesCount: 5,
+        showsCount: 5,
+        lookaheadDays: 90,
+      },
+    },
+    fetchImpl,
+    now: new Date('2026-05-02T12:00:00Z'),
+  });
+
+  assert.equal(items.length, 1);
+  assert.equal(items[0].title, 'Theatrical Only');
+  assert.equal(items[0].releaseDate, '2026-05-20T00:00:00Z');
+});
+
+test('Radarr ignores inCinemas when it falls outside the look-ahead window (#87)', async () => {
+  const fetchImpl = async (url) => {
+    if (url.includes('radarr')) {
+      return response([
+        {
+          id: 35,
+          title: 'Cinema Far Future',
+          inCinemas: '2027-06-01T00:00:00Z',
+          hasFile: false,
+        },
+      ]);
+    }
+    return response([]);
+  };
+
+  const items = await fetchComingSoonItems({
+    config: {
+      comingSoon: {
+        radarrUrl: 'http://radarr.local:7878',
+        radarrApiKey: 'rk',
+        moviesCount: 5,
+        showsCount: 5,
+        lookaheadDays: 90,
+      },
+    },
+    fetchImpl,
+    now: new Date('2026-05-02T12:00:00Z'),
+  });
+
+  assert.deepEqual(items, []);
+});
+
+test('Radarr picks the earliest of digital/physical/inCinemas inside the window (#87)', async () => {
+  const fetchImpl = async (url) => {
+    if (url.includes('radarr')) {
+      return response([
+        {
+          id: 36,
+          title: 'All Three Dates',
+          inCinemas: '2026-05-15T00:00:00Z',
+          digitalRelease: '2026-07-01T00:00:00Z',
+          physicalRelease: '2026-06-15T00:00:00Z',
+          hasFile: false,
+        },
+      ]);
+    }
+    return response([]);
+  };
+
+  const [item] = await fetchComingSoonItems({
+    config: {
+      comingSoon: {
+        radarrUrl: 'http://radarr.local:7878',
+        radarrApiKey: 'rk',
+        moviesCount: 5,
+        showsCount: 5,
+        lookaheadDays: 90,
+      },
+    },
+    fetchImpl,
+    now: new Date('2026-05-02T12:00:00Z'),
+  });
+
+  assert.equal(item.title, 'All Three Dates');
+  assert.equal(item.releaseDate, '2026-05-15T00:00:00Z');
+});
+
+test('Radarr inCinemas movie with hasFile=true is still excluded (#87)', async () => {
+  const fetchImpl = async (url) => {
+    if (url.includes('radarr')) {
+      return response([
+        {
+          id: 37,
+          title: 'Cinema But Downloaded',
+          inCinemas: '2026-05-20T00:00:00Z',
+          hasFile: true,
         },
       ]);
     }
