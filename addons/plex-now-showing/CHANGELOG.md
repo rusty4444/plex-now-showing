@@ -3,6 +3,16 @@
 All notable changes to the Now Showing add-on will be documented here.
 The project follows [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Changed
+- Radarr Coming Soon eligibility now also accepts `inCinemas` as a
+  release-date fallback alongside `digitalRelease` and `physicalRelease`.
+  When multiple dates are populated, the earliest qualifying date inside
+  the configured look-ahead window is selected. `hasFile === false` and
+  monitored filtering are unchanged, so already-imported movies still
+  drop out (closes #87).
+
 ## 2.1.1 - 2026-05-08
 
 ### Added
@@ -13,8 +23,7 @@ The project follows [Semantic Versioning](https://semver.org/).
   (closes #85, PR #86).
 - Radarr eligibility now includes `physicalRelease` alongside
   `digitalRelease`. When both are present, the earliest qualifying date
-  inside the look-ahead window is selected. `inCinemas` is intentionally
-  still **not** used as a release-date fallback.
+  inside the look-ahead window is selected.
 
 ## 2.1.0 - 2026-05-03
 

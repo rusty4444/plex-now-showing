@@ -4056,12 +4056,12 @@
       const lookaheadDays = Number(COMING_SOON.lookaheadDays);
       const lookahead = Number.isFinite(lookaheadDays) && lookaheadDays >= 1 ? lookaheadDays : 90;
       const end = new Date(Date.now() + lookahead * 86400000);
-      // #85: accept digitalRelease OR physicalRelease (not inCinemas), pick the
+      // #87: accept digitalRelease, physicalRelease, or inCinemas; pick the
       // earliest qualifying date inside the window.
       const pickReleaseDate = (m) => {
         const startMs = start.getTime();
         const endMs = end.getTime();
-        const candidates = [m.digitalRelease, m.physicalRelease]
+        const candidates = [m.digitalRelease, m.physicalRelease, m.inCinemas]
           .filter(Boolean)
           .map(d => ({ raw: d, ts: new Date(d).getTime() }))
           .filter(({ ts }) => Number.isFinite(ts) && ts >= startMs && ts <= endMs)

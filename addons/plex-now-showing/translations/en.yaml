@@ -89,8 +89,8 @@ configuration:
     name: Coming Soon look-ahead days
     description: >-
       Forward window for upcoming releases. Defaults to 90 days; raise it if
-      Coming Soon isn't filling up because qualifying digital/physical
-      release dates fall further out.
+      Coming Soon isn't filling up because qualifying digital, physical, or
+      cinema release dates fall further out.
   coming_soon_image_type:
     name: Coming Soon image type
     description: Use portrait poster art or landscape fanart/backdrop art.
