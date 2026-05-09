@@ -3,7 +3,7 @@
 All notable changes to the Now Showing add-on will be documented here.
 The project follows [Semantic Versioning](https://semver.org/).
 
-## Unreleased
+## 2.1.3 - 2026-05-09
 
 ### Added
 - Optional TMDB enrichment for Coming Soon (closes #91, PR #93). New
