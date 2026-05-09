@@ -27,6 +27,13 @@ export function configRoute({ config }) {
       // per-tablet).
       mode: config.mode || 'standalone',
       managed: !!config.haToken, // server already has a working HA token
+      // #98 — overlay-aware extras so the in-app setup form can prefill
+      // non-secret fields without a separate request. Secrets stay behind
+      // *Set booleans only.
+      haUrl: config.haUrl || '',
+      haUrlSet: !!config.haUrl,
+      haTokenSet: !!config.haToken,
+      landscape: !!config.landscape,
       displayMode: config.displayMode || 'now_showing',
       backend: config.backend || 'plex',
       player: config.player || '',

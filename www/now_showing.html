@@ -1578,6 +1578,27 @@
       <div class="setup-sub" id="setupSub">Values are saved to this device's localStorage. Nothing is sent anywhere else.</div>
 
       <!--
+        #98 — When the page is served by the unified add-on / Docker server,
+        the in-app overlay can save settings server-side via POST /api/setup.
+        In that mode the localStorage banner text is replaced and saves go to
+        the server, so all browsers/devices see the same values.
+      -->
+      <div id="setupServerSavedBanner"
+           style="display:none;margin:0 0 14px;padding:12px 14px;border-radius:6px;
+                  border:1px solid #2c5e2c;background:#0f1d0f;color:#bce6bc;
+                  font-size:0.85rem;line-height:1.4;">
+        <strong style="color:#bce6bc;display:block;margin-bottom:4px;">
+          Settings save to the server, not just this device
+        </strong>
+        <span>
+          Saving here writes to the add-on/Docker server and applies to every
+          browser, kiosk and phone that opens this URL. Secrets are stored
+          server-side and shown only as <em>set / not set</em> below — leave
+          a secret blank to keep its current value.
+        </span>
+      </div>
+
+      <!--
         #95 — When the page is served by the unified add-on / Docker server,
         the canonical setup lives in add-on options / docker env, not in this
         per-tablet localStorage. Show a banner pointing the user at the
@@ -1723,24 +1744,29 @@
           </div>
 
           <!--
-            #91 / #95 — TMDB enrichment. Server-side only: the kiosk
-            frontend never calls TMDB directly, so this is a status panel,
-            not an input. The enabled/region values come from /api/config;
-            the API key itself stays server-side.
+            #91 / #95 / #98 — TMDB enrichment. The kiosk frontend never
+            calls TMDB directly; the API key is sent to the server which
+            uses it for date enrichment only. In unified-server mode the
+            inputs save to /api/setup and persist across browsers/devices.
+            HACS-only installs see a status panel pointing at the add-on
+            options instead.
           -->
-          <div class="setup-section-title" style="margin-top:14px;">TMDB enrichment (server-side)</div>
+          <div class="setup-section-title" style="margin-top:14px;">TMDB enrichment</div>
           <div class="setup-field" id="cfgTmdbStatusField">
             <div id="cfgTmdbStatus" class="hint" style="color:var(--accent-light);">
               TMDB fallback status will appear when the unified server is reachable.
             </div>
-            <div class="hint" style="margin-top:6px;">
-              Configure <code>tmdb_api_key</code> and <code>tmdb_region</code>
-              (default <code>AU</code>) in the Home Assistant add-on
-              Configuration tab, or as <code>TMDB_API_KEY</code> /
-              <code>TMDB_REGION</code> env vars on the Docker container.
-              When set, TMDB fills in digital/physical/theatrical release
-              dates Radarr's calendar is missing. Leave the API key blank
-              to disable the fallback completely.
+          </div>
+          <div class="setup-field-grid">
+            <div class="setup-field">
+              <label for="cfgTmdbApiKey">TMDB API Key</label>
+              <input id="cfgTmdbApiKey" type="password" placeholder="(not set)" autocomplete="off" spellcheck="false">
+              <div class="hint">v3 key or v4 read-token. Saved server-side; leave blank to keep the existing key.</div>
+            </div>
+            <div class="setup-field">
+              <label for="cfgTmdbRegion">TMDB Region</label>
+              <input id="cfgTmdbRegion" type="text" maxlength="2" placeholder="AU" autocomplete="off" spellcheck="false">
+              <div class="hint">ISO 3166-1 alpha-2 country code (default AU).</div>
             </div>
           </div>
         </details>
@@ -2661,6 +2687,7 @@
       ['comingSoonDaysOffset', 'cfgComingSoonDaysOffset', '0'],
       ['comingSoonLookaheadDays', 'cfgComingSoonLookaheadDays', '90'],
       ['comingSoonImageType', 'cfgComingSoonImageType', 'poster'],
+      ['tmdbRegion', 'cfgTmdbRegion', 'AU'],
       ['visualTheme', 'cfgVisualTheme', 'classic-gold'],
       ['visualFrameStyle', 'cfgVisualFrameStyle', 'bulbs'],
       ['visualBulbSizePx', 'cfgVisualBulbSizePx', '28'],
@@ -2820,6 +2847,19 @@
       }
     }
 
+    // #98 — secret form field IDs paired with the *Set boolean path under
+    // the /api/config response. Used to render placeholder hints like
+    // "(saved on server, leave blank to keep)" without ever putting the
+    // secret value into the DOM.
+    const SETUP_SECRET_FIELDS = [
+      ['cfgHaToken', 'haTokenSet'],
+      ['cfgPlexToken', 'plex.tokenSet'],
+      ['cfgRadarrApiKey', 'comingSoon.radarrApiKeySet'],
+      ['cfgSonarrApiKey', 'comingSoon.sonarrApiKeySet'],
+      ['cfgTmdbApiKey', 'comingSoon.tmdb.apiKeySet'],
+      ['cfgFullyKioskPassword', null], // not surfaced individually; raw blob
+    ];
+
     function populateSetupForm() {
       try {
         for (const [key, id, defaultValue] of SETUP_VALUE_FIELDS) {
@@ -2853,13 +2893,15 @@
       void hydrateSetupFromServer();
     }
 
-    // #95 — fetch /api/config (already used for visual toggles) and use it
-    // to drive the in-app setup overlay's "managed by add-on" banner plus
-    // the TMDB status pill. Fields the user has saved locally always win
-    // (they are the per-tablet override) — server values are only used to
-    // fill blanks and to render an informational read-only summary.
+    // #95/#98 — fetch /api/config and use it to drive the in-app setup
+    // overlay. In unified-server mode this also tells the form to POST
+    // saves back to /api/setup so values persist server-side. Secrets are
+    // never returned by the server — only their *Set booleans — so we
+    // always show secret inputs as blank and use the boolean to render
+    // a "set / not set" hint underneath.
     async function hydrateSetupFromServer() {
       const banner = document.getElementById('setupServerBanner');
+      const savedBanner = document.getElementById('setupServerSavedBanner');
       const summary = document.getElementById('setupServerBannerSummary');
       const sub = document.getElementById('setupSub');
       const tmdbStatus = document.getElementById('cfgTmdbStatus');
@@ -2871,21 +2913,25 @@
         body = await resp.json();
       } catch (_) {
         // No unified server (HACS-only install) — keep the original
-        // localStorage-only messaging and hide the server banner.
+        // localStorage-only messaging and hide the server banners. Don't
+        // hide the TMDB status block — show a fallback hint instead so the
+        // heading is never orphaned (see #97).
         if (banner) banner.style.display = 'none';
-        if (tmdbField) tmdbField.style.display = 'none';
+        if (savedBanner) savedBanner.style.display = 'none';
+        if (tmdbStatus) {
+          tmdbStatus.innerHTML = `ℹ️ TMDB status is unavailable (could not reach <code>/api/config</code>). When running the unified server, configure <code>tmdb_api_key</code> / <code>TMDB_API_KEY</code>, or save it from the setup overlay if your install supports it.`;
+        }
         return;
       }
       if (!body || typeof body !== 'object') return;
       const isAddon = body.mode === 'addon';
       const isServer = isAddon || body.mode === 'standalone';
-      if (banner && isServer) {
-        banner.style.display = 'block';
-        if (sub) {
-          sub.textContent = isAddon
-            ? 'Connection, Coming Soon, and TMDB values are loaded from the add-on Configuration tab. Display settings can be overridden per-device below.'
-            : 'Connection, Coming Soon, and TMDB values are loaded from the server (Docker .env / env vars). Display settings can be overridden per-device below.';
-        }
+      // #98 — in server mode, show the green "saves go server-side" banner
+      // and hide the older localStorage-only banner.
+      if (savedBanner && isServer) savedBanner.style.display = 'block';
+      if (banner) banner.style.display = 'none';
+      if (sub && isServer) {
+        sub.textContent = 'Settings save to the unified server. They apply to every browser, kiosk and phone that opens this URL.';
       }
       if (summary) {
         const cs = body.comingSoon || {};
@@ -2904,41 +2950,62 @@
       if (tmdbStatus) {
         const tmdb = (body.comingSoon && body.comingSoon.tmdb) || {};
         if (tmdb.enabled) {
-          tmdbStatus.innerHTML = `✅ TMDB API key is configured on the server. Region: <strong>${(tmdb.region || 'AU').toUpperCase()}</strong>.`;
+          tmdbStatus.innerHTML = `✅ TMDB API key is set on the server. Region: <strong>${(tmdb.region || 'AU').toUpperCase()}</strong>. Leave the key field blank below to keep it.`;
         } else {
-          tmdbStatus.innerHTML = `⚠️ TMDB fallback is <strong>not configured</strong>. Add <code>tmdb_api_key</code> to the add-on options (or <code>TMDB_API_KEY</code> env var) to enable.`;
+          tmdbStatus.innerHTML = `⚠️ TMDB fallback is <strong>not configured</strong>. Enter a key below (or set <code>tmdb_api_key</code> in the add-on options / <code>TMDB_API_KEY</code> env var) to enable.`;
         }
       }
-      // Fill any blank fields from canonical server values so a brand-new
-      // browser doesn't render the form as empty just because localStorage
-      // is fresh. We only fill blanks — anything the user has saved locally
-      // is treated as a deliberate per-device override and left alone.
-      const fillIfBlank = (id, value) => {
+      // #98 — In server mode, server values are canonical: prefill non-secret
+      // fields unconditionally so all browsers see the same effective config.
+      // For secret fields, render a placeholder hint based on the *Set
+      // boolean (we never receive the secret itself) and leave the input
+      // blank — saving a blank secret preserves the existing one.
+      const fillFromServer = (id, value) => {
         const el = document.getElementById(id);
         if (!el) return;
         if (typeof value === 'undefined' || value === null) return;
         if (el.tagName === 'INPUT' && el.type === 'checkbox') {
-          // Only overwrite when localStorage doesn't have an explicit value.
+          el.checked = !!value;
           return;
         }
-        if (!el.value) el.value = String(value);
+        el.value = String(value);
       };
       const cs2 = body.comingSoon || {};
       const plex2 = body.plex || {};
-      fillIfBlank('cfgDisplayMode', body.displayMode);
-      fillIfBlank('cfgBackend', body.backend);
-      fillIfBlank('cfgPlayer', body.player);
-      fillIfBlank('cfgPlexUrl', plex2.url);
-      fillIfBlank('cfgPlexUsername', plex2.username);
-      fillIfBlank('cfgComingSoonTitle', cs2.title);
-      fillIfBlank('cfgRadarrUrl', cs2.radarrUrl);
-      fillIfBlank('cfgSonarrUrl', cs2.sonarrUrl);
-      if (Number.isFinite(cs2.moviesCount)) fillIfBlank('cfgComingSoonMoviesCount', cs2.moviesCount);
-      if (Number.isFinite(cs2.showsCount)) fillIfBlank('cfgComingSoonShowsCount', cs2.showsCount);
-      if (Number.isFinite(cs2.cycleInterval)) fillIfBlank('cfgComingSoonCycleInterval', cs2.cycleInterval);
-      if (Number.isFinite(cs2.daysOffset)) fillIfBlank('cfgComingSoonDaysOffset', cs2.daysOffset);
-      if (Number.isFinite(cs2.lookaheadDays)) fillIfBlank('cfgComingSoonLookaheadDays', cs2.lookaheadDays);
-      fillIfBlank('cfgComingSoonImageType', cs2.imageType);
+      const tmdb2 = cs2.tmdb || {};
+      // Secrets — placeholder reflects server state, value stays blank.
+      const setSecretPlaceholder = (id, isSet, label) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.value = '';
+        el.placeholder = isSet
+          ? `(saved on server — leave blank to keep ${label})`
+          : `(not set — enter ${label} to save)`;
+      };
+      setSecretPlaceholder('cfgHaToken', !!body.haTokenSet, 'HA token');
+      setSecretPlaceholder('cfgPlexToken', !!(plex2.tokenSet), 'Plex token');
+      setSecretPlaceholder('cfgRadarrApiKey', !!cs2.radarrApiKeySet, 'Radarr key');
+      setSecretPlaceholder('cfgSonarrApiKey', !!cs2.sonarrApiKeySet, 'Sonarr key');
+      setSecretPlaceholder('cfgTmdbApiKey', !!tmdb2.apiKeySet, 'TMDB key');
+
+      // Non-secret prefill — server is canonical when in server mode.
+      fillFromServer('cfgHaUrl', body.haUrl);
+      fillFromServer('cfgDisplayMode', body.displayMode);
+      fillFromServer('cfgBackend', body.backend);
+      fillFromServer('cfgPlayer', body.player);
+      fillFromServer('cfgLandscape', body.landscape);
+      fillFromServer('cfgPlexUrl', plex2.url);
+      fillFromServer('cfgPlexUsername', plex2.username);
+      fillFromServer('cfgComingSoonTitle', cs2.title);
+      fillFromServer('cfgRadarrUrl', cs2.radarrUrl);
+      fillFromServer('cfgSonarrUrl', cs2.sonarrUrl);
+      if (Number.isFinite(cs2.moviesCount)) fillFromServer('cfgComingSoonMoviesCount', cs2.moviesCount);
+      if (Number.isFinite(cs2.showsCount)) fillFromServer('cfgComingSoonShowsCount', cs2.showsCount);
+      if (Number.isFinite(cs2.cycleInterval)) fillFromServer('cfgComingSoonCycleInterval', cs2.cycleInterval);
+      if (Number.isFinite(cs2.daysOffset)) fillFromServer('cfgComingSoonDaysOffset', cs2.daysOffset);
+      if (Number.isFinite(cs2.lookaheadDays)) fillFromServer('cfgComingSoonLookaheadDays', cs2.lookaheadDays);
+      fillFromServer('cfgComingSoonImageType', cs2.imageType);
+      fillFromServer('cfgTmdbRegion', tmdb2.region);
       // Re-run dependent toggles in case we just filled the backend/displayMode.
       try {
         syncSetupDisplayModeFields();
@@ -3518,19 +3585,134 @@
         setupStatus('Could not save settings: ' + e.message, 'err');
         return;
       }
+
+      // #98 \u2014 in unified-server mode also POST the form to /api/setup so
+      // the values persist on the server and propagate to every other
+      // browser/kiosk on this install. Local localStorage is still written
+      // above so HACS-only installs (no server) keep working as before.
+      if (serverManaged) {
+        const payload = buildServerSetupPayload(accentColor, marqueeBgColor);
+        setupStatus('Saving to server\u2026');
+        fetch('/api/setup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        }).then(async (r) => {
+          if (!r.ok) {
+            const err = await r.json().catch(() => ({}));
+            throw new Error(err.details ? err.details.join(', ') : ('http ' + r.status));
+          }
+          setupStatus('Saved on server. Reloading\u2026', 'ok');
+          const clean = window.location.pathname;
+          setTimeout(() => { window.location.replace(clean); }, 350);
+        }).catch((err) => {
+          setupStatus('Server save failed: ' + err.message + ' (local copy was still saved)', 'err');
+        });
+        return;
+      }
+
       setupStatus('Saved. Reloading\u2026', 'ok');
       // Drop any token in the hash/query so it's not kept in history, then reload.
       const clean = window.location.pathname;
       setTimeout(() => { window.location.replace(clean); }, 350);
     }
 
+    // #98 \u2014 Build the JSON body for POST /api/setup. We send blank secrets
+    // as-is and let the server preserve existing values; non-secret fields
+    // ride along regardless. Visual settings are also forwarded so a phone
+    // can flip the theme and have it apply on the kiosk.
+    function buildServerSetupPayload(accentColor, marqueeBgColor) {
+      const val = (id) => (document.getElementById(id)?.value ?? '').trim();
+      const num = (id) => {
+        const raw = val(id);
+        if (raw === '') return null;
+        const n = Number(raw);
+        return Number.isFinite(n) ? n : null;
+      };
+      const bool = (id) => !!document.getElementById(id)?.checked;
+      const out = {
+        haUrl: val('cfgHaUrl'),
+        displayMode: val('cfgDisplayMode'),
+        backend: val('cfgBackend'),
+        player: val('cfgPlayer'),
+        plexUrl: val('cfgPlexUrl'),
+        plexUsername: val('cfgPlexUsername'),
+        landscape: bool('cfgLandscape'),
+        switcherEnabled: bool('cfgSwitcherEnabled'),
+        // Secrets \u2014 blank preserves existing on the server.
+        haToken: val('cfgHaToken'),
+        plexToken: val('cfgPlexToken'),
+        comingSoon: {
+          title: val('cfgComingSoonTitle'),
+          radarrUrl: val('cfgRadarrUrl'),
+          radarrApiKey: val('cfgRadarrApiKey'),
+          sonarrUrl: val('cfgSonarrUrl'),
+          sonarrApiKey: val('cfgSonarrApiKey'),
+          imageType: val('cfgComingSoonImageType'),
+          tmdb: {
+            apiKey: val('cfgTmdbApiKey'),
+            region: val('cfgTmdbRegion'),
+          },
+        },
+        visual: {
+          progressBar: bool('cfgVisualProgressBar'),
+          ratingsBadges: bool('cfgVisualRatingsBadges'),
+          genreChips: bool('cfgVisualGenreChips'),
+          useBackdrops: bool('cfgVisualUseBackdrops'),
+          burnInMitigation: bool('cfgVisualBurnInMitigation'),
+          infoPanelMode: val('cfgVisualInfoPanelMode'),
+          frameStyle: val('cfgVisualFrameStyle'),
+          marqueeFont: val('cfgVisualMarqueeFont'),
+          backdropStyle: val('cfgVisualBackdropStyle'),
+          theme: val('cfgVisualTheme'),
+          nightModeEntity: val('cfgVisualNightModeEntity'),
+          accentColor: accentColor,
+          marqueeBgColor: marqueeBgColor,
+        },
+      };
+      // Numeric fields \u2014 only forward when they parse cleanly.
+      const setNum = (target, key, id) => { const n = num(id); if (n !== null) target[key] = n; };
+      setNum(out.comingSoon, 'moviesCount', 'cfgComingSoonMoviesCount');
+      setNum(out.comingSoon, 'showsCount', 'cfgComingSoonShowsCount');
+      setNum(out.comingSoon, 'cycleInterval', 'cfgComingSoonCycleInterval');
+      setNum(out.comingSoon, 'daysOffset', 'cfgComingSoonDaysOffset');
+      setNum(out.comingSoon, 'lookaheadDays', 'cfgComingSoonLookaheadDays');
+      setNum(out, 'switcherIntervalMs', 'cfgSwitcherIntervalMs');
+      setNum(out.visual, 'bulbSizePx', 'cfgVisualBulbSizePx');
+      setNum(out.visual, 'backdropDelayMs', 'cfgVisualBackdropDelayMs');
+      setNum(out.visual, 'nudgeIntervalMs', 'cfgVisualNudgeIntervalMs');
+      setNum(out.visual, 'nudgeAmplitudePx', 'cfgVisualNudgeAmplitudePx');
+      setNum(out.visual, 'nightModeOpacity', 'cfgVisualNightModeOpacity');
+      setNum(out.visual, 'cornerRadiusPx', 'cfgVisualCornerRadiusPx');
+      return out;
+    }
+
     function setupClear() {
+      // #98 — local clear always runs; in server mode also offer to reset
+      // the server-side overlay so a phone can blow away the whole shared
+      // setup if the user wants a clean slate. The two confirmations are
+      // independent so a user can clear local without touching the server.
       if (!confirm('Clear all saved Now Showing settings on this device?')) return;
       try {
         for (const [key] of SETUP_VALUE_FIELDS) window.localStorage.removeItem('pns.' + key);
         for (const [key] of SETUP_CHECKBOX_FIELDS) window.localStorage.removeItem('pns.' + key);
         window.localStorage.removeItem('pns.plexPlayer');
       } catch (_) {}
+
+      const serverManaged = !!SERVER_MODE;
+      if (serverManaged && confirm(
+        'Also reset the server-side overlay so other devices revert to add-on/Docker defaults? This clears any settings you saved server-side, including secrets.'
+      )) {
+        fetch('/api/setup/reset', { method: 'POST' }).then(() => {
+          populateSetupForm();
+          setupStatus('Local + server settings cleared.', 'ok');
+        }).catch((err) => {
+          populateSetupForm();
+          setupStatus('Local cleared, server reset failed: ' + err.message, 'err');
+        });
+        return;
+      }
+
       populateSetupForm();
       setupStatus('Cleared.', 'ok');
     }

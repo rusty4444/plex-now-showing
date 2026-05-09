@@ -230,7 +230,7 @@ function parseHexColor(v, defaultValue) {
   return /^#[0-9a-f]{6}$/.test(s) ? s : defaultValue;
 }
 
-function validate(c) {
+export function validate(c) {
   const errors = [];
   if (!c.haUrl) errors.push('haUrl is required (set HA_URL or run as an add-on)');
   if (!c.haToken) errors.push('haToken is required (set HA_TOKEN or run as an add-on so SUPERVISOR_TOKEN is provided)');

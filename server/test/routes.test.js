@@ -124,6 +124,10 @@ test('GET /api/config defaults every visual toggle off', async () => {
     assert.deepEqual(body, {
       mode: 'addon',
       managed: true,
+      haUrl: 'http://supervisor/core',
+      haUrlSet: true,
+      haTokenSet: true,
+      landscape: false,
       displayMode: 'now_showing',
       backend: 'plex',
       player: '',

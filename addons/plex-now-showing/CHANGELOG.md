@@ -3,6 +3,45 @@
 All notable changes to the Now Showing add-on will be documented here.
 The project follows [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Added
+- Server-side persistent setup overlay (closes #98). The in-app setup
+  overlay (gear icon / `#setup`) is now a real persistent configuration
+  editor: every relevant field, including TMDB API key + region, HA
+  token, Plex/Radarr/Sonarr URLs and keys, Coming Soon counts, and
+  visual settings, is editable in the overlay and saves server-side via
+  `POST /api/setup`. Values are stored in `/data/overlay.json` on the
+  add-on disk and propagate to every browser, kiosk, and phone on the
+  next page load. No more "configured on Master Panel, blank on the
+  phone" — saving from any device updates them all.
+- New API surface: `GET /api/setup`, `POST /api/setup`,
+  `POST /api/setup/reset`. Secrets are never returned by the server —
+  only `*Set` booleans — and saving a blank secret preserves the
+  existing value so users can edit non-secret fields without re-typing
+  tokens. Reset deletes the overlay file and reverts every device to
+  the add-on/Docker defaults.
+- `/api/config` now also surfaces `haUrl`, `haUrlSet`, `haTokenSet`,
+  and `landscape` so the in-app overlay can prefill non-secret fields
+  consistently across clients.
+
+### Changed
+- Setup overlay now POSTs to the server in add-on/Docker mode instead
+  of writing to `localStorage` only. localStorage is still written as
+  a per-device cache so HACS-only installs (no server) keep working
+  unchanged.
+- Config precedence is now explicit: env / add-on options provide
+  *defaults*, the persistent overlay file *overrides* them where set.
+  Clearing a non-secret overlay field falls back to the env default;
+  the explicit `/api/setup/reset` endpoint wipes the file entirely.
+
+### Fixed
+- TMDB section in the setup overlay no longer leaves the heading
+  orphaned when `/api/config` fails — a fallback hint is shown
+  instead, and TMDB API key + region are now editable from the overlay
+  itself (closes #97). Existing add-on options / Docker env values
+  remain supported as defaults.
+
 ## 2.1.4 - 2026-05-09
 
 ### Fixed

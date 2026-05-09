@@ -19,7 +19,10 @@ Standalone (HACS-only) installs continue to work against the unmodified
 | GET    | `/api`                            | Version + mode + backend + endpoint listing              |
 | GET    | `/api/state`                      | Normalised now-playing payload (3 s TTL cache)          |
 | GET    | `/api/coming-soon`                | Radarr/Sonarr upcoming items for Coming Soon mode       |
-| GET    | `/api/config`                     | Browser-safe runtime flags (visual toggles)              |
+| GET    | `/api/config`                     | Browser-safe runtime flags (visual toggles + non-secret summary) |
+| GET    | `/api/setup`                      | Effective setup state (incl. `*Set` booleans for secrets) |
+| POST   | `/api/setup`                      | Persist overlay-edited settings to `/data/overlay.json` |
+| POST   | `/api/setup/reset`                | Delete the overlay file → revert to env/options defaults |
 | GET    | `/api/night-mode`                 | `{configured, on}` for the optional night-mode HA entity |
 | GET    | `/api/media-info/:ratingKey`      | Plex metadata for the info panel (10 min TTL cache)      |
 | GET    | `/healthz`                        | Liveness probe (doesn't call upstream)                   |
@@ -41,6 +44,24 @@ For HA Container users running via Docker Compose. Set:
 |---------|----------|-------|
 | `HA_URL`   | yes | e.g. `https://ha.example.com:8123` (trailing slash ok) |
 | `HA_TOKEN` | yes | Long-lived access token |
+
+## Persistent overlay configuration (#98)
+
+The in-app setup overlay (gear icon / `#setup`) is a real persistent
+configuration editor. POST /api/setup writes to a JSON file at
+`/data/overlay.json` (override with `OVERLAY_CONFIG_PATH`) and the next
+GET reflects the saved values across every browser, kiosk, and phone.
+
+**Precedence**: env / add-on options form the *defaults*; the overlay file
+*overrides* them where set. Clearing a non-secret field in the overlay
+falls back to the env default. Saving a blank **secret** preserves the
+existing value (so users can edit non-secret fields without re-typing
+tokens). `POST /api/setup/reset` deletes the overlay file completely.
+
+**Secret safety**: the server never returns saved secrets. `/api/config`
+and `/api/setup` only surface a `*Set` boolean per secret (e.g.
+`comingSoon.tmdb.apiKeySet: true`). Secrets are written to
+`/data/overlay.json` on the add-on disk and never appear in HTTP responses.
 
 ## All environment variables
 
@@ -95,6 +116,7 @@ For HA Container users running via Docker Compose. Set:
 | `VISUAL_MARQUEE_BG_COLOR` | _empty_ | Optional `#RRGGBB` marquee background/curtain override. Empty uses the active theme |
 | `VISUAL_CORNER_RADIUS_PX` | `0` | Inner marquee, poster, and info-panel corner radius in px, clamped 0-48 |
 | `STATIC_DIR` | `../www` | Override where `now_showing.html` is served from |
+| `OVERLAY_CONFIG_PATH` | `/data/overlay.json` | Path to the persistent overlay-config JSON (#98) |
 
 ## Local development
 

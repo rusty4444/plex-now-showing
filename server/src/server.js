@@ -12,7 +12,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
-import { loadConfig } from './config.js';
+import { loadConfig, validate as validateRuntime } from './config.js';
 import { createCache } from './cache.js';
 import { createHaClient } from './ha.js';
 import { createSwitcher, parseKiosks } from './switcher.js';
@@ -25,13 +25,41 @@ import { artworkRoute } from './routes/artwork.js';
 import { plexArtRoute } from './routes/plexArt.js';
 import { nightModeRoute } from './routes/nightMode.js';
 import { comingSoonRoute } from './routes/comingSoon.js';
+import { setupRoute } from './routes/setup.js';
+import { createOverlayStore, applyOverlay } from './overlayStore.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8'));
 
-export function createApp({ config, haClient }) {
+export function createApp({ config, haClient, overlayStore, baseConfig }) {
   const app = express();
   app.disable('x-powered-by');
+
+  // The setup route needs the *env-only* baseline so it can re-merge the
+  // overlay from scratch on every save (otherwise clearing an overlay key
+  // would fall back to a previously-overlaid value, not env defaults).
+  // Tests that don't supply baseConfig are env-only, so cloning `config`
+  // works there too.
+  const baseline = baseConfig
+    ? JSON.parse(JSON.stringify(baseConfig))
+    : JSON.parse(JSON.stringify(config));
+  const store = overlayStore || createOverlayStore();
+  // If the caller didn't pre-merge the overlay, do it here so first-request
+  // state reflects the saved overlay even in tests / programmatic setups.
+  // (In direct-run mode, the boot path has already done this; the read+apply
+  // is idempotent, so doing it again is harmless.)
+  try {
+    const persisted = store.read();
+    if (persisted && Object.keys(persisted).length > 0) {
+      const merged = applyOverlay(baseline, persisted);
+      Object.assign(config, merged);
+      config.comingSoon = { ...(merged.comingSoon || {}) };
+      config.comingSoon.tmdb = { ...((merged.comingSoon && merged.comingSoon.tmdb) || {}) };
+      config.visual = { ...(merged.visual || {}) };
+    }
+  } catch (err) {
+    console.warn(`[overlay] failed to apply persisted overlay: ${err.message}`);
+  }
 
   // Optional shared-secret header — only enforced if PROXY_SECRET is set.
   if (config.proxySecret) {
@@ -67,6 +95,7 @@ export function createApp({ config, haClient }) {
   app.use(rootRoute({ config, version: pkg.version }));
   app.use(healthzRoute({ config, version: pkg.version }));
   app.use(configRoute({ config }));
+  app.use(setupRoute({ baseConfig: baseline, liveConfig: config, store }));
   app.use(stateRoute({ haClient, cache: stateCache, config }));
   app.use(mediaInfoRoute({ cache: mediaInfoCache, config }));
   app.use(artworkRoute({ config }));
@@ -87,13 +116,29 @@ export function createApp({ config, haClient }) {
 // Boot when run directly (node src/server.js), not when imported by tests.
 const isDirectRun = import.meta.url === `file://${process.argv[1]}`;
 if (isDirectRun) {
-  const { config, errors } = loadConfig(process.env);
+  // Load env defaults, then merge any persisted overlay config on top before
+  // validating. This means a user who saved a working HA token from the
+  // setup overlay won't get blocked at boot if the env var was left blank.
+  const { config: envConfig } = loadConfig(process.env);
+  // Keep an env-only snapshot to pass through as `baseConfig` so the setup
+  // route always re-merges from a clean baseline.
+  const baseConfig = JSON.parse(JSON.stringify(envConfig));
+  const overlayStore = createOverlayStore();
+  let overlay = {};
+  try { overlay = overlayStore.read() || {}; } catch (_) { overlay = {}; }
+  const effective = applyOverlay(baseConfig, overlay);
+  Object.assign(envConfig, effective);
+  envConfig.comingSoon = { ...(effective.comingSoon || {}) };
+  envConfig.comingSoon.tmdb = { ...((effective.comingSoon && effective.comingSoon.tmdb) || {}) };
+  envConfig.visual = { ...(effective.visual || {}) };
+  const config = envConfig;
+  const errors = validateRuntime(config);
   if (errors.length > 0) {
     for (const e of errors) console.error(`[config] ${e}`);
     process.exit(1);
   }
   const haClient = createHaClient({ haUrl: config.haUrl, haToken: config.haToken });
-  const app = createApp({ config, haClient });
+  const app = createApp({ config, haClient, overlayStore, baseConfig });
 
   // Optional Fully Kiosk auto-switcher (#48).
   if (config.switcherEnabled) {
