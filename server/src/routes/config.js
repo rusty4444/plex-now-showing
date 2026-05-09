@@ -3,6 +3,13 @@
 // Only ships non-sensitive values. Tokens and internal settings (TTLs, cache,
 // kiosk URLs) are deliberately excluded. Visual toggles let the frontend
 // conditionally render new v2 UI without a rebuild.
+//
+// #95 — also surfaces the canonical setup state (server mode, configured
+// URLs, plex username, secret-set flags) so the in-app setup overlay can
+// show what the add-on/server is actually using rather than relying on a
+// per-browser localStorage copy. Secret values themselves are never
+// returned; only an `*Set` boolean. The frontend uses these to render a
+// "managed by add-on" read-only view.
 
 import { Router } from 'express';
 
@@ -14,9 +21,22 @@ export function configRoute({ config }) {
     // browsers on the wall might live for days. Let them re-read on reload.
     res.set('Cache-Control', 'no-store');
     res.json({
+      // #95 — `mode` lets the frontend tell add-on/Docker installs (where
+      // the server is the source of truth for setup) apart from HACS-only
+      // installs (where there is no server, so localStorage stays canonical
+      // per-tablet).
+      mode: config.mode || 'standalone',
+      managed: !!config.haToken, // server already has a working HA token
       displayMode: config.displayMode || 'now_showing',
       backend: config.backend || 'plex',
       player: config.player || '',
+      // Plex metadata API surfaces (URL non-sensitive; token boolean only).
+      plex: {
+        urlSet: !!config.plexUrl,
+        url: config.plexUrl || '',
+        tokenSet: !!config.plexToken,
+        username: config.plexUsername || '',
+      },
       comingSoon: {
         title: config.comingSoon?.title || 'Coming Soon',
         enabled: !!((config.comingSoon?.radarrUrl && config.comingSoon?.radarrApiKey)
@@ -27,11 +47,18 @@ export function configRoute({ config }) {
         daysOffset: config.comingSoon?.daysOffset ?? 0,
         lookaheadDays: config.comingSoon?.lookaheadDays ?? 90,
         imageType: config.comingSoon?.imageType || 'poster',
+        // #95 — Radarr/Sonarr URLs are non-secret (typically a LAN IP); the
+        // API keys stay server-side and we only surface a boolean.
+        radarrUrl: config.comingSoon?.radarrUrl || '',
+        radarrApiKeySet: !!config.comingSoon?.radarrApiKey,
+        sonarrUrl: config.comingSoon?.sonarrUrl || '',
+        sonarrApiKeySet: !!config.comingSoon?.sonarrApiKey,
         // #91 — surface whether TMDB enrichment is wired up so the kiosk
         // setup UI can light up a status pill ("TMDB region: AU"). The
         // token itself stays server-side.
         tmdb: {
           enabled: !!config.comingSoon?.tmdb?.apiKey,
+          apiKeySet: !!config.comingSoon?.tmdb?.apiKey,
           region: config.comingSoon?.tmdb?.region || 'AU',
         },
       },
