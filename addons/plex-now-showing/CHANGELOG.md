@@ -3,7 +3,7 @@
 All notable changes to the Now Showing add-on will be documented here.
 The project follows [Semantic Versioning](https://semver.org/).
 
-## Unreleased
+## 2.1.4 - 2026-05-09
 
 ### Fixed
 - Add-on setup state now persists across browsers, devices, and the HA
