@@ -122,9 +122,17 @@ test('GET /api/config defaults every visual toggle off', async () => {
     assert.equal(resp.headers.get('cache-control'), 'no-store');
     const body = await resp.json();
     assert.deepEqual(body, {
+      mode: 'addon',
+      managed: true,
       displayMode: 'now_showing',
       backend: 'plex',
       player: '',
+      plex: {
+        urlSet: true,
+        url: 'https://plex.example:32400',
+        tokenSet: true,
+        username: 'rusty',
+      },
       comingSoon: {
         title: 'Coming Soon',
         enabled: false,
@@ -134,8 +142,13 @@ test('GET /api/config defaults every visual toggle off', async () => {
         daysOffset: 0,
         lookaheadDays: 90,
         imageType: 'poster',
+        radarrUrl: '',
+        radarrApiKeySet: false,
+        sonarrUrl: '',
+        sonarrApiKeySet: false,
         tmdb: {
           enabled: false,
+          apiKeySet: false,
           region: 'AU',
         },
       },
@@ -161,6 +174,145 @@ test('GET /api/config defaults every visual toggle off', async () => {
         cornerRadiusPx: 0,
       },
     });
+  } finally { server.close(); }
+});
+
+// #95 — server-side config must survive per-browser localStorage swaps.
+// When configured with Radarr/TMDB tokens, /api/config exposes the URLs
+// and a `*Set` boolean for the secret without ever leaking the secret
+// itself, so the in-app setup form can render canonical state on a fresh
+// browser without the user having to re-enter anything.
+test('GET /api/config surfaces canonical setup state without leaking secrets', async () => {
+  const haClient = { getStates: async () => haStates };
+  const { server, url } = await startApp(
+    baseConfig({
+      mode: 'addon',
+      backend: 'jellyfin',
+      player: 'media_player.jellyfin_living_room',
+      plexUrl: 'https://plex.example:32400',
+      plexToken: 'super-secret-plex-token',
+      plexUsername: 'rusty',
+      comingSoon: {
+        title: 'Coming Soon',
+        radarrUrl: 'http://radarr.lan:7878',
+        radarrApiKey: 'super-secret-radarr-key',
+        sonarrUrl: 'http://sonarr.lan:8989',
+        sonarrApiKey: 'super-secret-sonarr-key',
+        moviesCount: 5,
+        showsCount: 5,
+        cycleInterval: 8,
+        daysOffset: 0,
+        lookaheadDays: 90,
+        imageType: 'poster',
+        tmdb: { apiKey: 'super-secret-tmdb-key', region: 'GB' },
+      },
+    }),
+    haClient,
+  );
+  try {
+    const body = await fetch(`${url}/api/config`).then(r => r.json());
+    // Canonical state surfaces correctly.
+    assert.equal(body.mode, 'addon');
+    assert.equal(body.managed, true);
+    assert.equal(body.backend, 'jellyfin');
+    assert.equal(body.player, 'media_player.jellyfin_living_room');
+    assert.equal(body.plex.url, 'https://plex.example:32400');
+    assert.equal(body.plex.urlSet, true);
+    assert.equal(body.plex.tokenSet, true);
+    assert.equal(body.plex.username, 'rusty');
+    assert.equal(body.comingSoon.radarrUrl, 'http://radarr.lan:7878');
+    assert.equal(body.comingSoon.radarrApiKeySet, true);
+    assert.equal(body.comingSoon.sonarrUrl, 'http://sonarr.lan:8989');
+    assert.equal(body.comingSoon.sonarrApiKeySet, true);
+    assert.equal(body.comingSoon.tmdb.enabled, true);
+    assert.equal(body.comingSoon.tmdb.apiKeySet, true);
+    assert.equal(body.comingSoon.tmdb.region, 'GB');
+    // Secrets must never appear anywhere in the response.
+    const dump = JSON.stringify(body);
+    for (const secret of [
+      'super-secret-plex-token',
+      'super-secret-radarr-key',
+      'super-secret-sonarr-key',
+      'super-secret-tmdb-key',
+    ]) {
+      assert.equal(dump.includes(secret), false, `secret ${secret} leaked into /api/config`);
+    }
+  } finally { server.close(); }
+});
+
+// #95 — when no secrets are set the *Set booleans are false. This is what
+// the frontend uses to render "needs configuration" hints (vs "configured"
+// when true), so the inverted case matters too.
+test('GET /api/config reports *Set booleans as false when secrets are blank', async () => {
+  const haClient = { getStates: async () => haStates };
+  const { server, url } = await startApp(
+    baseConfig({
+      plexUrl: '',
+      plexToken: '',
+      plexUsername: '',
+    }),
+    haClient,
+  );
+  try {
+    const body = await fetch(`${url}/api/config`).then(r => r.json());
+    assert.equal(body.plex.urlSet, false);
+    assert.equal(body.plex.tokenSet, false);
+    assert.equal(body.plex.username, '');
+    assert.equal(body.comingSoon.radarrApiKeySet, false);
+    assert.equal(body.comingSoon.sonarrApiKeySet, false);
+    assert.equal(body.comingSoon.tmdb.apiKeySet, false);
+    assert.equal(body.comingSoon.tmdb.enabled, false);
+  } finally { server.close(); }
+});
+
+// #95 — a fresh browser opening the kiosk on a different origin must be
+// able to read all canonical setup fields from /api/config alone, so the
+// in-app setup form is never rendered "blank" just because that tablet's
+// localStorage hasn't been seeded. This is the regression we want to
+// prevent.
+test('GET /api/config returns full canonical state on a fresh request (no cookies / no auth)', async () => {
+  const haClient = { getStates: async () => haStates };
+  const { server, url } = await startApp(
+    baseConfig({
+      backend: 'plex',
+      plexUrl: 'https://plex.example:32400',
+      plexUsername: 'rusty',
+      comingSoon: {
+        title: 'My Coming Soon',
+        radarrUrl: 'http://radarr.lan:7878',
+        radarrApiKey: 'rk',
+        sonarrUrl: '',
+        sonarrApiKey: '',
+        moviesCount: 7,
+        showsCount: 3,
+        cycleInterval: 12,
+        daysOffset: 0,
+        lookaheadDays: 60,
+        imageType: 'fanart',
+        tmdb: { apiKey: 'tk', region: 'US' },
+      },
+    }),
+    haClient,
+  );
+  try {
+    // No headers at all — simulates the very first phone hitting the
+    // ingress URL or the LAN URL without any prior state.
+    const body = await fetch(`${url}/api/config`).then(r => r.json());
+    // Connection
+    assert.equal(body.backend, 'plex');
+    assert.equal(body.plex.url, 'https://plex.example:32400');
+    assert.equal(body.plex.username, 'rusty');
+    // Coming Soon
+    assert.equal(body.comingSoon.title, 'My Coming Soon');
+    assert.equal(body.comingSoon.radarrUrl, 'http://radarr.lan:7878');
+    assert.equal(body.comingSoon.moviesCount, 7);
+    assert.equal(body.comingSoon.showsCount, 3);
+    assert.equal(body.comingSoon.cycleInterval, 12);
+    assert.equal(body.comingSoon.lookaheadDays, 60);
+    assert.equal(body.comingSoon.imageType, 'fanart');
+    // TMDB
+    assert.equal(body.comingSoon.tmdb.enabled, true);
+    assert.equal(body.comingSoon.tmdb.region, 'US');
   } finally { server.close(); }
 });
 

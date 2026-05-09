@@ -3,6 +3,57 @@
 All notable changes to the Now Showing add-on will be documented here.
 The project follows [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Fixed
+- Add-on setup state now persists across browsers, devices, and the HA
+  app (closes #95). The in-app setup overlay was previously the only
+  mechanism for configuring connection / Coming Soon / TMDB values and
+  it stored everything in per-tablet `localStorage`, so a phone or HA
+  app opening the kiosk on a different origin saw blank fields even
+  though the operator had filled them in on Master Panel. The canonical
+  setup now lives in the add-on **Configuration** tab (or Docker env
+  vars). The unified server reads it once at boot and exposes a
+  non-secret summary at `GET /api/config`; every browser hits the same
+  endpoint, so a fresh phone shows the same configured state without
+  any per-device re-entry.
+- The setup overlay now renders a "Settings are managed by the Now
+  Showing add-on" banner in unified-server mode with a read-only
+  summary of what the server actually loaded (mode, display mode,
+  backend/player, Plex/Radarr/Sonarr URLs, TMDB region + configured
+  status). Connection / Coming Soon password fields are still hidden
+  for security; the banner shows a `(key set)` / `(token set)` marker
+  instead of the secret. localStorage values continue to work as
+  per-device overrides for visual preferences.
+- The first-run setup auto-open is now suppressed in unified-server
+  mode — the server already has a working HA token, so a brand-new
+  phone is no longer forced through a setup form pretending to need
+  credentials.
+- Save-button validation no longer demands an HA / Radarr / Sonarr
+  token in unified-server mode (the server already has them).
+
+### Added
+- `GET /api/config` now exposes `mode`, `managed`, the canonical
+  Plex / Radarr / Sonarr URLs, plex username, and `*Set` booleans for
+  every secret. No secrets are returned. This is what the in-app
+  setup overlay uses to render the read-only summary.
+- The setup overlay's Coming Soon section gained an inline TMDB
+  status panel showing whether the server has a TMDB API key
+  configured and which region is active (driven by the existing
+  `tmdb_api_key` / `tmdb_region` add-on options). This is a status
+  display only — the API key remains a server-side option in the
+  add-on Configuration tab (or `TMDB_API_KEY` env var); the kiosk
+  frontend never calls TMDB directly.
+
+### Migration
+- No action required for the canonical Connection / Coming Soon /
+  TMDB values: they are already read from add-on options. If you
+  previously filled in the in-app setup overlay and the values only
+  appeared on one tablet, copy those same values into **Settings →
+  Add-ons → Now Showing → Configuration** once and every device will
+  pick them up automatically. The per-device localStorage overrides
+  are left untouched and continue to work.
+
 ## 2.1.3 - 2026-05-09
 
 ### Added

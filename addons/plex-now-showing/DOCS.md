@@ -103,6 +103,31 @@ writes the same per-tablet `pns.*` keys the kiosk reads at runtime.
 In the Home Assistant add-on, the setup overlay opens at the top and scrolls
 inside Ingress, so all controls remain reachable on smaller tablet or desktop
 iframes without zooming out.
+
+### Where setup lives (server-managed vs per-device) — #95
+
+When you install the add-on (or run the unified server in Docker), the
+**canonical setup** lives in **Settings → Add-ons → Now Showing →
+Configuration** (or, for Docker, your `docker-compose.yml` / `.env`). The
+server reads those values once at boot and exposes a non-secret summary at
+`GET /api/config` so every tablet, phone, kiosk, or HA app shares the same
+values, regardless of how the kiosk was opened.
+
+The in-app setup overlay (the gear icon on the live display, or `#setup`)
+is now a **per-device override**: it stores values in this browser's
+`localStorage` so a single tablet can pin display preferences (theme,
+backdrops, frame style, etc.) without affecting the rest of the fleet. It
+is **not** the source of truth for connection details, Coming Soon, or
+TMDB. When you open the overlay on a fresh phone you'll see a
+"Settings are managed by the Now Showing add-on" banner with a read-only
+summary of what the server has loaded.
+
+If you upgraded from v2.1.3 or earlier and the kiosk used to look
+configured on Master Panel but blank on your phone, that's because v2.1.3
+wrote setup values only to each browser's `localStorage`. Re-save the
+values once in **Settings → Add-ons → Now Showing → Configuration** and
+every device will pick them up automatically — no per-tablet re-entry
+needed.
 Advanced users can still set `pns.visualProgressBar=true` /
 `pns.visualRatingsBadges=true` / `pns.visualGenreChips=true` /
 `pns.visualInfoPanelMode=on_pause` / `pns.visualFrameStyle=gold-line` /

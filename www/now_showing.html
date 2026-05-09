@@ -1575,7 +1575,35 @@
   <div class="setup-overlay" id="setupOverlay">
     <form class="setup-card" id="setupForm" autocomplete="off" onsubmit="return false;">
       <h1>Now Showing &mdash; Setup</h1>
-      <div class="setup-sub">Values are saved to this device's localStorage. Nothing is sent anywhere else.</div>
+      <div class="setup-sub" id="setupSub">Values are saved to this device's localStorage. Nothing is sent anywhere else.</div>
+
+      <!--
+        #95 — When the page is served by the unified add-on / Docker server,
+        the canonical setup lives in add-on options / docker env, not in this
+        per-tablet localStorage. Show a banner pointing the user at the
+        Configuration tab, plus a read-only summary of what the server
+        actually loaded, so a phone or kiosk on a different origin doesn't
+        appear "blank" just because that browser hasn't filled the form
+        locally.
+      -->
+      <div id="setupServerBanner"
+           style="display:none;margin:0 0 14px;padding:12px 14px;border-radius:6px;
+                  border:1px solid #6b5520;background:#221a08;color:#e6d8a6;
+                  font-size:0.85rem;line-height:1.4;">
+        <strong style="color:var(--accent-light);display:block;margin-bottom:4px;">
+          Settings are managed by the Now Showing add-on
+        </strong>
+        <span id="setupServerBannerText">
+          Connection, Coming Soon, and Plex metadata values come from the
+          Home Assistant add-on Configuration tab (or your Docker
+          <code>.env</code>). Changes you make below are remembered on this
+          device only and override the server values for this browser.
+          Update the add-on config to apply changes everywhere.
+        </span>
+        <div id="setupServerBannerSummary"
+             style="margin-top:8px;font-family:'Roboto Mono',monospace;font-size:0.78rem;
+                    color:#bfa75e;white-space:pre-wrap;"></div>
+      </div>
 
       <div class="setup-tabs" role="tablist" aria-label="Setup sections">
         <button class="setup-tab active" id="setupTabConnection" type="button" role="tab" aria-selected="true" aria-controls="setupPanelConnection" data-setup-tab="connection">Connection</button>
@@ -1691,6 +1719,28 @@
               <label for="cfgComingSoonLookaheadDays">Look-ahead Days</label>
               <input id="cfgComingSoonLookaheadDays" type="number" min="1" max="365" step="1" inputmode="numeric" autocomplete="off">
               <div class="hint">Forward window for upcoming releases. Default 90.</div>
+            </div>
+          </div>
+
+          <!--
+            #91 / #95 — TMDB enrichment. Server-side only: the kiosk
+            frontend never calls TMDB directly, so this is a status panel,
+            not an input. The enabled/region values come from /api/config;
+            the API key itself stays server-side.
+          -->
+          <div class="setup-section-title" style="margin-top:14px;">TMDB enrichment (server-side)</div>
+          <div class="setup-field" id="cfgTmdbStatusField">
+            <div id="cfgTmdbStatus" class="hint" style="color:var(--accent-light);">
+              TMDB fallback status will appear when the unified server is reachable.
+            </div>
+            <div class="hint" style="margin-top:6px;">
+              Configure <code>tmdb_api_key</code> and <code>tmdb_region</code>
+              (default <code>AU</code>) in the Home Assistant add-on
+              Configuration tab, or as <code>TMDB_API_KEY</code> /
+              <code>TMDB_REGION</code> env vars on the Docker container.
+              When set, TMDB fills in digital/physical/theatrical release
+              dates Radarr's calendar is missing. Leave the API key blank
+              to disable the fallback completely.
             </div>
           </div>
         </details>
@@ -2796,6 +2846,104 @@
         syncCornerRadiusField();
         initSetupAutomationLinks();
       } catch (_) { /* storage unavailable */ }
+      // #95 — overlay the canonical server-side config so the form doesn't
+      // look "blank" on a phone that has never visited this origin before.
+      // Async on purpose: it shouldn't block the local-storage values
+      // showing instantly.
+      void hydrateSetupFromServer();
+    }
+
+    // #95 — fetch /api/config (already used for visual toggles) and use it
+    // to drive the in-app setup overlay's "managed by add-on" banner plus
+    // the TMDB status pill. Fields the user has saved locally always win
+    // (they are the per-tablet override) — server values are only used to
+    // fill blanks and to render an informational read-only summary.
+    async function hydrateSetupFromServer() {
+      const banner = document.getElementById('setupServerBanner');
+      const summary = document.getElementById('setupServerBannerSummary');
+      const sub = document.getElementById('setupSub');
+      const tmdbStatus = document.getElementById('cfgTmdbStatus');
+      const tmdbField = document.getElementById('cfgTmdbStatusField');
+      let body = null;
+      try {
+        const resp = await fetch('/api/config', { cache: 'no-store' });
+        if (!resp.ok) throw new Error('http ' + resp.status);
+        body = await resp.json();
+      } catch (_) {
+        // No unified server (HACS-only install) — keep the original
+        // localStorage-only messaging and hide the server banner.
+        if (banner) banner.style.display = 'none';
+        if (tmdbField) tmdbField.style.display = 'none';
+        return;
+      }
+      if (!body || typeof body !== 'object') return;
+      const isAddon = body.mode === 'addon';
+      const isServer = isAddon || body.mode === 'standalone';
+      if (banner && isServer) {
+        banner.style.display = 'block';
+        if (sub) {
+          sub.textContent = isAddon
+            ? 'Connection, Coming Soon, and TMDB values are loaded from the add-on Configuration tab. Display settings can be overridden per-device below.'
+            : 'Connection, Coming Soon, and TMDB values are loaded from the server (Docker .env / env vars). Display settings can be overridden per-device below.';
+        }
+      }
+      if (summary) {
+        const cs = body.comingSoon || {};
+        const plex = body.plex || {};
+        const tmdb = (cs.tmdb || {});
+        const lines = [];
+        lines.push(`mode: ${body.mode || 'standalone'}`);
+        lines.push(`display: ${body.displayMode || 'now_showing'}`);
+        lines.push(`backend: ${body.backend || 'plex'}${body.player ? ' (' + body.player + ')' : ''}`);
+        if (plex.urlSet) lines.push(`plex: ${plex.url}${plex.tokenSet ? ' (token set)' : ' (no token)'}${plex.username ? ' user=' + plex.username : ''}`);
+        if (cs.radarrUrl) lines.push(`radarr: ${cs.radarrUrl}${cs.radarrApiKeySet ? ' (key set)' : ' (no key)'}`);
+        if (cs.sonarrUrl) lines.push(`sonarr: ${cs.sonarrUrl}${cs.sonarrApiKeySet ? ' (key set)' : ' (no key)'}`);
+        lines.push(`tmdb: ${tmdb.enabled ? 'configured' : 'not configured'}, region=${tmdb.region || 'AU'}`);
+        summary.textContent = lines.join('\n');
+      }
+      if (tmdbStatus) {
+        const tmdb = (body.comingSoon && body.comingSoon.tmdb) || {};
+        if (tmdb.enabled) {
+          tmdbStatus.innerHTML = `✅ TMDB API key is configured on the server. Region: <strong>${(tmdb.region || 'AU').toUpperCase()}</strong>.`;
+        } else {
+          tmdbStatus.innerHTML = `⚠️ TMDB fallback is <strong>not configured</strong>. Add <code>tmdb_api_key</code> to the add-on options (or <code>TMDB_API_KEY</code> env var) to enable.`;
+        }
+      }
+      // Fill any blank fields from canonical server values so a brand-new
+      // browser doesn't render the form as empty just because localStorage
+      // is fresh. We only fill blanks — anything the user has saved locally
+      // is treated as a deliberate per-device override and left alone.
+      const fillIfBlank = (id, value) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (typeof value === 'undefined' || value === null) return;
+        if (el.tagName === 'INPUT' && el.type === 'checkbox') {
+          // Only overwrite when localStorage doesn't have an explicit value.
+          return;
+        }
+        if (!el.value) el.value = String(value);
+      };
+      const cs2 = body.comingSoon || {};
+      const plex2 = body.plex || {};
+      fillIfBlank('cfgDisplayMode', body.displayMode);
+      fillIfBlank('cfgBackend', body.backend);
+      fillIfBlank('cfgPlayer', body.player);
+      fillIfBlank('cfgPlexUrl', plex2.url);
+      fillIfBlank('cfgPlexUsername', plex2.username);
+      fillIfBlank('cfgComingSoonTitle', cs2.title);
+      fillIfBlank('cfgRadarrUrl', cs2.radarrUrl);
+      fillIfBlank('cfgSonarrUrl', cs2.sonarrUrl);
+      if (Number.isFinite(cs2.moviesCount)) fillIfBlank('cfgComingSoonMoviesCount', cs2.moviesCount);
+      if (Number.isFinite(cs2.showsCount)) fillIfBlank('cfgComingSoonShowsCount', cs2.showsCount);
+      if (Number.isFinite(cs2.cycleInterval)) fillIfBlank('cfgComingSoonCycleInterval', cs2.cycleInterval);
+      if (Number.isFinite(cs2.daysOffset)) fillIfBlank('cfgComingSoonDaysOffset', cs2.daysOffset);
+      if (Number.isFinite(cs2.lookaheadDays)) fillIfBlank('cfgComingSoonLookaheadDays', cs2.lookaheadDays);
+      fillIfBlank('cfgComingSoonImageType', cs2.imageType);
+      // Re-run dependent toggles in case we just filled the backend/displayMode.
+      try {
+        syncSetupDisplayModeFields();
+        syncSetupBackendFields();
+      } catch (_) { /* form not ready */ }
     }
 
     function syncSetupBackendFields() {
@@ -3315,8 +3463,18 @@
     function setupSave() {
       const haTok = document.getElementById('cfgHaToken').value.trim();
       const displayMode = readDisplayMode(document.getElementById('cfgDisplayMode')?.value || DISPLAY_MODE);
-      if (!haTok && displayMode !== 'coming_soon') { setupStatus('HA token is required.', 'err'); return; }
-      if (displayMode === 'coming_soon') {
+      // #95 — in unified-server mode (add-on / Docker) the server already
+      // has a working HA token. The browser never needs one. Skip the
+      // "HA token is required" guard so a phone or kiosk on a different
+      // origin can still save per-device display preferences without
+      // re-entering credentials. Same logic for Radarr/Sonarr in Coming
+      // Soon mode: the server's API keys are authoritative.
+      const serverManaged = !!SERVER_MODE;
+      if (!serverManaged && !haTok && displayMode !== 'coming_soon') {
+        setupStatus('HA token is required.', 'err');
+        return;
+      }
+      if (!serverManaged && displayMode === 'coming_soon') {
         const hasSource = (document.getElementById('cfgRadarrUrl')?.value.trim()
           && document.getElementById('cfgRadarrApiKey')?.value.trim())
           || (document.getElementById('cfgSonarrUrl')?.value.trim()
@@ -3453,7 +3611,10 @@
       });
 
       // Show the gear icon on the live display whenever we have any saved
-      // config — it's the escape hatch to reopen setup.
+      // config — it's the escape hatch to reopen setup. #95: also show it
+      // on first-run unified-server mode tablets so the user can still
+      // reach setup without typing #setup, since auto-open is suppressed
+      // when the server is authoritative.
       const hasSavedConfig = (() => {
         try {
           return !!(window.localStorage.getItem('pns.haToken')
@@ -3462,14 +3623,20 @@
       })();
       if (gear && hasSavedConfig) gear.style.display = 'block';
 
-      // First-run: if we have no HA token at all and no config script supplied
-      // one, auto-open setup. Also honour explicit `#setup` in the hash.
+      // First-run: if we have no HA token at all and no config script
+      // supplied one, auto-open setup. Honour explicit `#setup` in the hash
+      // either way. #95 — but skip the auto-open in unified-server mode:
+      // the server has its own HA token, so a brand-new browser shouldn't
+      // be forced through a setup form pretending to need credentials.
       const forceSetup = /(^|&)setup(=|&|$)/.test(window.location.hash.replace(/^#/, ''));
-      if (forceSetup || (!HA_TOKEN && DISPLAY_MODE !== 'coming_soon')) {
-        switchSetupTab('connection');
-        populateSetupForm();
-        setupVisible(true);
-      }
+      void serverModeReady.then(() => {
+        if (gear && SERVER_MODE) gear.style.display = 'block';
+        if (forceSetup || (!SERVER_MODE && !HA_TOKEN && DISPLAY_MODE !== 'coming_soon')) {
+          switchSetupTab('connection');
+          populateSetupForm();
+          setupVisible(true);
+        }
+      });
     }
 
     if (document.readyState === 'loading') {
