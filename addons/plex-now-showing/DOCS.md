@@ -43,7 +43,7 @@ probe of `/api`) and switches to `/api/state`. Plex-only metadata calls use
 | `coming_soon_shows_count` | `5` | Number of Sonarr series to include. |
 | `coming_soon_cycle_interval` | `8` | Seconds each upcoming title stays on screen. |
 | `coming_soon_days_offset` | `0` | Include releases from this many days in the past. |
-| `coming_soon_lookahead_days` | `90` | Forward window (days) for upcoming releases. Radarr considers `digitalRelease`, `physicalRelease`, and `inCinemas`; the earliest qualifying date inside the window wins. |
+| `coming_soon_lookahead_days` | `90` | Forward window (days) for upcoming releases. Radarr eligibility accepts `digitalRelease`, `physicalRelease`, or `inCinemas`. The displayed footer date prefers the earliest qualifying home-release date; cinema-only items are labelled `In cinemas: <date>` so the footer is not mistaken for home availability. |
 | `coming_soon_image_type` | `poster` | `poster` or `fanart`. |
 | `tmdb_api_key` | _empty_ | Optional TMDB API key (v3 or v4). When set, fills in digital/physical/theatrical release dates Radarr's calendar is missing. Empty disables the fallback completely. |
 | `tmdb_region` | `AU` | ISO 3166-1 country code used to select region-specific release dates from TMDB. Falls back to whatever region TMDB lists first if there's no match. |
