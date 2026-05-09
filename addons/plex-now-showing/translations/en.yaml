@@ -94,6 +94,26 @@ configuration:
   coming_soon_image_type:
     name: Coming Soon image type
     description: Use portrait poster art or landscape fanart/backdrop art.
+  tmdb_api_key:
+    name: TMDB API key (optional)
+    description: >-
+      Optional The Movie Database API key used to fill in release dates
+      Radarr's calendar is missing. Both v3 keys and v4 read-tokens work.
+      Leave empty to keep Coming Soon fully Radarr-driven; nothing else
+      changes if you do. Sign up at https://www.themoviedb.org/settings/api.
+  tmdb_region:
+    name: TMDB region
+    description: >-
+      ISO 3166-1 country code (e.g. AU, US, GB) used to pick which regional
+      release dates TMDB returns. Defaults to AU. If TMDB has no entry for
+      this region we silently fall back to whatever region TMDB lists first
+      so Coming Soon still has something to show.
+  tmdb_ttl_ms:
+    name: TMDB cache TTL (ms)
+    description: >-
+      How long to cache TMDB release-date lookups before re-querying. The
+      default 21600000 (6 hours) is well within TMDB's daily quota even on
+      large libraries.
   proxy_secret:
     name: Proxy secret (optional)
     description: >-

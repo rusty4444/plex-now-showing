@@ -71,6 +71,11 @@ services:
       VISUAL_ACCENT_COLOR: "${VISUAL_ACCENT_COLOR:-}"
       VISUAL_MARQUEE_BG_COLOR: "${VISUAL_MARQUEE_BG_COLOR:-}"
 
+      # ---- Optional TMDB enrichment (#91) ----
+      TMDB_API_KEY: "${TMDB_API_KEY:-}"
+      TMDB_REGION: "${TMDB_REGION:-AU}"
+      TMDB_TTL_MS: "${TMDB_TTL_MS:-21600000}"
+
       # ---- Optional hardening (recommended if exposed off-LAN) ----
       PROXY_SECRET: "${PROXY_SECRET:-}"
       ALLOWED_ORIGINS: "${ALLOWED_ORIGINS:-}"

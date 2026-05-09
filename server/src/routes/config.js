@@ -27,6 +27,13 @@ export function configRoute({ config }) {
         daysOffset: config.comingSoon?.daysOffset ?? 0,
         lookaheadDays: config.comingSoon?.lookaheadDays ?? 90,
         imageType: config.comingSoon?.imageType || 'poster',
+        // #91 — surface whether TMDB enrichment is wired up so the kiosk
+        // setup UI can light up a status pill ("TMDB region: AU"). The
+        // token itself stays server-side.
+        tmdb: {
+          enabled: !!config.comingSoon?.tmdb?.apiKey,
+          region: config.comingSoon?.tmdb?.region || 'AU',
+        },
       },
       visual: {
         progressBar: !!config.visual?.progressBar,

@@ -360,6 +360,9 @@ useful as a Fully Kiosk screensaver URL or as a target for HA automations.
 | Days offset | `coming_soon_days_offset` | `COMING_SOON_DAYS_OFFSET` | `comingSoonDaysOffset` | Include recent past releases |
 | Look-ahead days | `coming_soon_lookahead_days` | `COMING_SOON_LOOKAHEAD_DAYS` | `comingSoonLookaheadDays` | Forward window, default `90`, range `1`–`365`. Radarr eligibility accepts `digitalRelease`, `physicalRelease`, or `inCinemas`. The displayed footer date prefers the earliest qualifying home-release date; cinema-only items are labelled `In cinemas: <date>` so the footer is not mistaken for home availability. |
 | Image type | `coming_soon_image_type` | `COMING_SOON_IMAGE_TYPE` | `comingSoonImageType` | `poster`, `fanart` |
+| TMDB API key | `tmdb_api_key` | `TMDB_API_KEY` | Server only | Optional. When set, fills in digital/physical/theatrical release dates Radarr's calendar is missing. Both v3 keys and v4 read-tokens work. Empty disables the fallback completely. |
+| TMDB region | `tmdb_region` | `TMDB_REGION` | Server only | ISO 3166-1 country code for region-specific dates. Default `AU`. |
+| TMDB cache TTL | `tmdb_ttl_ms` | `TMDB_TTL_MS` | Server only | Cache window for TMDB lookups (ms). Default `21600000` (6 h). |
 
 ### Using Now Showing And Coming Soon Together
 

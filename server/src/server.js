@@ -60,6 +60,9 @@ export function createApp({ config, haClient }) {
   const stateCache = createCache(config.stateTtl);
   const mediaInfoCache = createCache(config.mediaInfoTtl);
   const comingSoonCache = createCache(config.comingSoonTtl);
+  // Long-lived TMDB cache: typed release dates rarely change, and we want
+  // them to outlive a single Coming Soon page refresh.
+  const tmdbCache = createCache(config.tmdbTtl);
 
   app.use(rootRoute({ config, version: pkg.version }));
   app.use(healthzRoute({ config, version: pkg.version }));
@@ -69,7 +72,7 @@ export function createApp({ config, haClient }) {
   app.use(artworkRoute({ config }));
   app.use(plexArtRoute({ config }));
   app.use(nightModeRoute({ haClient, config }));
-  app.use(comingSoonRoute({ cache: comingSoonCache, config }));
+  app.use(comingSoonRoute({ cache: comingSoonCache, tmdbCache, config }));
 
   // Static HTML last so /api/* wins on overlap.
   app.use(express.static(config.staticDir, {

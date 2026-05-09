@@ -4,7 +4,7 @@
 import { Router } from 'express';
 import { fetchComingSoonItems, hasComingSoonSource } from '../comingSoon.js';
 
-export function comingSoonRoute({ cache, config, fetchImpl = globalThis.fetch }) {
+export function comingSoonRoute({ cache, tmdbCache = null, config, fetchImpl = globalThis.fetch }) {
   const r = Router();
 
   r.get('/api/coming-soon', async (_req, res) => {
@@ -15,7 +15,7 @@ export function comingSoonRoute({ cache, config, fetchImpl = globalThis.fetch })
     try {
       let payload = cache.get('coming-soon');
       if (payload === undefined) {
-        const items = await fetchComingSoonItems({ config, fetchImpl });
+        const items = await fetchComingSoonItems({ config, fetchImpl, tmdbCache });
         payload = {
           title: config.comingSoon?.title || 'Coming Soon',
           imageType: config.comingSoon?.imageType || 'poster',

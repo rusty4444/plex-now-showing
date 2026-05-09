@@ -420,3 +420,33 @@ test('switcher is off by default, on requires FULLY_KIOSKS', () => {
   });
   assert.deepEqual(enabled.errors, []);
 });
+
+// ---- TMDB enrichment (#91) ------------------------------------------------
+
+test('TMDB defaults: empty key, AU region, 6h cache TTL', () => {
+  const { config, errors } = loadConfig({ SUPERVISOR_TOKEN: 'x' });
+  assert.equal(config.comingSoon.tmdb.apiKey, '');
+  assert.equal(config.comingSoon.tmdb.region, 'AU');
+  assert.equal(config.tmdbTtl, 21600000);
+  assert.deepEqual(errors, []);
+});
+
+test('TMDB region is normalised to upper-case ISO 3166-1 alpha-2', () => {
+  const { config: lower } = loadConfig({ SUPERVISOR_TOKEN: 'x', TMDB_REGION: 'us' });
+  assert.equal(lower.comingSoon.tmdb.region, 'US');
+
+  const { config: spaced } = loadConfig({ SUPERVISOR_TOKEN: 'x', TMDB_REGION: '  gb  ' });
+  assert.equal(spaced.comingSoon.tmdb.region, 'GB');
+
+  const { config: bogus } = loadConfig({ SUPERVISOR_TOKEN: 'x', TMDB_REGION: 'USA' });
+  assert.equal(bogus.comingSoon.tmdb.region, 'AU'); // falls back to default
+});
+
+test('TMDB API key is preserved verbatim (both v3 and v4 shapes)', () => {
+  const v3 = loadConfig({ SUPERVISOR_TOKEN: 'x', TMDB_API_KEY: 'abcdef0123456789abcdef0123456789' });
+  assert.equal(v3.config.comingSoon.tmdb.apiKey, 'abcdef0123456789abcdef0123456789');
+
+  const v4Token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ4In0.zzz';
+  const v4 = loadConfig({ SUPERVISOR_TOKEN: 'x', TMDB_API_KEY: v4Token });
+  assert.equal(v4.config.comingSoon.tmdb.apiKey, v4Token);
+});

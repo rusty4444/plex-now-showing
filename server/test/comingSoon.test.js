@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { fetchComingSoonItems, formatCountdown, formatReleaseDate } from '../src/comingSoon.js';
+import { createCache } from '../src/cache.js';
 
 function response(body, ok = true, status = 200) {
   return {
@@ -9,6 +10,14 @@ function response(body, ok = true, status = 200) {
     status,
     json: async () => body,
   };
+}
+
+function tmdbReleaseDates({ region = 'AU', digital, physical, theatrical } = {}) {
+  const dates = [];
+  if (theatrical) dates.push({ type: 3, release_date: theatrical });
+  if (digital) dates.push({ type: 4, release_date: digital });
+  if (physical) dates.push({ type: 5, release_date: physical });
+  return { results: [{ iso_3166_1: region, release_dates: dates }] };
 }
 
 test('fetchComingSoonItems interleaves Radarr movies and first Sonarr episode per series', async () => {
@@ -522,4 +531,357 @@ test('configurable lookaheadDays widens the request window', async () => {
   });
   assert.equal(widened.length, 1);
   assert.equal(widened[0].title, 'Far Future');
+});
+
+// ---- TMDB enrichment (#91) ------------------------------------------------
+
+test('TMDB is not called when tmdb_api_key is empty (no enrichment)', async () => {
+  const calls = [];
+  const fetchImpl = async (url) => {
+    calls.push(url);
+    if (url.includes('radarr')) {
+      return response([
+        {
+          id: 100,
+          title: 'No Home Date',
+          tmdbId: 99,
+          inCinemas: '2026-06-01T00:00:00Z',
+          hasFile: false,
+        },
+      ]);
+    }
+    if (url.includes('themoviedb')) {
+      throw new Error('TMDB should not be called when api key is empty');
+    }
+    return response([]);
+  };
+  const items = await fetchComingSoonItems({
+    config: {
+      comingSoon: {
+        radarrUrl: 'http://radarr.local:7878',
+        radarrApiKey: 'rk',
+        moviesCount: 5,
+        showsCount: 5,
+        lookaheadDays: 90,
+      },
+    },
+    fetchImpl,
+    now: new Date('2026-05-02T12:00:00Z'),
+  });
+  assert.equal(items.length, 1);
+  assert.equal(items[0].releaseType, 'cinema');
+  assert.ok(!calls.some(u => u.includes('themoviedb')));
+});
+
+test('TMDB enrichment fills in a missing digital date so the entry becomes home', async () => {
+  const fetchImpl = async (url) => {
+    if (url.includes('radarr')) {
+      return response([
+        {
+          id: 200,
+          title: 'Cinema Now Digital Soon',
+          tmdbId: 9000,
+          inCinemas: '2026-05-15T00:00:00Z',
+          hasFile: false,
+        },
+      ]);
+    }
+    if (url.includes('/movie/9000/release_dates')) {
+      return response(tmdbReleaseDates({
+        region: 'AU',
+        digital: '2026-06-20T00:00:00Z',
+      }));
+    }
+    return response([]);
+  };
+  const [item] = await fetchComingSoonItems({
+    config: {
+      comingSoon: {
+        radarrUrl: 'http://radarr.local:7878',
+        radarrApiKey: 'rk',
+        moviesCount: 5,
+        showsCount: 5,
+        lookaheadDays: 90,
+        tmdb: { apiKey: 'k', region: 'AU' },
+      },
+    },
+    fetchImpl,
+    now: new Date('2026-05-02T12:00:00Z'),
+  });
+  assert.equal(item.releaseType, 'home');
+  assert.equal(item.releaseDate, '2026-06-20T00:00:00Z');
+  assert.equal(item.releaseLabel, '20th of June 2026');
+});
+
+test('TMDB region preference picks AU dates over US dates', async () => {
+  const fetchImpl = async (url) => {
+    if (url.includes('radarr')) {
+      return response([
+        {
+          id: 201,
+          title: 'Region Aware',
+          tmdbId: 9001,
+          hasFile: false,
+        },
+      ]);
+    }
+    if (url.includes('/movie/9001/release_dates')) {
+      return response({
+        results: [
+          {
+            iso_3166_1: 'US',
+            release_dates: [{ type: 4, release_date: '2026-05-30T00:00:00Z' }],
+          },
+          {
+            iso_3166_1: 'AU',
+            release_dates: [{ type: 4, release_date: '2026-06-25T00:00:00Z' }],
+          },
+        ],
+      });
+    }
+    return response([]);
+  };
+  const [item] = await fetchComingSoonItems({
+    config: {
+      comingSoon: {
+        radarrUrl: 'http://radarr.local:7878',
+        radarrApiKey: 'rk',
+        moviesCount: 5,
+        showsCount: 5,
+        lookaheadDays: 90,
+        tmdb: { apiKey: 'k', region: 'AU' },
+      },
+    },
+    fetchImpl,
+    now: new Date('2026-05-02T12:00:00Z'),
+  });
+  assert.equal(item.releaseType, 'home');
+  assert.equal(item.releaseDate, '2026-06-25T00:00:00Z');
+});
+
+test('TMDB falls back to a labelled cinema date when only theatrical is available', async () => {
+  const fetchImpl = async (url) => {
+    if (url.includes('radarr')) {
+      return response([
+        {
+          id: 202,
+          title: 'Theatrical Only',
+          tmdbId: 9002,
+          // Radarr knows nothing about this movie's dates.
+          hasFile: false,
+        },
+      ]);
+    }
+    if (url.includes('/movie/9002/release_dates')) {
+      return response(tmdbReleaseDates({
+        region: 'AU',
+        theatrical: '2026-06-05T00:00:00Z',
+      }));
+    }
+    return response([]);
+  };
+  const [item] = await fetchComingSoonItems({
+    config: {
+      comingSoon: {
+        radarrUrl: 'http://radarr.local:7878',
+        radarrApiKey: 'rk',
+        moviesCount: 5,
+        showsCount: 5,
+        lookaheadDays: 90,
+        tmdb: { apiKey: 'k', region: 'AU' },
+      },
+    },
+    fetchImpl,
+    now: new Date('2026-05-02T12:00:00Z'),
+  });
+  assert.equal(item.releaseType, 'cinema');
+  assert.equal(item.releaseDate, '2026-06-05T00:00:00Z');
+  assert.equal(item.releaseLabel, 'In cinemas: 5th of June 2026');
+});
+
+test('TMDB API failure does not break Coming Soon — Radarr cinema fallback still shows', async () => {
+  const fetchImpl = async (url) => {
+    if (url.includes('radarr')) {
+      return response([
+        {
+          id: 203,
+          title: 'TMDB Down',
+          tmdbId: 9003,
+          inCinemas: '2026-05-20T00:00:00Z',
+          hasFile: false,
+        },
+      ]);
+    }
+    if (url.includes('themoviedb')) {
+      return response({}, false, 500);
+    }
+    return response([]);
+  };
+  const [item] = await fetchComingSoonItems({
+    config: {
+      comingSoon: {
+        radarrUrl: 'http://radarr.local:7878',
+        radarrApiKey: 'rk',
+        moviesCount: 5,
+        showsCount: 5,
+        lookaheadDays: 90,
+        tmdb: { apiKey: 'k', region: 'AU' },
+      },
+    },
+    fetchImpl,
+    logger: { warn() {}, info() {} },
+    now: new Date('2026-05-02T12:00:00Z'),
+  });
+  assert.equal(item.releaseType, 'cinema');
+  assert.equal(item.releaseDate, '2026-05-20T00:00:00Z');
+});
+
+test('TMDB enrichment is skipped for movies with hasFile=true', async () => {
+  let tmdbCalls = 0;
+  const fetchImpl = async (url) => {
+    if (url.includes('radarr')) {
+      return response([
+        {
+          id: 204,
+          title: 'Already Downloaded',
+          tmdbId: 9004,
+          inCinemas: '2026-05-20T00:00:00Z',
+          hasFile: true,
+        },
+      ]);
+    }
+    if (url.includes('themoviedb')) {
+      tmdbCalls += 1;
+      return response(tmdbReleaseDates({ digital: '2026-06-01T00:00:00Z' }));
+    }
+    return response([]);
+  };
+  const items = await fetchComingSoonItems({
+    config: {
+      comingSoon: {
+        radarrUrl: 'http://radarr.local:7878',
+        radarrApiKey: 'rk',
+        moviesCount: 5,
+        showsCount: 5,
+        lookaheadDays: 90,
+        tmdb: { apiKey: 'k', region: 'AU' },
+      },
+    },
+    fetchImpl,
+    now: new Date('2026-05-02T12:00:00Z'),
+  });
+  assert.deepEqual(items, []);
+  assert.equal(tmdbCalls, 0);
+});
+
+test('TMDB enrichment is skipped when Radarr already provides a home release date', async () => {
+  let tmdbCalls = 0;
+  const fetchImpl = async (url) => {
+    if (url.includes('radarr')) {
+      return response([
+        {
+          id: 205,
+          title: 'Already Has Home Date',
+          tmdbId: 9005,
+          digitalRelease: '2026-06-01T00:00:00Z',
+          hasFile: false,
+        },
+      ]);
+    }
+    if (url.includes('themoviedb')) {
+      tmdbCalls += 1;
+      return response(tmdbReleaseDates({ digital: '2026-05-10T00:00:00Z' }));
+    }
+    return response([]);
+  };
+  const [item] = await fetchComingSoonItems({
+    config: {
+      comingSoon: {
+        radarrUrl: 'http://radarr.local:7878',
+        radarrApiKey: 'rk',
+        moviesCount: 5,
+        showsCount: 5,
+        lookaheadDays: 90,
+        tmdb: { apiKey: 'k', region: 'AU' },
+      },
+    },
+    fetchImpl,
+    now: new Date('2026-05-02T12:00:00Z'),
+  });
+  assert.equal(item.releaseType, 'home');
+  assert.equal(item.releaseDate, '2026-06-01T00:00:00Z');
+  assert.equal(tmdbCalls, 0);
+});
+
+test('TMDB lookups are cached across movies in the same Coming Soon refresh', async () => {
+  let tmdbCalls = 0;
+  const fetchImpl = async (url) => {
+    if (url.includes('radarr')) {
+      return response([
+        { id: 1, title: 'A', tmdbId: 7777, inCinemas: '2026-05-15T00:00:00Z', hasFile: false },
+      ]);
+    }
+    if (url.includes('themoviedb')) {
+      tmdbCalls += 1;
+      return response(tmdbReleaseDates({ digital: '2026-06-01T00:00:00Z' }));
+    }
+    return response([]);
+  };
+  const cache = createCache(60000);
+  const args = {
+    config: {
+      comingSoon: {
+        radarrUrl: 'http://radarr.local:7878',
+        radarrApiKey: 'rk',
+        moviesCount: 5,
+        showsCount: 5,
+        lookaheadDays: 90,
+        tmdb: { apiKey: 'k', region: 'AU' },
+      },
+    },
+    fetchImpl,
+    tmdbCache: cache,
+    now: new Date('2026-05-02T12:00:00Z'),
+  };
+  await fetchComingSoonItems(args);
+  await fetchComingSoonItems(args);
+  await fetchComingSoonItems(args);
+  assert.equal(tmdbCalls, 1);
+});
+
+test('TMDB digital date out of look-ahead window is ignored', async () => {
+  const fetchImpl = async (url) => {
+    if (url.includes('radarr')) {
+      return response([
+        {
+          id: 206,
+          title: 'Far Out Digital',
+          tmdbId: 9006,
+          inCinemas: '2026-05-20T00:00:00Z',
+          hasFile: false,
+        },
+      ]);
+    }
+    if (url.includes('themoviedb')) {
+      return response(tmdbReleaseDates({ digital: '2027-08-01T00:00:00Z' }));
+    }
+    return response([]);
+  };
+  const [item] = await fetchComingSoonItems({
+    config: {
+      comingSoon: {
+        radarrUrl: 'http://radarr.local:7878',
+        radarrApiKey: 'rk',
+        moviesCount: 5,
+        showsCount: 5,
+        lookaheadDays: 90,
+        tmdb: { apiKey: 'k', region: 'AU' },
+      },
+    },
+    fetchImpl,
+    now: new Date('2026-05-02T12:00:00Z'),
+  });
+  // Out-of-window TMDB date is dropped; Radarr's cinema fallback wins.
+  assert.equal(item.releaseType, 'cinema');
+  assert.equal(item.releaseDate, '2026-05-20T00:00:00Z');
 });

@@ -49,6 +49,10 @@ export function loadConfig(env = process.env) {
     stateTtl: parseInt(env.STATE_TTL_MS || '3000', 10),
     mediaInfoTtl: parseInt(env.MEDIA_INFO_TTL_MS || '600000', 10), // 10 min
     comingSoonTtl: parseInt(env.COMING_SOON_TTL_MS || '900000', 10), // 15 min
+    // TMDB enrichment cache TTL (#91). Independent from the Coming Soon page
+    // cache so a fresh /api/coming-soon doesn't always re-query TMDB. 6 h
+    // covers a normal screensaver day with one round-trip per movie.
+    tmdbTtl: parseInt(env.TMDB_TTL_MS || '21600000', 10),
     comingSoon: {
       title: env.COMING_SOON_TITLE || 'Coming Soon',
       radarrUrl: (env.RADARR_URL || '').replace(/\/$/, ''),
@@ -64,6 +68,19 @@ export function loadConfig(env = process.env) {
       // meaningful; upper bound of 365 mirrors daysOffset.
       lookaheadDays: parseIntClamped(env.COMING_SOON_LOOKAHEAD_DAYS, 90, 1, 365),
       imageType: parseEnum(env.COMING_SOON_IMAGE_TYPE, ['poster', 'fanart'], 'poster'),
+      // Optional TMDB enrichment (#91). Disabled unless an API token is
+      // supplied. Fills in digital/physical/theatrical release dates by
+      // region when Radarr's calendar response lacks them — Radarr stays the
+      // primary source. Region defaults to AU per the issue; when missing or
+      // unmatched at TMDB we fall back to the movie's first available region.
+      tmdb: {
+        apiKey: env.TMDB_API_KEY || '',
+        region: parseRegion(env.TMDB_REGION, 'AU'),
+        // TMDB API accepts both v3 keys and v4 read-tokens. v4 tokens go in
+        // the Authorization header; v3 keys go in ?api_key=. Heuristic: v4
+        // tokens are JWTs (contain two dots and start with "eyJ"); anything
+        // else is treated as a v3 key.
+      },
     },
     // Fully Kiosk auto-switcher (#48). Disabled by default; users who prefer
     // the HA Blueprint (#47) can leave it off and vice versa.
@@ -191,6 +208,17 @@ function parseFloatClamped(v, defaultValue, min, max) {
   return Math.min(Math.max(n, min), max);
 }
 
+// ISO 3166-1 alpha-2 country code, e.g. AU, US, GB. TMDB rejects anything
+// else, so we normalise to upper-case and reject non-letters; bad input
+// returns the default ('AU' per #91) so a typo can't silently disable the
+// fallback path.
+function parseRegion(v, defaultValue) {
+  if (v == null) return defaultValue;
+  const s = String(v).trim().toUpperCase();
+  if (s === '') return defaultValue;
+  return /^[A-Z]{2}$/.test(s) ? s : defaultValue;
+}
+
 // Validate a #RRGGBB hex colour string. Anything else (including #RGB short
 // form, named colours, rgba(), garbage) returns defaultValue so a typo in
 // add-on config can't render the kiosk unstyled. Trims and lower-cases for
@@ -210,6 +238,7 @@ function validate(c) {
   if (!Number.isFinite(c.port) || c.port < 1 || c.port > 65535) errors.push('port must be between 1 and 65535');
   if (!Number.isFinite(c.poll) || c.poll < 1000) errors.push('poll must be \u2265 1000 ms');
   if (!Number.isFinite(c.comingSoonTtl) || c.comingSoonTtl < 10000) errors.push('comingSoonTtl must be \u2265 10000 ms');
+  if (!Number.isFinite(c.tmdbTtl) || c.tmdbTtl < 10000) errors.push('tmdbTtl must be \u2265 10000 ms');
   if (c.displayMode === 'coming_soon') {
     const hasSource = !!((c.comingSoon.radarrUrl && c.comingSoon.radarrApiKey)
       || (c.comingSoon.sonarrUrl && c.comingSoon.sonarrApiKey));

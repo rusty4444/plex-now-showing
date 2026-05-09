@@ -33,6 +33,9 @@ window.NOW_SHOWING_CONFIG = {
   comingSoonDaysOffset: 0,
   comingSoonLookaheadDays: 90, // forward window in days; widen if Coming Soon doesn't fill up
   comingSoonImageType: 'poster',
+  // TMDB enrichment (#91) is server-side only. Configure tmdb_api_key /
+  // TMDB_API_KEY on the add-on or Docker container so the server can fill in
+  // any digital/physical/theatrical release dates Radarr is missing.
 
   // Plex filtering
   plexUsername: '',   // your Plex username - filters to only your playback

@@ -134,6 +134,10 @@ test('GET /api/config defaults every visual toggle off', async () => {
         daysOffset: 0,
         lookaheadDays: 90,
         imageType: 'poster',
+        tmdb: {
+          enabled: false,
+          region: 'AU',
+        },
       },
       visual: {
         progressBar: false,

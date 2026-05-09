@@ -64,6 +64,12 @@ options:
   coming_soon_days_offset: 0
   coming_soon_lookahead_days: 90
   coming_soon_image_type: poster
+  # Optional TMDB enrichment (#91) — fills in digital/physical/theatrical
+  # release dates Radarr's calendar doesn't have. Disabled by default; leave
+  # tmdb_api_key blank to keep Coming Soon fully Radarr-driven.
+  tmdb_api_key: ""
+  tmdb_region: AU
+  tmdb_ttl_ms: 21600000
   proxy_secret: ""
   allowed_origins: []
   # Fully Kiosk auto-switcher (#48) — disabled by default. Enable this OR the
@@ -127,6 +133,9 @@ schema:
   coming_soon_days_offset: "int(0,365)"
   coming_soon_lookahead_days: "int(1,365)"
   coming_soon_image_type: "list(poster|fanart)"
+  tmdb_api_key: "password?"
+  tmdb_region: "match(^[A-Za-z]{2}$)?"
+  tmdb_ttl_ms: "int(10000,86400000)"
   proxy_secret: "password?"
   allowed_origins:
     - "url?"

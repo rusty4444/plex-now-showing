@@ -45,6 +45,9 @@ probe of `/api`) and switches to `/api/state`. Plex-only metadata calls use
 | `coming_soon_days_offset` | `0` | Include releases from this many days in the past. |
 | `coming_soon_lookahead_days` | `90` | Forward window (days) for upcoming releases. Radarr considers `digitalRelease`, `physicalRelease`, and `inCinemas`; the earliest qualifying date inside the window wins. |
 | `coming_soon_image_type` | `poster` | `poster` or `fanart`. |
+| `tmdb_api_key` | _empty_ | Optional TMDB API key (v3 or v4). When set, fills in digital/physical/theatrical release dates Radarr's calendar is missing. Empty disables the fallback completely. |
+| `tmdb_region` | `AU` | ISO 3166-1 country code used to select region-specific release dates from TMDB. Falls back to whatever region TMDB lists first if there's no match. |
+| `tmdb_ttl_ms` | `21600000` | TMDB lookup cache TTL (ms). Default 6 h. |
 | `proxy_secret` | _empty_ | If set, requests to `/api/*` must carry `X-Proxy-Secret`. |
 | `allowed_origins` | `[]` | Comma-joined allowlist for the `Origin` header on `/api/*`. Leave empty for Ingress-only. |
 | `switcher_enabled` | `false` | Turn on the built-in Fully Kiosk auto-switcher. Use **this or the Blueprint (#47)** — not both. |
@@ -126,6 +129,32 @@ Assistant Blueprint import/download flow and can generate the equivalent
 add-on options / Docker env for the built-in Fully Kiosk switcher. The switcher
 itself runs server-side, so paste the generated values into the add-on options
 or Docker `.env`, then restart the add-on/container.
+
+### TMDB enrichment for Coming Soon (#91)
+
+Radarr's calendar sometimes returns a movie with only `inCinemas` (or no
+release dates at all in the look-ahead window). When that happens, the
+Coming Soon footer either falls back to a clearly labelled cinema date or
+drops the title entirely.
+
+Setting `tmdb_api_key` (and optionally `tmdb_region`) tells the server to
+ask The Movie Database for the missing dates. Radarr stays the primary
+source — TMDB is only consulted when Radarr lacks usable home-release
+metadata, and any TMDB digital/physical date that lands inside the
+look-ahead window upgrades the entry to a `home` release type. If only a
+TMDB theatrical date is available it's used as a labelled cinema fallback.
+
+Notes:
+
+- The kiosk works exactly as before with `tmdb_api_key` left blank — no
+  extra API calls are made, no warnings are logged.
+- Both v3 keys and v4 read-tokens are accepted; paste whichever you have.
+- Movies are matched by Radarr's `tmdbId` (always present in modern
+  Radarr installs) and fall back to `imdbId` via TMDB's `/find` endpoint.
+  Title-only matching is deliberately avoided.
+- Lookups are cached for `tmdb_ttl_ms` (default 6 h). Auth, rate-limit, and
+  network failures are logged and silently ignored — Coming Soon never
+  breaks because TMDB is unreachable.
 
 ### Using Now Showing and Coming Soon together
 
