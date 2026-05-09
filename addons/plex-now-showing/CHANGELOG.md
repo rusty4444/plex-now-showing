@@ -3,7 +3,7 @@
 All notable changes to the Now Showing add-on will be documented here.
 The project follows [Semantic Versioning](https://semver.org/).
 
-## Unreleased
+## 2.1.5 - 2026-05-09
 
 ### Added
 - Server-side persistent setup overlay (closes #98). The in-app setup
