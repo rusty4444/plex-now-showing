@@ -3,6 +3,38 @@
 All notable changes to the Now Showing add-on will be documented here.
 The project follows [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Added
+- Optional TMDB enrichment for Coming Soon (closes #91, PR #93). New
+  `tmdb_api_key`, `tmdb_region`, and `tmdb_ttl_ms` add-on options
+  (env: `TMDB_API_KEY`, `TMDB_REGION` default `AU`, `TMDB_TTL_MS` default
+  6 h) let the server fall back to The Movie Database for movies whose
+  Radarr calendar entry has no usable digital/physical release date.
+  Radarr stays the primary source — TMDB is only consulted when Radarr
+  lacks usable home-release metadata, and any TMDB digital/physical date
+  inside the look-ahead window upgrades the entry to a `home` release.
+  If only a TMDB theatrical date is available it is used as a labelled
+  cinema fallback. Movies are matched by Radarr `tmdbId` first and fall
+  back to `imdbId` via TMDB's `/find` endpoint; title-only matching is
+  deliberately avoided. Disabled by default — leave `tmdb_api_key`
+  blank for identical behaviour to 2.1.2. Both v3 keys and v4
+  read-tokens are accepted. Auth, rate-limit, and network failures are
+  logged and silently swallowed so Coming Soon never breaks because
+  TMDB is unreachable. `hasFile`, monitored filtering, and the
+  configurable look-ahead window are unchanged.
+
+### Changed
+- Coming Soon footer now prefers the earliest qualifying home-release
+  date (`digitalRelease` / `physicalRelease`) inside the look-ahead
+  window for Radarr movies (closes #90, PR #92). The kiosk only falls
+  back to `inCinemas` when no home date qualifies, and cinema-only
+  items are tagged with `releaseType: 'cinema'` and prefixed with
+  `In cinemas: <date>` so the footer is not mistaken for home
+  availability. Both the Node server and the frontend-only path apply
+  the same rule. `hasFile`, monitored filtering, and the configurable
+  look-ahead behaviour are unchanged.
+
 ## 2.1.2 - 2026-05-08
 
 ### Changed

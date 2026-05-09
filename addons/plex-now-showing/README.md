@@ -4,6 +4,28 @@ Cinema-style now-playing and coming-soon kiosk for Home Assistant, installed
 straight from the Home Assistant add-on store. One click, no long-lived access
 token, no Docker command line.
 
+## What's new in 2.1.3
+
+- Optional TMDB enrichment for Coming Soon. Set `tmdb_api_key` (and
+  optionally `tmdb_region`, default `AU`) to let the server fill in
+  digital, physical, or theatrical release dates that Radarr's calendar
+  is missing. Disabled by default — leave the key blank to keep Coming
+  Soon fully Radarr-driven. Both v3 keys and v4 read-tokens work.
+- Radarr stays the primary source. TMDB is only consulted when Radarr
+  has no usable home-release date inside the look-ahead window. A TMDB
+  digital or physical date upgrades the entry to a `home` release; a
+  theatrical-only TMDB date is used as a labelled cinema fallback.
+- Lookups are cached for `tmdb_ttl_ms` (default 6 h) and TMDB failures
+  (auth, rate limit, network, no match) are logged and silently
+  swallowed, so Coming Soon never breaks because TMDB is unreachable.
+- The Coming Soon footer now prefers the earliest qualifying
+  home-release date for Radarr movies and only falls back to
+  `inCinemas` when no home date qualifies. Cinema-only items are
+  prefixed with `In cinemas: <date>` so the footer is not mistaken for
+  home availability.
+- `hasFile === false`, monitored filtering, and the configurable
+  `coming_soon_lookahead_days` window are still respected.
+
 ## What's new in 2.1.2
 
 - Radarr Coming Soon eligibility now also accepts `inCinemas` as a release-date
