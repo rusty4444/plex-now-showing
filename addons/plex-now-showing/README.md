@@ -4,6 +4,52 @@ Cinema-style now-playing and coming-soon kiosk for Home Assistant, installed
 straight from the Home Assistant add-on store. One click, no long-lived access
 token, no Docker command line.
 
+## What's new in 2.1.6
+
+- New **Include cinema / theatrical releases** checkbox in the in-app
+  setup overlay, under Coming Soon sources/settings. It controls
+  whether Radarr `inCinemas` dates and TMDB theatrical/cinema release
+  types are used when building the Coming Soon list.
+- Default is **enabled**, preserving the prior behaviour: Radarr
+  `inCinemas` acts as an eligibility/display fallback and TMDB
+  theatrical-only dates surface as labelled cinema entries
+  (`In cinemas: <date>`).
+- Disabling the toggle suppresses cinema-only entries entirely —
+  Radarr `inCinemas` is ignored and TMDB theatrical types are skipped
+  — while digital and physical home releases keep showing.
+- The setting is persisted server-side via the v2.1.5 overlay file, so
+  flipping it on any device updates every browser, kiosk, and phone on
+  the install. Monitored, `hasFile`, and the configurable look-ahead
+  window keep applying as before.
+
+## What's new in 2.1.5
+
+- Persistent **server-side setup overlay**. The in-app setup overlay
+  (gear icon / `#setup`) is now a real configuration editor that saves
+  server-side instead of per-device `localStorage`. Settings — Plex /
+  Radarr / Sonarr URLs and keys, HA token, Coming Soon counts, visual
+  options, and more — persist across phones, Master Panel / Fully
+  Kiosk, the HA app via Ingress, and direct URL access. Saving from
+  any device updates them all on the next page load.
+- TMDB API key and region can now be entered directly in the setup
+  overlay. The TMDB section no longer leaves the heading orphaned
+  when `/api/config` is unavailable. Existing add-on options / Docker
+  env values remain supported as defaults.
+- New API surface backs the overlay: `GET /api/setup`,
+  `POST /api/setup`, `POST /api/setup/reset`. Secrets are never
+  returned by the server (only `*Set` booleans), saving a blank
+  secret preserves the existing value, and reset reverts every device
+  to the add-on / Docker defaults. Add-on options / env vars provide
+  defaults; the overlay file overrides them where set.
+
+## What's new in 2.1.4
+
+- Add-on setup state now persists across browsers, devices, and the
+  HA app. Configuration moved from per-tablet `localStorage` to the
+  add-on **Configuration** tab (or Docker env vars), with the unified
+  server exposing a non-secret summary at `GET /api/config` so every
+  browser sees the same configured state without per-device re-entry.
+
 ## What's new in 2.1.3
 
 - Optional TMDB enrichment for Coming Soon. Set `tmdb_api_key` (and
