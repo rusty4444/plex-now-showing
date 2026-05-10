@@ -3,7 +3,7 @@
 All notable changes to the Now Showing add-on will be documented here.
 The project follows [Semantic Versioning](https://semver.org/).
 
-## Unreleased
+## 2.1.6 - 2026-05-10
 
 ### Added
 - Toggle to include or exclude cinema/theatrical releases from Coming
