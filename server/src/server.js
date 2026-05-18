@@ -109,7 +109,7 @@ export function createApp({ config, haClient, overlayStore, baseConfig }) {
   app.use(plexArtRoute({ config }));
   app.use(nightModeRoute({ haClient, config }));
   app.use(comingSoonRoute({ cache: comingSoonCache, tmdbCache, config }));
-  app.use(eventBus.eventsRoute);
+  app.get('/api/events', eventBus.eventsRoute);
 
   // Static HTML last so /api/* wins on overlap.
   app.use(express.static(config.staticDir, {

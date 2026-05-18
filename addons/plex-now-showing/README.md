@@ -4,6 +4,13 @@ Cinema-style now-playing and coming-soon kiosk for Home Assistant, installed
 straight from the Home Assistant add-on store. One click, no long-lived access
 token, no Docker command line.
 
+## What's new in 2.3.2
+
+- **Fixed all requests returning `:ok`** — the SSE endpoint was registered with
+  `app.use()` without a path prefix, so it caught every incoming request and
+  returned `:ok` instead of the actual file. The kiosk HTML, font files, and
+  static assets were all blocked. Fixed by mounting it at `/api/events` only.
+
 ## What's new in 2.3.1
 
 - **Fixed SSE crash** — a `ReferenceError: req is not defined` in the `/api/events`

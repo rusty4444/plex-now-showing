@@ -3,6 +3,17 @@
 All notable changes to the Now Showing add-on will be documented here.
 The project follows [Semantic Versioning](https://semver.org/).
 
+## 2.3.2 - 2026-05-19
+
+### Fixed
+- All requests returning `:ok` (closes #105) — the SSE `/api/events` handler was
+  registered with `app.use(eventBus.eventsRoute)` which catches **every** request
+  path on the server. The function wrote `:ok` and never called `next()`, so the
+  Express static middleware never ran. No static files were served: not
+  `now_showing.html`, not the font files, not `now_showing.config.js`. Changed
+  to `app.get('/api/events', eventBus.eventsRoute)` so it only matches
+  `GET /api/events`.
+
 ## 2.3.1 - 2026-05-19
 
 ### Fixed
