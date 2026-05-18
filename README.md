@@ -6,9 +6,9 @@
   </a>
 </p>
 
-> This README describes Plex Now Showing v2.1.0. This release builds on the
-> v2.0.0 add-on/Docker foundation with Coming Soon mode, more player
-> backends, a broader setup UI, and more visual controls.
+> This README describes Now Showing v2.3.0. This release builds on the
+> v2.1.0 foundation with a live streaming architecture, poster framing,
+> film-grain overlay, Ken Burns pan, self-hosted fonts, and more.
 
 A full-screen cinema marquee display for Home Assistant that shows what is
 currently playing on Plex, Jellyfin, Emby, Kodi, Apple TV, generic streaming
@@ -50,20 +50,23 @@ All three paths use the same kiosk UI. The add-on and Docker paths add the
 Node server that proxies Home Assistant and Plex metadata so API tokens are
 not exposed to the tablet browser.
 
-## What's Changed From V2.0.0 To V2.1.0
+## What's Changed From V2.1.0 To V2.3.0
 
-V2.1.0 is the "wall display polish" release. It keeps the v2.0.0 server,
-add-on, Docker, and frontend-only install paths, then adds the next layer of
-real-world kiosk features:
+V2.3.0 is the "cinematic depth" release. It refactors the live data feed, adds film-grade visual effects, self-hosts all resources, and gives fine-grained control over every info panel section.
 
-| Area | V2.1.0 change |
+| Area | V2.3.0 change |
 |------|---------------|
-| More playback sources | Apple TV, generic streaming-device, and Kaleidescape backends join Plex, Jellyfin, Emby, and Kodi. Apple TV / streaming mode can use Home Assistant `app_name`, `media_title`, `entity_picture`, and dashboard-icons app badges for Disney+, YouTube, Netflix, Plex, Hulu, Prime Video, and similar apps. |
-| Coming Soon screensaver | New `coming_soon` display mode rotates upcoming Radarr/Sonarr movies and episodes with configurable marquee text, movie/show counts, cycle interval, days offset, and poster/fanart artwork. |
-| Setup UI | The setup flow now has player loading/picking, backend-specific player hints, Coming Soon source fields, Fully Kiosk automation helpers, a wider live visual preview in the Display tab, a corrected bulb-frame preview, and fixed scrolling inside Home Assistant add-on Ingress views. |
-| Visual controls | Frame style, bulb size, marquee font, theme preset, accent color, marquee background color, corner radius, progress bar, ratings badges, genre chips, info-panel mode, backdrops, burn-in nudge, and night dimming are configurable from setup without editing the HTML. |
-| Now Showing + Coming Soon together | The docs now cover running two display URLs/instances so Fully Kiosk can show Now Showing during playback and Coming Soon as the idle/screensaver view. |
-| Release package | The Home Assistant add-on package and Node server package are versioned at `2.1.0`, with Docker/add-on release docs updated for the `addon-v2.1.0` package flow. |
+| Live streaming architecture | **#10** — replaced polling with WebSocket (HA events) + SSE push to the browser. The kiosh now receives state changes in real time instead of hammering `/api/state` every 5 seconds. Graceful fallback to polling if SSE fails. Server-side WebSocket reconnection with exponential backoff. |
+| Poster framing | **#67** — new `visual_poster_framing` option (`centred` / `cover` / `matted`). `centred` renders the poster at natural aspect ratio with letterbox bars (closest to the classic cinema look). `cover` fills the poster frame entirely (crops portrait posters). `matted` shrinks the poster with a dark matte border and rounded corners. |
+| Film-grain overlay | **#27** — `visual_film_grain` toggle. When on, a subtle SVG noise texture overlays the entire screen for cinematic warmth. GPU-composited via CSS `mix-blend-mode: overlay; display: none` when off means zero performance impact. |
+| Ken Burns poster pan | **#22** — `visual_ken_burns` toggle. Slow zoom-in + translate on poster art, CSS `@keyframes` driven so it's GPU-composited with no JS timer overhead. |
+| Self-hosted Google Fonts | **#40** — 23 woff2 files bundled in `www/fonts/`, 48 inline `@font-face` declarations. Eliminates the Google Fonts CDN dependency (works offline, no external DNS/privacy leak, works behind firewalls). |
+| Per-section info toggles | **#64** — six new booleans (`visual_info_show_title`, `visual_info_show_subtitle`, `visual_info_show_meta`, `visual_info_show_summary`, `visual_info_show_techbox`, `visual_info_show_player`) that independently hide/show each section of the info panel. All default `true` for backward compatibility. Editable from the in-app setup overlay. |
+| Cross-device sync | Overlay store now persists every visual toggle server-side so the same values apply across browsers, tablets, and phones without per-device configuration. |
+| Bulb chase animation | **#16** — CSS `@keyframes` chase pattern on the bulb frame. GPU-composited animation replaces the static bulb glow from v2.1.0. Off (`display: none`) when `visual_frame_style` is not `bulbs`, so zero CPU cost. |
+| Connection status + debug | **#15** — live connection indicator (green dot / red dot) on the kiosk overlay. Debug mode logs connection events, SSE state, and reconnection attempts to the browser console. |
+| Dev health docs | **#37** — added `CONTRIBUTING.md`, issue templates (`bug.md`, `feature_request.md`), pull request template, and `CHANGELOG.md`. |
+| Release package | Home Assistant add-on versioned at `2.3.0`, with multi-arch Docker images built and published to GHCR via CI. |
 
 ## Features
 
@@ -82,6 +85,11 @@ real-world kiosk features:
 - Optional progress bar driven by Home Assistant `media_position`.
 - Optional IMDb / Rotten Tomatoes / audience badges and genre chips from Plex
   metadata.
+- Optional poster framing: `centred` (letterbox bars), `cover` (fill frame), or
+  `matted` (dark border + rounded corners).
+- Optional film-grain overlay for cinematic warmth (GPU-composited, zero impact
+  when off).
+- Optional Ken Burns poster pan (GPU-composited CSS `@keyframes` zoom + translate).
 - Optional info-panel modes: `on_tap`, `on_pause`, or `always`.
 - Optional backdrop art on pause, either fullscreen landscape fade or ambient
   blurred fanart.
@@ -179,7 +187,7 @@ http://<docker-host>:8099/now_showing.html
 ```
 
 For the stable v2 release, keep `TAG=latest` or pin this release with
-`TAG=2.1.0`. For the rolling `dev` branch image, set this in `docker/.env`:
+`TAG=2.3.0`. For the rolling `dev` branch image, set this in `docker/.env`:
 
 ```env
 TAG=dev
@@ -241,11 +249,12 @@ the HA token.
 3. If no token is configured, the page opens `#setup`. Fill:
    - **Connection**: display mode, Home Assistant URL/token, backend, optional
      player, optional Plex URL/token, Coming Soon sources, and landscape mode
-   - **Display**: live visual preview, theme preset, accent color, frame
-     style, marquee font, marquee background color, corner radius, progress
-     bar, ratings badges, genre chips,
-     info-panel mode, backdrops, burn-in mitigation, pixel nudge, and night
-     dimming
+  - **Display**: live visual preview, theme preset, accent color, frame
+    style, marquee font, marquee background color, corner radius, progress
+    bar, ratings badges, genre chips,
+    info-panel mode, poster framing, film grain, Ken Burns pan,
+    backdrops, burn-in mitigation, pixel nudge, and night
+    dimming
    - **Automation**: import/download the tablet-switching Blueprint, or prepare
      built-in Fully Kiosk switcher settings for the add-on or Docker
 
@@ -407,25 +416,34 @@ something new.
 
 | Feature | Add-on option | Docker env | Frontend key | Values |
 |---------|---------------|------------|--------------|--------|
-| Progress bar | `visual_progress_bar` | `VISUAL_PROGRESS_BAR` | `visualProgressBar` | `true` / `false` |
-| Ratings badges | `visual_ratings_badges` | `VISUAL_RATINGS_BADGES` | `visualRatingsBadges` | Plex metadata required |
-| Genre chips | `visual_genre_chips` | `VISUAL_GENRE_CHIPS` | `visualGenreChips` | Plex metadata required |
-| Info panel mode | `visual_info_panel_mode` | `VISUAL_INFO_PANEL_MODE` | `visualInfoPanelMode` | `on_tap`, `on_pause`, `always` |
-| Frame style | `visual_frame_style` | `VISUAL_FRAME_STYLE` | `visualFrameStyle` | `bulbs`, `gold-line`, `none` |
-| Bulb size | `visual_bulb_size_px` | `VISUAL_BULB_SIZE_PX` | `visualBulbSizePx` | `12` to `48` px, default `28` |
-| Marquee font | `visual_marquee_font` | `VISUAL_MARQUEE_FONT` | `visualMarqueeFont` | `bebas-neue`, `anton`, `oswald`, `monoton`, `playfair-display` |
-| Backdrops | `visual_use_backdrops` | `VISUAL_USE_BACKDROPS` | `visualUseBackdrops` | Plex metadata required |
-| Backdrop style | `visual_backdrop_style` | `VISUAL_BACKDROP_STYLE` | `visualBackdropStyle` | `fullscreen`, `ambient` |
-| Backdrop delay | `visual_backdrop_delay_ms` | `VISUAL_BACKDROP_DELAY_MS` | `visualBackdropDelayMs` | `1000` to `600000` ms |
-| Burn-in mitigation | `visual_burn_in_mitigation` | `VISUAL_BURN_IN_MITIGATION` | `visualBurnInMitigation` | `true` / `false` |
-| Pixel nudge interval | `visual_nudge_interval_ms` | `VISUAL_NUDGE_INTERVAL_MS` | `visualNudgeIntervalMs` | `5000` to `600000` ms |
-| Pixel nudge amplitude | `visual_nudge_amplitude_px` | `VISUAL_NUDGE_AMPLITUDE_PX` | `visualNudgeAmplitudePx` | `1` to `16` px |
-| Night-mode entity | `visual_night_mode_entity` | `VISUAL_NIGHT_MODE_ENTITY` | `visualNightModeEntity` | HA on/off entity ID |
-| Night opacity | `visual_night_mode_opacity` | `VISUAL_NIGHT_MODE_OPACITY` | `visualNightModeOpacity` | `0` to `0.95` |
-| Theme preset | `visual_theme` | `VISUAL_THEME` | `visualTheme` | `classic-gold`, `art-deco-silver`, `neon-80s`, `minimalist-dark` |
-| Accent color | `visual_accent_color` | `VISUAL_ACCENT_COLOR` | `visualAccentColor` | Strict `#RRGGBB`, empty for theme default |
-| Marquee background | `visual_marquee_bg_color` | `VISUAL_MARQUEE_BG_COLOR` | `visualMarqueeBgColor` | Strict `#RRGGBB`, empty for theme default |
-| Corner radius | `visual_corner_radius_px` | `VISUAL_CORNER_RADIUS_PX` | `visualCornerRadiusPx` | `0` to `48` px, default `0` |
+|| Progress bar | `visual_progress_bar` | `VISUAL_PROGRESS_BAR` | `visualProgressBar` | `true` / `false` |
+|| Ratings badges | `visual_ratings_badges` | `VISUAL_RATINGS_BADGES` | `visualRatingsBadges` | Plex metadata required |
+|| Genre chips | `visual_genre_chips` | `VISUAL_GENRE_CHIPS` | `visualGenreChips` | Plex metadata required |
+|| Info panel mode | `visual_info_panel_mode` | `VISUAL_INFO_PANEL_MODE` | `visualInfoPanelMode` | `on_tap`, `on_pause`, `always` |
+|| Poster framing | `visual_poster_framing` | `VISUAL_POSTER_FRAMING` | `visualPosterFraming` | `centred`, `cover`, `matted` |
+|| Film grain | `visual_film_grain` | `VISUAL_FILM_GRAIN` | `visualFilmGrain` | `true` / `false` |
+|| Ken Burns pan | `visual_ken_burns` | `VISUAL_KEN_BURNS` | `visualKenBurns` | `true` / `false` |
+|| Info: show title | `visual_info_show_title` | `VISUAL_INFO_SHOW_TITLE` | `visualInfoShowTitle` | `true` / `false` (default `true`) |
+|| Info: show subtitle | `visual_info_show_subtitle` | `VISUAL_INFO_SHOW_SUBTITLE` | `visualInfoShowSubtitle` | `true` / `false` (default `true`) |
+|| Info: show meta | `visual_info_show_meta` | `VISUAL_INFO_SHOW_META` | `visualInfoShowMeta` | `true` / `false` (default `true`) |
+|| Info: show summary | `visual_info_show_summary` | `VISUAL_INFO_SHOW_SUMMARY` | `visualInfoShowSummary` | `true` / `false` (default `true`) |
+|| Info: show tech spec | `visual_info_show_techbox` | `VISUAL_INFO_SHOW_TECHBOX` | `visualInfoShowTechbox` | `true` / `false` (default `true`) |
+|| Info: show player | `visual_info_show_player` | `VISUAL_INFO_SHOW_PLAYER` | `visualInfoShowPlayer` | `true` / `false` (default `true`) |
+|| Frame style | `visual_frame_style` | `VISUAL_FRAME_STYLE` | `visualFrameStyle` | `bulbs`, `gold-line`, `none` |
+|| Bulb size | `visual_bulb_size_px` | `VISUAL_BULB_SIZE_PX` | `visualBulbSizePx` | `12` to `48` px, default `28` |
+|| Marquee font | `visual_marquee_font` | `VISUAL_MARQUEE_FONT` | `visualMarqueeFont` | `bebas-neue`, `anton`, `oswald`, `monoton`, `playfair-display` |
+|| Backdrops | `visual_use_backdrops` | `VISUAL_USE_BACKDROPS` | `visualUseBackdrops` | Plex metadata required |
+|| Backdrop style | `visual_backdrop_style` | `VISUAL_BACKDROP_STYLE` | `visualBackdropStyle` | `fullscreen`, `ambient` |
+|| Backdrop delay | `visual_backdrop_delay_ms` | `VISUAL_BACKDROP_DELAY_MS` | `visualBackdropDelayMs` | `1000` to `600000` ms |
+|| Burn-in mitigation | `visual_burn_in_mitigation` | `VISUAL_BURN_IN_MITIGATION` | `visualBurnInMitigation` | `true` / `false` |
+|| Pixel nudge interval | `visual_nudge_interval_ms` | `VISUAL_NUDGE_INTERVAL_MS` | `visualNudgeIntervalMs` | `5000` to `600000` ms |
+|| Pixel nudge amplitude | `visual_nudge_amplitude_px` | `VISUAL_NUDGE_AMPLITUDE_PX` | `visualNudgeAmplitudePx` | `1` to `16` px |
+|| Night-mode entity | `visual_night_mode_entity` | `VISUAL_NIGHT_MODE_ENTITY` | `visualNightModeEntity` | HA on/off entity ID |
+|| Night opacity | `visual_night_mode_opacity` | `VISUAL_NIGHT_MODE_OPACITY` | `visualNightModeOpacity` | `0` to `0.95` |
+|| Theme preset | `visual_theme` | `VISUAL_THEME` | `visualTheme` | `classic-gold`, `art-deco-silver`, `neon-80s`, `minimalist-dark` |
+|| Accent color | `visual_accent_color` | `VISUAL_ACCENT_COLOR` | `visualAccentColor` | Strict `#RRGGBB`, empty for theme default |
+|| Marquee background | `visual_marquee_bg_color` | `VISUAL_MARQUEE_BG_COLOR` | `visualMarqueeBgColor` | Strict `#RRGGBB`, empty for theme default |
+|| Corner radius | `visual_corner_radius_px` | `VISUAL_CORNER_RADIUS_PX` | `visualCornerRadiusPx` | `0` to `48` px, default `0` |
 
 ## Backend Behavior
 
