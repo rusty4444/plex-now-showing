@@ -38,6 +38,7 @@ const FRAME_STYLES = ['bulbs', 'gold-line', 'none'];
 const MARQUEE_FONTS = ['bebas-neue', 'anton', 'oswald', 'monoton', 'playfair-display'];
 const BACKDROP_STYLES = ['fullscreen', 'ambient'];
 const VISUAL_THEMES = ['classic-gold', 'art-deco-silver', 'neon-80s', 'minimalist-dark'];
+const POSTER_FRAMINGS = ['centred', 'cover', 'matted'];
 
 const HEX_RE = /^#[0-9a-f]{6}$/;
 const REGION_RE = /^[A-Z]{2}$/;
@@ -226,6 +227,20 @@ export function sanitizeOverlayInput(body) {
       if (!(k in v)) continue;
       const raw = v[k];
       switch (k) {
+        case 'posterFraming': {
+          const s = asString(raw);
+          if (s && !POSTER_FRAMINGS.includes(s)) { errors.push('visual_posterFraming_invalid'); break; }
+          if (s !== null) out.visual[k] = s;
+          break;
+        }
+        case 'filmGrain':
+        case 'kenBurns':
+        case 'infoShowTitle':
+        case 'infoShowSubtitle':
+        case 'infoShowMeta':
+        case 'infoShowSummary':
+        case 'infoShowTechbox':
+        case 'infoShowPlayer':
         case 'progressBar':
         case 'ratingsBadges':
         case 'genreChips':
@@ -447,6 +462,9 @@ export function effectiveSetupView(config) {
       frameStyle: config.visual?.frameStyle || 'bulbs',
       bulbSizePx: config.visual?.bulbSizePx ?? 28,
       marqueeFont: config.visual?.marqueeFont || 'bebas-neue',
+      posterFraming: config.visual?.posterFraming || 'centred',
+      filmGrain: !!config.visual?.filmGrain,
+      kenBurns: !!config.visual?.kenBurns,
       backdropStyle: config.visual?.backdropStyle || 'fullscreen',
       backdropDelayMs: Number.isFinite(config.visual?.backdropDelayMs) ? config.visual.backdropDelayMs : 10000,
       burnInMitigation: !!config.visual?.burnInMitigation,
@@ -458,6 +476,13 @@ export function effectiveSetupView(config) {
       accentColor: config.visual?.accentColor || '',
       marqueeBgColor: config.visual?.marqueeBgColor || '',
       cornerRadiusPx: config.visual?.cornerRadiusPx ?? 0,
+      // #64 — per-section info panel visibility
+      infoShowTitle: config.visual?.infoShowTitle !== false,
+      infoShowSubtitle: config.visual?.infoShowSubtitle !== false,
+      infoShowMeta: config.visual?.infoShowMeta !== false,
+      infoShowSummary: config.visual?.infoShowSummary !== false,
+      infoShowTechbox: config.visual?.infoShowTechbox !== false,
+      infoShowPlayer: config.visual?.infoShowPlayer !== false,
     },
     switcher: {
       enabled: !!config.switcherEnabled,

@@ -125,6 +125,13 @@ export function loadConfig(env = process.env) {
       marqueeFont: parseEnum(env.VISUAL_MARQUEE_FONT,
         ['bebas-neue', 'anton', 'oswald', 'monoton', 'playfair-display'],
         'bebas-neue'),
+      // Poster framing (#67): centred (default) | cover | matted
+      posterFraming: parseEnum(env.VISUAL_POSTER_FRAMING,
+        ['centred', 'cover', 'matted'], 'centred'),
+      // Film grain overlay (#27): subtle noise texture for cinematic warmth
+      filmGrain: parseBool(env.VISUAL_FILM_GRAIN, false),
+      // Ken Burns pan (#22): slow zoom + translate on poster art
+      kenBurns: parseBool(env.VISUAL_KEN_BURNS, false),
       // Two presentation styles:
       //   'fullscreen' — landscape only; after backdropDelayMs of pause,
       //                   crossfade the poster view to the Plex fanart.
@@ -179,6 +186,14 @@ export function loadConfig(env = process.env) {
       // Corner / frame radius slider (#68). Applies to the inner marquee,
       // poster, and info panel only; the outer bulb frame stays square.
       cornerRadiusPx: parseIntClamped(env.VISUAL_CORNER_RADIUS_PX, 0, 0, 48),
+      // #64 — per-section info panel visibility. All default true so
+      // existing installs see no change until the opt-out.
+      infoShowTitle:      parseBool(env.VISUAL_INFO_SHOW_TITLE, true),
+      infoShowSubtitle:   parseBool(env.VISUAL_INFO_SHOW_SUBTITLE, true),
+      infoShowMeta:       parseBool(env.VISUAL_INFO_SHOW_META, true),
+      infoShowSummary:    parseBool(env.VISUAL_INFO_SHOW_SUMMARY, true),
+      infoShowTechbox:    parseBool(env.VISUAL_INFO_SHOW_TECHBOX, true),
+      infoShowPlayer:     parseBool(env.VISUAL_INFO_SHOW_PLAYER, true),
     },
     // Where the static HTML lives (overridden in tests)
     staticDir: env.STATIC_DIR || new URL('../../www', import.meta.url).pathname,

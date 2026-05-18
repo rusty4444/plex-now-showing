@@ -83,6 +83,9 @@ export const OVERLAY_VISUAL_KEYS = [
   'frameStyle',
   'bulbSizePx',
   'marqueeFont',
+  'posterFraming',
+  'filmGrain',
+  'kenBurns',
   'backdropStyle',
   'backdropDelayMs',
   'burnInMitigation',
@@ -94,6 +97,13 @@ export const OVERLAY_VISUAL_KEYS = [
   'accentColor',
   'marqueeBgColor',
   'cornerRadiusPx',
+  // #64 — per-section info panel visibility
+  'infoShowTitle',
+  'infoShowSubtitle',
+  'infoShowMeta',
+  'infoShowSummary',
+  'infoShowTechbox',
+  'infoShowPlayer',
 ];
 
 export function defaultOverlayPath() {

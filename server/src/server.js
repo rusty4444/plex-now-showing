@@ -15,7 +15,10 @@ import { dirname, join } from 'node:path';
 import { loadConfig, validate as validateRuntime } from './config.js';
 import { createCache } from './cache.js';
 import { createHaClient } from './ha.js';
+import { createHaWsClient } from './haWs.js';
+import { createEventBroadcaster } from './routes/events.js';
 import { createSwitcher, parseKiosks } from './switcher.js';
+import { normalise } from './state.js';
 import { rootRoute } from './routes/root.js';
 import { healthzRoute } from './routes/healthz.js';
 import { stateRoute } from './routes/state.js';
@@ -92,6 +95,10 @@ export function createApp({ config, haClient, overlayStore, baseConfig }) {
   // them to outlive a single Coming Soon page refresh.
   const tmdbCache = createCache(config.tmdbTtl);
 
+  // SSE event bus (#10): created here but connected to HA WS later in the
+  // direct-run path so tests don't trigger WS connections.
+  const eventBus = createEventBroadcaster();
+
   app.use(rootRoute({ config, version: pkg.version }));
   app.use(healthzRoute({ config, version: pkg.version }));
   app.use(configRoute({ config }));
@@ -102,6 +109,7 @@ export function createApp({ config, haClient, overlayStore, baseConfig }) {
   app.use(plexArtRoute({ config }));
   app.use(nightModeRoute({ haClient, config }));
   app.use(comingSoonRoute({ cache: comingSoonCache, tmdbCache, config }));
+  app.use(eventBus.eventsRoute);
 
   // Static HTML last so /api/* wins on overlap.
   app.use(express.static(config.staticDir, {
@@ -109,6 +117,10 @@ export function createApp({ config, haClient, overlayStore, baseConfig }) {
     maxAge: '5m',
     index: ['now_showing.html', 'index.html'],
   }));
+
+  // Expose eventBus + stateCache for the direct-run bootstrap below
+  app.set('eventBus', eventBus);
+  app.set('stateCache', stateCache);
 
   return app;
 }
@@ -139,6 +151,38 @@ if (isDirectRun) {
   }
   const haClient = createHaClient({ haUrl: config.haUrl, haToken: config.haToken });
   const app = createApp({ config, haClient, overlayStore, baseConfig });
+  const stateCache = app.get('stateCache');
+  let haWs = null;
+
+  // HA WebSocket subscription + SSE (#10): push state changes to browsers
+  // instead of forcing them to poll.
+  if (config.haUrl && config.haToken) {
+    const eventBus = app.get('eventBus');
+    haWs = createHaWsClient({
+      haUrl: config.haUrl,
+      haToken: config.haToken,
+      onStateChange: (data) => {
+        stateCache.invalidate('state');
+        const normalised = normalise([data.new_state], {
+          backend: config.backend,
+          player: config.player,
+          plexPlayer: config.plexPlayer,
+          plexUsername: config.plexUsername,
+        });
+        eventBus.broadcast(normalised || null);
+      },
+      onError: (err) => console.error(`[ha-ws] ${err.message}`),
+    });
+    haWs.start();
+  }
+
+  // Global shutdown: stop WS client + switch before exiting
+  function gracefulShutdown() {
+    const bus = app.get('eventBus');
+    if (bus) bus.close();
+    if (haWs) haWs.stop();
+    process.exit(0);
+  }
 
   // Optional Fully Kiosk auto-switcher (#48).
   if (config.switcherEnabled) {
@@ -158,7 +202,11 @@ if (isDirectRun) {
     switcher.start();
     // Clean shutdown so Supervisor's SIGTERM doesn't leave a dangling timer.
     for (const sig of ['SIGTERM', 'SIGINT']) {
-      process.on(sig, () => { switcher.stop(); process.exit(0); });
+      process.on(sig, () => { switcher.stop(); gracefulShutdown(); });
+    }
+  } else {
+    for (const sig of ['SIGTERM', 'SIGINT']) {
+      process.on(sig, gracefulShutdown);
     }
   }
 

@@ -4,12 +4,425 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Now Showing</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@400;500;600&family=Monoton&family=Oswald:wght@600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+  <!-- Self-hosted woff2 (#40). Falls back to Google Fonts if CDN is unreachable. -->
   <style>
+/* vietnamese */
+@font-face {
+  font-family: 'Anton';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/1Ptgg87LROyAm3K8-C8QSw.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Anton';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/1Ptgg87LROyAm3K9-C8QSw.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Anton';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/1Ptgg87LROyAm3Kz-C8.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Bebas Neue';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/JTUSjIg69CK48gW7PXoo9Wdhyzbi.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Bebas Neue';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/JTUSjIg69CK48gW7PXoo9Wlhyw.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2JL7SUc.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa0ZL7SUc.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2ZL7SUc.woff2) format('woff2');
+  unicode-range: U+1F00-1FFF;
+}
+/* greek */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1pL7SUc.woff2) format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2pL7SUc.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa25L7SUc.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2JL7SUc.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa0ZL7SUc.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2ZL7SUc.woff2) format('woff2');
+  unicode-range: U+1F00-1FFF;
+}
+/* greek */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1pL7SUc.woff2) format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2pL7SUc.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa25L7SUc.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2JL7SUc.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa0ZL7SUc.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2ZL7SUc.woff2) format('woff2');
+  unicode-range: U+1F00-1FFF;
+}
+/* greek */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1pL7SUc.woff2) format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2pL7SUc.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa25L7SUc.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Monoton';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/5h1aiZUrOngCibe4Tk_LQlS7.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Monoton';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/5h1aiZUrOngCibe4TkHLQg.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(fonts/TK3IWkUHHAIjg75cFRf3bXL8LICs1_Fv40pKlN4NNSeSASz7FmlbHYjedg.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(fonts/TK3IWkUHHAIjg75cFRf3bXL8LICs1_Fv40pKlN4NNSeSASz7FmlSHYjedg.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(fonts/TK3IWkUHHAIjg75cFRf3bXL8LICs1_Fv40pKlN4NNSeSASz7FmlZHYjedg.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(fonts/TK3IWkUHHAIjg75cFRf3bXL8LICs1_Fv40pKlN4NNSeSASz7FmlYHYjedg.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(fonts/TK3IWkUHHAIjg75cFRf3bXL8LICs1_Fv40pKlN4NNSeSASz7FmlWHYg.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(fonts/TK3IWkUHHAIjg75cFRf3bXL8LICs1_Fv40pKlN4NNSeSASz7FmlbHYjedg.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(fonts/TK3IWkUHHAIjg75cFRf3bXL8LICs1_Fv40pKlN4NNSeSASz7FmlSHYjedg.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(fonts/TK3IWkUHHAIjg75cFRf3bXL8LICs1_Fv40pKlN4NNSeSASz7FmlZHYjedg.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(fonts/TK3IWkUHHAIjg75cFRf3bXL8LICs1_Fv40pKlN4NNSeSASz7FmlYHYjedg.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(fonts/TK3IWkUHHAIjg75cFRf3bXL8LICs1_Fv40pKlN4NNSeSASz7FmlWHYg.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(fonts/nuFiD-vYSZviVYUb_rj3ij__anPXDTjYgFE_.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(fonts/nuFiD-vYSZviVYUb_rj3ij__anPXDTPYgFE_.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(fonts/nuFiD-vYSZviVYUb_rj3ij__anPXDTLYgFE_.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(fonts/nuFiD-vYSZviVYUb_rj3ij__anPXDTzYgA.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url(fonts/nuFiD-vYSZviVYUb_rj3ij__anPXDTjYgFE_.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url(fonts/nuFiD-vYSZviVYUb_rj3ij__anPXDTPYgFE_.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url(fonts/nuFiD-vYSZviVYUb_rj3ij__anPXDTLYgFE_.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url(fonts/nuFiD-vYSZviVYUb_rj3ij__anPXDTzYgA.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* Self-hosted @font-face declarations (#40) — bundled so the display survives internet outages */
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
+  
     /* ===== THEME PRESETS (#23) =====
      *
      * Each theme is one block of CSS custom-property overrides applied via
@@ -446,6 +859,51 @@
       overflow: hidden;
       background: var(--bg-marquee);
       border-radius: 0 0 var(--pns-corner-radius) var(--pns-corner-radius);
+    }
+
+    /* Poster framing (#67): three modes for how the artwork sits. */
+    /* centred (default) — current behaviour, poster centred both axes */
+    .poster-area {
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center center;
+    }
+    /* cover — edge-to-edge fit, crop poster to fill */
+    body[data-poster-framing="cover"] .poster-area {
+      background-size: cover;
+    }
+    /* matted — contained with an accent-colour gallery border */
+    body[data-poster-framing="matted"] .poster-area {
+      background-size: contain;
+      box-shadow: inset 0 0 0 12px var(--accent-mid);
+    }
+
+    /* Film-grain overlay (#27): 5% opacity noise for cinematic warmth.
+       Hidden by default; body.visual-film-grain toggles it on. */
+    .film-grain {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      pointer-events: none;
+      z-index: 15;
+      opacity: 0.05;
+      mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-size: 256px 256px;
+    }
+    body.visual-film-grain .film-grain { display: block; }
+
+    /* Ken Burns pan (#22): slow zoom + translate on poster when active. */
+    @keyframes ken-burns {
+      0%   { transform: scale(1.0) translate(0, 0); }
+      50%  { transform: scale(1.08) translate(-2%, -1%); }
+      100% { transform: scale(1.0) translate(0, 0); }
+    }
+    body.visual-ken-burns .poster-area.loaded {
+      animation: ken-burns 30s ease-in-out infinite;
+      will-change: transform;
     }
 
     /* ===== BURN-IN MITIGATION (#28) =====
@@ -1086,6 +1544,16 @@
        that advertises it. on_pause keeps tap working while playing so the
        hint is still accurate there. */
     body.info-mode-always .info-panel .info-hint { display: none; }
+
+    /* #64 — per-section info panel visibility. Each .info-hide-* class hides
+       its matching section. When all sections are off + infoPanelMode !==
+       on_tap, the panel renders nothing. */
+    body.info-hide-title    .info-panel .info-title    { display: none; }
+    body.info-hide-subtitle .info-panel .info-subtitle { display: none; }
+    body.info-hide-meta     .info-panel .info-meta     { display: none; }
+    body.info-hide-summary  .info-panel .info-summary  { display: none; }
+    body.info-hide-techbox  .info-panel .info-techbox  { display: none; }
+    body.info-hide-player   .info-panel .info-player   { display: none; }
 
     /* ===== SETUP PAGE (#setup) ===== */
     .setup-overlay {
@@ -1974,6 +2442,28 @@
           </div>
           <div class="hint">Rounds the marquee, poster, and info panel. The outer bulb frame stays square.</div>
         </div>
+        <div class="setup-field-grid">
+          <div class="setup-field">
+            <label for="cfgVisualPosterFraming">Poster Framing</label>
+            <select id="cfgVisualPosterFraming" autocomplete="off">
+              <option value="centred">Centred</option>
+              <option value="cover">Cover</option>
+              <option value="matted">Matted</option>
+            </select>
+          </div>
+          <div class="setup-field">
+            <label class="setup-check" for="cfgVisualFilmGrain">
+              <input id="cfgVisualFilmGrain" type="checkbox">
+              Film grain overlay
+            </label>
+          </div>
+          <div class="setup-field">
+            <label class="setup-check" for="cfgVisualKenBurns">
+              <input id="cfgVisualKenBurns" type="checkbox">
+              Ken Burns poster pan
+            </label>
+          </div>
+        </div>
 
         <div class="setup-section-title">Info Panel</div>
         <div class="setup-field-grid">
@@ -2002,6 +2492,44 @@
               <option value="on_pause">On Pause</option>
               <option value="always">Always</option>
             </select>
+          </div>
+        </div>
+        <div class="setup-field-grid">
+          <div class="setup-field">
+            <label class="setup-check" for="cfgVisualInfoShowTitle">
+              <input id="cfgVisualInfoShowTitle" type="checkbox">
+              Title
+            </label>
+          </div>
+          <div class="setup-field">
+            <label class="setup-check" for="cfgVisualInfoShowSubtitle">
+              <input id="cfgVisualInfoShowSubtitle" type="checkbox">
+              Subtitle
+            </label>
+          </div>
+          <div class="setup-field">
+            <label class="setup-check" for="cfgVisualInfoShowMeta">
+              <input id="cfgVisualInfoShowMeta" type="checkbox">
+              Meta (year / runtime / rating)
+            </label>
+          </div>
+          <div class="setup-field">
+            <label class="setup-check" for="cfgVisualInfoShowSummary">
+              <input id="cfgVisualInfoShowSummary" type="checkbox">
+              Summary
+            </label>
+          </div>
+          <div class="setup-field">
+            <label class="setup-check" for="cfgVisualInfoShowTechbox">
+              <input id="cfgVisualInfoShowTechbox" type="checkbox">
+              Tech box
+            </label>
+          </div>
+          <div class="setup-field">
+            <label class="setup-check" for="cfgVisualInfoShowPlayer">
+              <input id="cfgVisualInfoShowPlayer" type="checkbox">
+              Player info
+            </label>
           </div>
         </div>
 
@@ -2125,6 +2653,9 @@
     <div class="status-dot grey" id="statusDotHa" title="Home Assistant"></div>
     <div class="status-dot grey" id="statusDotBackend" title="Media backend"></div>
   </div>
+
+  <!-- FILM GRAIN OVERLAY (#27) -->
+  <div class="film-grain" id="filmGrainOverlay"></div>
 
   <!-- DEBUG OVERLAY (#15) — shown when ?debug=1 -->
   <div id="debugOverlay"></div>
@@ -2393,6 +2924,12 @@
       infoPanelMode: 'on_tap',
       frameStyle: 'bulbs',
       bulbSizePx: 28,
+      // Poster framing (#67) — centred|cover|matted
+      posterFraming: 'centred',
+      // Film grain (#27) — optional noise overlay for cinematic warmth
+      filmGrain: false,
+      // Ken Burns (#22) — slow zoom/pan on poster
+      kenBurns: false,
       // #21 backdrop art on pause.
       useBackdrops: false,
       backdropStyle: 'fullscreen', // 'fullscreen' | 'ambient'
@@ -2448,6 +2985,14 @@
       return defaultValue;
     }
 
+    const POSTER_FRAMINGS = ['centred', 'cover', 'matted'];
+
+    function readPosterFraming(defaultValue) {
+      const value = String(readConfig('visualPosterFraming')).trim().toLowerCase();
+      if (value && POSTER_FRAMINGS.includes(value)) return value;
+      return defaultValue;
+    }
+
     // #23 theme preset resolver. Unknown names fall back instead of throwing
     // so a stale tablet picking a renamed theme still renders.
     function readVisualTheme(defaultValue) {
@@ -2492,6 +3037,9 @@
       VISUAL.frameStyle = readFrameStyle('bulbs');
       VISUAL.bulbSizePx = readIntClamped('visualBulbSizePx', 28, 12, 48);
       VISUAL.marqueeFont = readMarqueeFont('bebas-neue');
+      VISUAL.posterFraming = readPosterFraming('centred');
+      VISUAL.filmGrain = readBool('visualFilmGrain', false);
+      VISUAL.kenBurns = readBool('visualKenBurns', false);
       VISUAL.useBackdrops = readBool('visualUseBackdrops', false);
       VISUAL.backdropStyle = readBackdropStyle('fullscreen');
       VISUAL.backdropDelayMs = readIntClamped('visualBackdropDelayMs', 10000, 1000, 600000);
@@ -2507,6 +3055,13 @@
       VISUAL.accentColor = readAccentColor('');
       VISUAL.marqueeBgColor = readMarqueeBgColor('');
       VISUAL.cornerRadiusPx = readIntClamped('visualCornerRadiusPx', 0, 0, 48);
+      // #64 — per-section info panel visibility
+      VISUAL.infoShowTitle    = readBool('visualInfoShowTitle', true);
+      VISUAL.infoShowSubtitle = readBool('visualInfoShowSubtitle', true);
+      VISUAL.infoShowMeta     = readBool('visualInfoShowMeta', true);
+      VISUAL.infoShowSummary  = readBool('visualInfoShowSummary', true);
+      VISUAL.infoShowTechbox  = readBool('visualInfoShowTechbox', true);
+      VISUAL.infoShowPlayer   = readBool('visualInfoShowPlayer', true);
 
       await serverModeReady;
       if (!SERVER_MODE) return;
@@ -2543,6 +3098,11 @@
         if (v && typeof v.marqueeFont === 'string' && MARQUEE_FONTS.includes(v.marqueeFont)) {
           VISUAL.marqueeFont = v.marqueeFont;
         }
+        if (v && typeof v.posterFraming === 'string' && POSTER_FRAMINGS.includes(v.posterFraming)) {
+          VISUAL.posterFraming = v.posterFraming;
+        }
+        if (v && typeof v.filmGrain === 'boolean') VISUAL.filmGrain = v.filmGrain;
+        if (v && typeof v.kenBurns === 'boolean') VISUAL.kenBurns = v.kenBurns;
         if (v && typeof v.useBackdrops === 'boolean') VISUAL.useBackdrops = v.useBackdrops;
         if (v && typeof v.backdropStyle === 'string' && BACKDROP_STYLES.includes(v.backdropStyle)) {
           VISUAL.backdropStyle = v.backdropStyle;
@@ -2580,6 +3140,13 @@
         if (v && Number.isFinite(v.cornerRadiusPx)) {
           VISUAL.cornerRadiusPx = Math.max(0, Math.min(48, v.cornerRadiusPx));
         }
+        // #64 — per-section info panel visibility (server override)
+        if (v && typeof v.infoShowTitle    === 'boolean') VISUAL.infoShowTitle    = v.infoShowTitle;
+        if (v && typeof v.infoShowSubtitle === 'boolean') VISUAL.infoShowSubtitle = v.infoShowSubtitle;
+        if (v && typeof v.infoShowMeta     === 'boolean') VISUAL.infoShowMeta     = v.infoShowMeta;
+        if (v && typeof v.infoShowSummary  === 'boolean') VISUAL.infoShowSummary  = v.infoShowSummary;
+        if (v && typeof v.infoShowTechbox  === 'boolean') VISUAL.infoShowTechbox  = v.infoShowTechbox;
+        if (v && typeof v.infoShowPlayer   === 'boolean') VISUAL.infoShowPlayer   = v.infoShowPlayer;
       } catch (err) {
         console.warn('[plex-now-showing] /api/config fetch failed — using local defaults.', err);
       }
@@ -2696,6 +3263,19 @@
       // owns the bulb DOM and chase timer so non-bulb modes do no extra work.
       document.body.dataset.frameStyle = VISUAL.frameStyle;
       document.body.dataset.marqueeFont = VISUAL.marqueeFont;
+      document.body.dataset.posterFraming = VISUAL.posterFraming;
+      document.body.classList.toggle('visual-film-grain', VISUAL.filmGrain);
+      document.body.classList.toggle('visual-ken-burns', VISUAL.kenBurns);
+      // #64 — per-section info panel visibility. Each toggle maps to a body
+      // class that CSS uses to hide/show the corresponding info panel section.
+      // When all sections are off and infoPanelMode !== on_tap, the panel
+      // renders nothing rather than an empty box.
+      document.body.classList.toggle('info-hide-title', !VISUAL.infoShowTitle);
+      document.body.classList.toggle('info-hide-subtitle', !VISUAL.infoShowSubtitle);
+      document.body.classList.toggle('info-hide-meta', !VISUAL.infoShowMeta);
+      document.body.classList.toggle('info-hide-summary', !VISUAL.infoShowSummary);
+      document.body.classList.toggle('info-hide-techbox', !VISUAL.infoShowTechbox);
+      document.body.classList.toggle('info-hide-player', !VISUAL.infoShowPlayer);
       document.documentElement.style.setProperty('--pns-bulb-size', `${VISUAL.bulbSizePx || 28}px`);
       syncFrameStyle();
       // #21 backdrop art. Two body classes:
@@ -2792,6 +3372,7 @@
       ['visualNudgeAmplitudePx', 'cfgVisualNudgeAmplitudePx', '4'],
       ['visualNightModeEntity', 'cfgVisualNightModeEntity', ''],
       ['visualNightModeOpacity', 'cfgVisualNightModeOpacity', '0.4'],
+      ['visualPosterFraming', 'cfgVisualPosterFraming', 'centred'],
       ['switcherIntervalMs', 'cfgSwitcherIntervalMs', '5000'],
       ['fullyKioskHost', 'cfgFullyKioskHost', ''],
       ['fullyKioskPassword', 'cfgFullyKioskPassword', ''],
@@ -2807,8 +3388,18 @@
       ['visualBurnInMitigation', 'cfgVisualBurnInMitigation', false],
       ['switcherEnabled', 'cfgSwitcherEnabled', false],
       // #100 — cinema/theatrical inclusion. Default true preserves existing
+      ['visualFilmGrain', 'cfgVisualFilmGrain', false],
+      ['visualKenBurns', 'cfgVisualKenBurns', false],
       // behaviour; users opt out from the setup overlay.
       ['comingSoonIncludeCinemaReleases', 'cfgComingSoonIncludeCinemaReleases', true],
+      // #64 — per-section info panel visibility. All default true so existing
+      // installs see no change until the opt-out.
+      ['visualInfoShowTitle',    'cfgVisualInfoShowTitle',    true],
+      ['visualInfoShowSubtitle', 'cfgVisualInfoShowSubtitle', true],
+      ['visualInfoShowMeta',     'cfgVisualInfoShowMeta',     true],
+      ['visualInfoShowSummary',  'cfgVisualInfoShowSummary',  true],
+      ['visualInfoShowTechbox',  'cfgVisualInfoShowTechbox',  true],
+      ['visualInfoShowPlayer',   'cfgVisualInfoShowPlayer',   true],
     ];
     const SETUP_NUMBER_RULES = {
       visualBackdropDelayMs: { min: 1000, max: 600000, fallback: 10000, float: false },
@@ -2925,6 +3516,15 @@
       'cfgVisualNudgeAmplitudePx',
       'cfgVisualNightModeEntity',
       'cfgVisualNightModeOpacity',
+      'cfgVisualPosterFraming',
+      'cfgVisualFilmGrain',
+      'cfgVisualKenBurns',
+      'cfgVisualInfoShowTitle',
+      'cfgVisualInfoShowSubtitle',
+      'cfgVisualInfoShowMeta',
+      'cfgVisualInfoShowSummary',
+      'cfgVisualInfoShowTechbox',
+      'cfgVisualInfoShowPlayer',
     ];
 
     function setupVisible(show) {
@@ -3761,11 +4361,21 @@
           infoPanelMode: val('cfgVisualInfoPanelMode'),
           frameStyle: val('cfgVisualFrameStyle'),
           marqueeFont: val('cfgVisualMarqueeFont'),
+          posterFraming: val('cfgVisualPosterFraming'),
+          filmGrain: bool('cfgVisualFilmGrain'),
+          kenBurns: bool('cfgVisualKenBurns'),
           backdropStyle: val('cfgVisualBackdropStyle'),
           theme: val('cfgVisualTheme'),
           nightModeEntity: val('cfgVisualNightModeEntity'),
           accentColor: accentColor,
           marqueeBgColor: marqueeBgColor,
+          // #64 — per-section info panel visibility
+          infoShowTitle:    bool('cfgVisualInfoShowTitle'),
+          infoShowSubtitle: bool('cfgVisualInfoShowSubtitle'),
+          infoShowMeta:     bool('cfgVisualInfoShowMeta'),
+          infoShowSummary:  bool('cfgVisualInfoShowSummary'),
+          infoShowTechbox:  bool('cfgVisualInfoShowTechbox'),
+          infoShowPlayer:   bool('cfgVisualInfoShowPlayer'),
         },
       };
       // Numeric fields \u2014 only forward when they parse cleanly.
@@ -5205,7 +5815,68 @@
       resetBackdropForIdle();
     }
 
+    // ===== SSE STATE PUSH (#10) =====
+    // Connects to /api/events for real-time state updates.
+    // Falls back to 30s polling if SSE fails or is unavailable.
+    let sseSource = null;
+    let sseFallbackTimer = null;
+    const SSE_FALLBACK_INTERVAL = 30000;
+
+    function startSseConnection() {
+      try {
+        sseSource = new EventSource('/api/events');
+      } catch (err) {
+        debugLogMsg(`SSE init failed: ${err.message}, falling back to ${SSE_FALLBACK_INTERVAL / 1000}s poll`);
+        startSseFallbackPoll();
+        return;
+      }
+
+      sseSource.onopen = () => {
+        debugLogMsg('SSE connected — push mode active');
+        // Cancel any fallback timer
+        if (sseFallbackTimer) {
+          clearInterval(sseFallbackTimer);
+          sseFallbackTimer = null;
+        }
+      };
+
+      sseSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          // Server sends null payload when nothing is playing
+          if (data && data.state) {
+            showMedia(data);
+            debugLogMsg(`[SSE] State: ${data.state} | ${data.title || '?'}`);
+          } else {
+            // null or no state field = nothing playing
+            showIdle();
+            debugLogMsg('[SSE] No media — idle');
+          }
+        } catch (e) {
+          debugLogMsg(`[SSE] parse error: ${e.message}`);
+        }
+      };
+
+      sseSource.onerror = () => {
+        debugLogMsg('SSE error — browser will auto-reconnect');
+        // Don't close sseSource — the browser's built-in EventSource
+        // automatically reconnects on transient failures. Only switch
+        // to fallback polling if SSE was explicitly closed.
+        if (!sseFallbackTimer) {
+          startSseFallbackPoll();
+        }
+      };
+    }
+
+    function startSseFallbackPoll() {
+      if (sseFallbackTimer) return;
+      debugLogMsg(`Fallback poll every ${SSE_FALLBACK_INTERVAL / 1000}s`);
+      poll();
+      sseFallbackTimer = setInterval(poll, SSE_FALLBACK_INTERVAL);
+    }
+
     // ===== POLLING LOOP =====
+    // Primary: SSE push from server. Fallback: 30s poll.
     async function poll() {
       const data = await fetchNowShowingData();
       if (data) {
@@ -5224,10 +5895,12 @@
       await loadVisualConfig();
       applyVisualToggles();
       syncDisplayModeText();
+      // Start SSE push connection — falls back to 30s poll automatically
+      startSseConnection();
+      // Do an immediate poll so the first render is instant (before SSE delivers)
       poll();
-      setInterval(poll, POLL_INTERVAL);
       startConnectionPolling();
-      if (window.DEBUG_MODE) debugLogMsg('Debug mode enabled, polling started');
+      if (window.DEBUG_MODE) debugLogMsg('Debug mode enabled');
     }
 
     // Recreate bulbs on resize
@@ -5248,6 +5921,12 @@
     } else {
       init();
     }
+
+    // Clean up SSE on page unload
+    window.addEventListener('beforeunload', () => {
+      if (sseSource) { sseSource.close(); sseSource = null; }
+      if (sseFallbackTimer) { clearInterval(sseFallbackTimer); sseFallbackTimer = null; }
+    });
   </script>
 </body>
 </html>

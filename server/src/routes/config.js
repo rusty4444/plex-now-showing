@@ -86,6 +86,9 @@ export function configRoute({ config }) {
         frameStyle: config.visual?.frameStyle || 'bulbs',
         bulbSizePx: config.visual?.bulbSizePx ?? 28,
         marqueeFont: config.visual?.marqueeFont || 'bebas-neue',
+        posterFraming: config.visual?.posterFraming || 'centred',
+        filmGrain: !!config.visual?.filmGrain,
+        kenBurns: !!config.visual?.kenBurns,
         backdropStyle: config.visual?.backdropStyle || 'fullscreen',
         backdropDelayMs: Number.isFinite(config.visual?.backdropDelayMs)
           ? config.visual.backdropDelayMs : 10000,
@@ -103,6 +106,13 @@ export function configRoute({ config }) {
         accentColor: config.visual?.accentColor || '',
         marqueeBgColor: config.visual?.marqueeBgColor || '',
         cornerRadiusPx: config.visual?.cornerRadiusPx ?? 0,
+        // #64 — per-section info panel visibility
+        infoShowTitle: config.visual?.infoShowTitle !== false,
+        infoShowSubtitle: config.visual?.infoShowSubtitle !== false,
+        infoShowMeta: config.visual?.infoShowMeta !== false,
+        infoShowSummary: config.visual?.infoShowSummary !== false,
+        infoShowTechbox: config.visual?.infoShowTechbox !== false,
+        infoShowPlayer: config.visual?.infoShowPlayer !== false,
       },
     });
   });

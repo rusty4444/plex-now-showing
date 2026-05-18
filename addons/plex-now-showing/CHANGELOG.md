@@ -3,6 +3,32 @@
 All notable changes to the Now Showing add-on will be documented here.
 The project follows [Semantic Versioning](https://semver.org/).
 
+## 2.3.0 - 2026-05-18
+
+### Added
+- Poster framing modes (closes #67) — three layout options (`centred`, `cover`,
+  `matted`) for how artwork sits in the kiosk view. Configurable via
+  `VISUAL_POSTER_FRAMING` / `visual_poster_framing`.
+- Film-grain overlay (closes #27) — subtle 5% opacity SVG noise texture for
+  cinematic warmth. Configurable via `VISUAL_FILM_GRAIN` / `visual_film_grain`.
+- Ken Burns poster pan (closes #22) — slow 30s zoom/translate animation on the
+  poster art. Configurable via `VISUAL_KEN_BURNS` / `visual_ken_burns`.
+- Self-hosted Google Fonts (closes #40) — Bebas Neue, Playfair Display, Inter,
+  Anton, Monoton, and Oswald shipped as bundled woff2 files. Survives internet
+  outages with zero CDN dependency. Falls back gracefully if CDN is available.
+- Per-section info panel toggles (closes #64) — independent visibility switches
+  for title, subtitle, meta (year/runtime/rating), summary, tech box, and player
+  info. All default ON so existing installs see no change. Configurable via
+  `VISUAL_INFO_SHOW_*` env vars or the in-app setup overlay.
+- Fixed missing overlay keys — `posterFraming`, `filmGrain`, and `kenBurns` were
+  never registered in the overlay store, causing setup UI saves to silently drop
+  them. All visual settings now actually persist across devices.
+- HA WebSocket subscription + SSE push (closes #10) — server connects to HA's
+  WebSocket API for real-time state_changed events, pushes updates to browsers
+  via Server-Sent Events at `/api/events`. Browser falls back to 30s poll.
+  Frontend no longer polls every 5s.
+- Graceful shutdown — HA WS client cleaned up on SIGTERM/SIGINT.
+
 ## 2.2.0 - 2026-05-18
 
 ### Added

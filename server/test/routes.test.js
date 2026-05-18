@@ -166,6 +166,9 @@ test('GET /api/config defaults every visual toggle off', async () => {
         frameStyle: 'bulbs',
         bulbSizePx: 28,
         marqueeFont: 'bebas-neue',
+        posterFraming: 'centred',
+        filmGrain: false,
+        kenBurns: false,
         backdropStyle: 'fullscreen',
         backdropDelayMs: 10000,
         burnInMitigation: false,
@@ -177,6 +180,13 @@ test('GET /api/config defaults every visual toggle off', async () => {
         accentColor: '',
         marqueeBgColor: '',
         cornerRadiusPx: 0,
+        // #64 — per-section info panel visibility
+        infoShowTitle: true,
+        infoShowSubtitle: true,
+        infoShowMeta: true,
+        infoShowSummary: true,
+        infoShowTechbox: true,
+        infoShowPlayer: true,
       },
     });
   } finally { server.close(); }
