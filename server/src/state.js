@@ -53,9 +53,26 @@ function isBackendPlayer(state, rule) {
   if ((rule.requiredAttributes || []).some(name => !(state.attributes || {})[name])) {
     return false;
   }
-  return state.entity_id.startsWith(rule.entityPrefix)
-    || rule.exactEntities.includes(state.entity_id)
-    || (rule.entityIncludes || []).some(token => state.entity_id.includes(token));
+  // Exact entity_id match has highest priority
+  if (rule.exactEntities.includes(state.entity_id)) return true;
+  // Prefix match
+  if (state.entity_id.startsWith(rule.entityPrefix)) return true;
+  // Substring match in entity_id
+  if ((rule.entityIncludes || []).some(token => state.entity_id.includes(token))) return true;
+  // Attribute match: if the rule specifies an appIdMatch, check the entity's
+  // app_id or source_list for a match. Catches cases where the entity_id
+  // doesn't follow the naming convention (e.g. Shield -> media_player.shield_4
+  // running the Jellyfin Android TV app).
+  if (rule.appIdMatch) {
+    const attrs = state.attributes || {};
+    const appId = (attrs.app_id || '').toLowerCase();
+    if (appId.includes(rule.appIdMatch)) return true;
+    const source = (attrs.source || '').toLowerCase();
+    if (source.includes(rule.appIdMatch)) return true;
+    const appName = (attrs.app_name || '').toLowerCase();
+    if (appName.includes(rule.appIdMatch)) return true;
+  }
+  return false;
 }
 
 function shape(playerState) {

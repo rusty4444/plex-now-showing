@@ -21,6 +21,7 @@ export const BACKEND_RULES = Object.freeze({
     label: 'Jellyfin',
     entityPrefix: 'media_player.jellyfin_',
     exactEntities: Object.freeze(['media_player.jellyfin']),
+    appIdMatch: 'jellyfin',
     defaultPlayer: '',
   }),
   emby: Object.freeze({
@@ -28,6 +29,7 @@ export const BACKEND_RULES = Object.freeze({
     label: 'Emby',
     entityPrefix: 'media_player.emby_',
     exactEntities: Object.freeze(['media_player.emby']),
+    appIdMatch: 'emby',
     defaultPlayer: '',
   }),
   kodi: Object.freeze({
@@ -35,6 +37,7 @@ export const BACKEND_RULES = Object.freeze({
     label: 'Kodi',
     entityPrefix: 'media_player.kodi_',
     exactEntities: Object.freeze(['media_player.kodi']),
+    appIdMatch: 'kodi',
     defaultPlayer: '',
   }),
   apple_tv: Object.freeze({

@@ -5670,9 +5670,13 @@
 
     // ===== UPDATE DISPLAY =====
     function showMedia(data) {
+      // `/api/artwork` paths are add-on proxy routes — must use the
+      // page origin, not HA_URL (which points to Home Assistant).
       const artworkUrl = data.artwork.startsWith('http')
         ? data.artwork
-        : `${HA_URL}${data.artwork}`;
+        : data.artwork.startsWith('/api/artwork')
+          ? window.location.origin + data.artwork
+          : `${HA_URL}${data.artwork}`;
 
       const mediaKey = `${data.title}_${data.seriesTitle}_${artworkUrl}`;
       const isSameMedia = mediaKey === currentMediaKey && isShowingMedia;
